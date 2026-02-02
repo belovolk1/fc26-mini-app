@@ -57,7 +57,6 @@ const messages: Record<
     ladderLobbyTitle: string
     ladderLobbyVs: string
     ladderMessageOpponent: string
-    ladderOpponentNoUsername: string
     ladderLobbyAgree: string
     ladderManualTitle: string
     ladderMyScore: string
@@ -186,7 +185,6 @@ const messages: Record<
     ladderLobbyTitle: 'Lobby',
     ladderLobbyVs: 'You vs {name}',
     ladderMessageOpponent: 'Message opponent in Telegram',
-    ladderOpponentNoUsername: 'Opponent has not set a Telegram username — they can add it in Profile.',
     ladderLobbyAgree: 'Agree and enter the result below.',
     ladderManualTitle: 'Match result',
     ladderMyScore: 'My score',
@@ -316,7 +314,6 @@ const messages: Record<
     ladderLobbyTitle: 'Lobby',
     ladderLobbyVs: 'Tu vs {name}',
     ladderMessageOpponent: 'Scrie adversarului în Telegram',
-    ladderOpponentNoUsername: 'Adversarul nu a setat un username Telegram — îl poate adăuga în Profil.',
     ladderLobbyAgree: 'Introdu rezultatul mai jos.',
     ladderManualTitle: 'Rezultat meci',
     ladderMyScore: 'Scorul meu',
@@ -446,7 +443,6 @@ const messages: Record<
     ladderLobbyTitle: 'Лобби',
     ladderLobbyVs: 'Вы vs {name}',
     ladderMessageOpponent: 'Написать сопернику в Telegram',
-    ladderOpponentNoUsername: 'У соперника не указан username в Telegram — его можно добавить в Профиле.',
     ladderLobbyAgree: 'Договоритесь и введите результат ниже.',
     ladderManualTitle: 'Результат матча',
     ladderMyScore: 'Мои голы',
@@ -1771,7 +1767,7 @@ function App() {
                   </a>
                 </>
               )}
-            </div>
+      </div>
 
             <p className="panel-hint">
               {t.profileHint}
@@ -1798,7 +1794,7 @@ function App() {
               <>
                 <button type="button" className="primary-button" onClick={startSearch}>
                   {t.ladderSearchButton}
-                </button>
+        </button>
                 <p className="panel-hint">{t.ladderHint}</p>
                 <p className="panel-hint">{t.ladderTwoPlayersHint}</p>
               </>
@@ -1824,19 +1820,14 @@ function App() {
                     type="button"
                     className="link-button"
                     onClick={() => {
-                      const url = opponentUsername ? `https://t.me/${opponentUsername}` : 'tg://'
+                      const url = opponentUsername ? `https://t.me/${opponentUsername}` : 'https://t.me'
                       const openLink = (tg as { openTelegramLink?: (u: string) => void })?.openTelegramLink
                       if (openLink) openLink(url)
-                      else if (opponentUsername) window.open(url, '_blank', 'noopener,noreferrer')
+                      else window.open(url, '_blank', 'noopener,noreferrer')
                     }}
                   >
                     {t.ladderMessageOpponent}
                   </button>
-                  {!opponentUsername && (
-                    <span className="panel-hint" style={{ display: 'block', marginTop: 4 }}>
-                      {t.ladderOpponentNoUsername}
-                    </span>
-                  )}
                 </p>
 
                 {currentMatch.score_submitted_by == null && (
@@ -1851,7 +1842,7 @@ function App() {
                         value={scoreA}
                         onChange={(e) => setScoreA(e.target.value)}
                       />
-                    </div>
+      </div>
                     <div className="form-row">
                       <label className="form-label">{t.ladderOppScore}</label>
                       <input
