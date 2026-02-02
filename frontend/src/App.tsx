@@ -769,36 +769,77 @@ function App() {
     void check()
   }, [activeView, playerId, t.guestName])
 
-  // Опрос: когда в поиске — раз в 2 сек проверяем, появился ли матч
+  // Применить найденный матч (лобби) — общий код для Realtime и опроса
+  const applyPendingMatch = async (match: { id: number; player_a_id: string; player_b_id: string; score_a?: number | null; score_b?: number | null; score_submitted_by?: string | null }) => {
+    setCurrentMatch({
+      id: match.id,
+      player_a_id: match.player_a_id,
+      player_b_id: match.player_b_id,
+      score_a: match.score_a ?? undefined,
+      score_b: match.score_b ?? undefined,
+      score_submitted_by: match.score_submitted_by ?? undefined,
+    })
+    const oppId = match.player_a_id === playerId ? match.player_b_id : match.player_a_id
+    const { data: opp } = await supabase.from('players').select('username, first_name, last_name').eq('id', oppId).single()
+    const name = opp ? (opp.username ? `@${opp.username}` : [opp.first_name, opp.last_name].filter(Boolean).join(' ') || t.guestName) : t.guestName
+    setOpponentName(name)
+    setSearchStatus('in_lobby')
+  }
+
+  const fetchPendingMatch = async (): Promise<boolean> => {
+    if (!playerId) return false
+    const { data } = await supabase
+      .from('matches')
+      .select('id, player_a_id, player_b_id, score_a, score_b, score_submitted_by')
+      .eq('result', 'PENDING')
+      .or(`player_a_id.eq.${playerId},player_b_id.eq.${playerId}`)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+    if (data) {
+      await applyPendingMatch(data)
+      return true
+    }
+    return false
+  }
+
+  // Realtime: подписка на новые матчи (мгновенный переход в лобби)
   useEffect(() => {
     if (searchStatus !== 'searching' || !playerId) return
-    const interval = setInterval(async () => {
-      const { data } = await supabase
-        .from('matches')
-        .select('id, player_a_id, player_b_id, score_a, score_b, score_submitted_by')
-        .eq('result', 'PENDING')
-        .or(`player_a_id.eq.${playerId},player_b_id.eq.${playerId}`)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle()
-      if (data) {
-        setCurrentMatch({
-          id: data.id,
-          player_a_id: data.player_a_id,
-          player_b_id: data.player_b_id,
-          score_a: data.score_a ?? undefined,
-          score_b: data.score_b ?? undefined,
-          score_submitted_by: data.score_submitted_by ?? undefined,
-        })
-        const oppId = data.player_a_id === playerId ? data.player_b_id : data.player_a_id
-        const { data: opp } = await supabase.from('players').select('username, first_name, last_name').eq('id', oppId).single()
-        const name = opp ? (opp.username ? `@${opp.username}` : [opp.first_name, opp.last_name].filter(Boolean).join(' ') || t.guestName) : t.guestName
-        setOpponentName(name)
-        setSearchStatus('in_lobby')
-      }
-    }, 2000)
+    const channel = supabase
+      .channel('matchmaking-matches')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'matches', filter: `player_a_id=eq.${playerId}` },
+        async (payload) => {
+          const row = payload.new as { id: number; player_a_id: string; player_b_id: string; result?: string; score_a?: number | null; score_b?: number | null; score_submitted_by?: string | null }
+          if (row.result === 'PENDING') await applyPendingMatch(row)
+        },
+      )
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'matches', filter: `player_b_id=eq.${playerId}` },
+        async (payload) => {
+          const row = payload.new as { id: number; player_a_id: string; player_b_id: string; result?: string; score_a?: number | null; score_b?: number | null; score_submitted_by?: string | null }
+          if (row.result === 'PENDING') await applyPendingMatch(row)
+        },
+      )
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') console.log('[FC Area] Realtime: subscribed to matches')
+      })
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [searchStatus, playerId])
+
+  // Опрос (fallback): когда в поиске — раз в 1 сек проверяем матч (если Realtime не сработал)
+  useEffect(() => {
+    if (searchStatus !== 'searching' || !playerId) return
+    const interval = setInterval(() => {
+      void fetchPendingMatch()
+    }, 1000)
     return () => clearInterval(interval)
-  }, [searchStatus, playerId, t.guestName])
+  }, [searchStatus, playerId])
 
   const startSearch = async () => {
     if (!user || !playerId) {
