@@ -1019,6 +1019,40 @@ function App() {
     }
   }, [searchStatus, playerId])
 
+  // Realtime: обновление матча в лобби — когда соперник ввёл счёт, второй сразу видит «Подтвердить» и счёт
+  useEffect(() => {
+    if (searchStatus !== 'in_lobby' || !currentMatch?.id) return
+    const matchId = currentMatch.id
+    const channel = supabase
+      .channel(`match-update-${matchId}`)
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'matches', filter: `id=eq.${matchId}` },
+        (payload) => {
+          const row = payload.new as { id: number; player_a_id: string; player_b_id: string; result?: string; score_a?: number | null; score_b?: number | null; score_submitted_by?: string | null }
+          setCurrentMatch((m) =>
+            m && m.id === matchId
+              ? { ...m, score_a: row.score_a ?? m.score_a, score_b: row.score_b ?? m.score_b, score_submitted_by: row.score_submitted_by ?? m.score_submitted_by }
+              : m,
+          )
+          if (row.result && row.result !== 'PENDING') {
+            setScoreA('')
+            setScoreB('')
+            setCurrentMatch(null)
+            setOpponentUsername(null)
+            setSearchStatus('idle')
+            refetchMatchesCount()
+          }
+        },
+      )
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') console.log('[FC Area] Realtime: subscribed to match updates', matchId)
+      })
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [searchStatus, currentMatch?.id])
+
   // Опрос (fallback): когда в поиске — раз в 1 сек проверяем матч (если Realtime не сработал)
   useEffect(() => {
     if (searchStatus !== 'searching' || !playerId) return
@@ -1781,22 +1815,20 @@ function App() {
                 <p className="panel-text lobby-vs">
                   {t.ladderLobbyVs.replace('{name}', opponentName)}
                 </p>
-                {opponentUsername && (
-                  <p className="panel-text small">
-                    <button
-                      type="button"
-                      className="link-button"
-                      onClick={() => {
-                        const url = `https://t.me/${opponentUsername}`
-                        const openLink = (tg as { openTelegramLink?: (u: string) => void })?.openTelegramLink
-                        if (openLink) openLink(url)
-                        else window.open(url, '_blank', 'noopener,noreferrer')
-                      }}
-                    >
-                      {t.ladderMessageOpponent}
-                    </button>
-                  </p>
-                )}
+                <p className="panel-text small">
+                  <button
+                    type="button"
+                    className="link-button"
+                    onClick={() => {
+                      const url = opponentUsername ? `https://t.me/${opponentUsername}` : 'https://t.me'
+                      const openLink = (tg as { openTelegramLink?: (u: string) => void })?.openTelegramLink
+                      if (openLink) openLink(url)
+                      else window.open(url, '_blank', 'noopener,noreferrer')
+                    }}
+                  >
+                    {t.ladderMessageOpponent}
+                  </button>
+                </p>
 
                 {currentMatch.score_submitted_by == null && (
                   <>
