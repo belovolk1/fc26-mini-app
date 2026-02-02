@@ -1190,22 +1190,51 @@ function App() {
               aria-label="Menu"
               aria-expanded={navOpen}
             >
-              <span className="nav-hamburger-line" />
-              <span className="nav-hamburger-line" />
-              <span className="nav-hamburger-line" />
+              <span className={`nav-hamburger-line ${navOpen ? 'nav-hamburger-line--open' : ''}`} />
+              <span className={`nav-hamburger-line ${navOpen ? 'nav-hamburger-line--open' : ''}`} />
+              <span className={`nav-hamburger-line ${navOpen ? 'nav-hamburger-line--open' : ''}`} />
             </button>
             <div className={`nav-drawer-backdrop ${navOpen ? 'nav-drawer-backdrop--open' : ''}`} onClick={() => setNavOpen(false)} aria-hidden="true" />
-            <nav className={`nav-drawer ${navOpen ? 'nav-drawer--open' : ''}`}>
-              {navLinks.map(({ view, label }) => (
+            <nav className={`nav-drawer ${navOpen ? 'nav-drawer--open' : ''}`} aria-hidden={!navOpen}>
+              <div className="nav-drawer-header">
+                <span className="nav-drawer-title">{t.appTitle}</span>
                 <button
-                  key={view}
                   type="button"
-                  className={activeView === view ? 'nav-drawer-btn active' : 'nav-drawer-btn'}
-                  onClick={() => closeNavAnd(view)}
+                  className="nav-drawer-close"
+                  onClick={() => setNavOpen(false)}
+                  aria-label="Close menu"
                 >
-                  {label}
+                  <span className="nav-drawer-close-icon" aria-hidden>×</span>
                 </button>
-              ))}
+              </div>
+              <div className="nav-drawer-user">
+                <span className="nav-drawer-user-name">{displayName}</span>
+                <span className="nav-drawer-user-elo">ELO: {elo ?? '—'}</span>
+              </div>
+              <div className="nav-drawer-lang">
+                {(['en', 'ro', 'ru'] as const).map((l) => (
+                  <button
+                    key={l}
+                    type="button"
+                    className={lang === l ? 'lang-btn active' : 'lang-btn'}
+                    onClick={() => setLang(l)}
+                  >
+                    {l.toUpperCase()}
+                  </button>
+                ))}
+              </div>
+              <div className="nav-drawer-links">
+                {navLinks.map(({ view, label }) => (
+                  <button
+                    key={view}
+                    type="button"
+                    className={activeView === view ? 'nav-drawer-btn active' : 'nav-drawer-btn'}
+                    onClick={() => closeNavAnd(view)}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
             </nav>
           </>
         ) : (
@@ -1222,7 +1251,7 @@ function App() {
             ))}
           </nav>
         )}
-        <div className="header-right">
+        <div className={`header-right ${showHamburger ? 'header-right--desktop-only' : ''}`}>
           <div className="lang-switch">
             <button
               type="button"
@@ -1382,13 +1411,15 @@ function App() {
                         </div>
                       )}
                     </div>
-                    <h2 className="profile-display-name">{selectedPlayerRow.display_name ?? '—'}</h2>
-                    {selectedPlayerRow.country_code && (
-                      <p className="profile-country-badge">
-                        {COUNTRIES.find((c) => c.code === selectedPlayerRow!.country_code)?.flag ?? '🌐'}{' '}
-                        {COUNTRIES.find((c) => c.code === selectedPlayerRow!.country_code)?.name ?? selectedPlayerRow.country_code}
-                      </p>
-                    )}
+                    <div className="profile-sidebar-info">
+                      <h2 className="profile-display-name">{selectedPlayerRow.display_name ?? '—'}</h2>
+                      {selectedPlayerRow.country_code && (
+                        <p className="profile-country-badge">
+                          {COUNTRIES.find((c) => c.code === selectedPlayerRow!.country_code)?.flag ?? '🌐'}{' '}
+                          {COUNTRIES.find((c) => c.code === selectedPlayerRow!.country_code)?.name ?? selectedPlayerRow.country_code}
+                        </p>
+                      )}
+                    </div>
                   </aside>
                   <div className="profile-main">
                     <div className="profile-rank-card">
@@ -1559,13 +1590,15 @@ function App() {
                             </div>
                           )}
                         </div>
-                        <h2 className="profile-display-name">{displayName}</h2>
-                        {myCountryCode && (
-                          <p className="profile-country-badge">
-                            {COUNTRIES.find((c) => c.code === myCountryCode)?.flag ?? '🌐'}{' '}
-                            {COUNTRIES.find((c) => c.code === myCountryCode)?.name ?? myCountryCode}
-                          </p>
-                        )}
+                        <div className="profile-sidebar-info">
+                          <h2 className="profile-display-name">{displayName}</h2>
+                          {myCountryCode && (
+                            <p className="profile-country-badge">
+                              {COUNTRIES.find((c) => c.code === myCountryCode)?.flag ?? '🌐'}{' '}
+                              {COUNTRIES.find((c) => c.code === myCountryCode)?.name ?? myCountryCode}
+                            </p>
+                          )}
+                        </div>
                       </aside>
                       <div className="profile-main">
                         <div className="profile-rank-card">
