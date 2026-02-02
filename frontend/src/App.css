@@ -727,8 +727,64 @@
 }
 
 .rating-table td:nth-child(3),
-.rating-table td:nth-child(4) {
+.rating-table td:nth-child(4),
+.rating-table td:nth-child(5),
+.rating-table td:nth-child(6),
+.rating-table td:nth-child(7),
+.rating-table td:nth-child(8),
+.rating-table td:nth-child(9),
+.rating-table td:nth-child(10) {
   text-align: right;
+}
+
+.rating-row-clickable {
+  cursor: pointer;
+}
+
+.rating-row-clickable:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.rating-player-name {
+  color: #58a6ff;
+  font-weight: 500;
+}
+
+.rating-back-btn {
+  margin-bottom: 12px;
+  font-size: 14px;
+}
+
+.player-profile-name {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 8px 0 16px;
+}
+
+.player-stats-dl {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+}
+
+.player-stats-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.player-stats-row dt {
+  margin: 0;
+  font-weight: 500;
+  color: #8b949e;
+}
+
+.player-stats-row dd {
+  margin: 0;
+  font-weight: 600;
 }
 
 .app-nav {

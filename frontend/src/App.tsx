@@ -100,6 +100,14 @@ const messages: Record<
     ratingRank: string
     ratingElo: string
     ratingMatches: string
+    ratingWins: string
+    ratingDraws: string
+    ratingLosses: string
+    ratingGoalsFor: string
+    ratingGoalsAgainst: string
+    ratingWinRate: string
+    ratingBack: string
+    playerProfileTitle: string
     guestName: string
   }
 > = {
@@ -209,6 +217,14 @@ const messages: Record<
     ratingRank: '#',
     ratingElo: 'ELO',
     ratingMatches: 'Matches',
+    ratingWins: 'W',
+    ratingDraws: 'D',
+    ratingLosses: 'L',
+    ratingGoalsFor: 'GF',
+    ratingGoalsAgainst: 'GA',
+    ratingWinRate: 'W%',
+    ratingBack: 'Back to rating',
+    playerProfileTitle: 'Player profile',
     guestName: 'Guest',
   },
   ro: {
@@ -317,6 +333,14 @@ const messages: Record<
     ratingRank: '#',
     ratingElo: 'ELO',
     ratingMatches: 'Meciuri',
+    ratingWins: 'V',
+    ratingDraws: 'E',
+    ratingLosses: 'Înf',
+    ratingGoalsFor: 'GM',
+    ratingGoalsAgainst: 'GP',
+    ratingWinRate: 'V%',
+    ratingBack: 'Înapoi la clasament',
+    playerProfileTitle: 'Profil jucător',
     guestName: 'Vizitator',
   },
   ru: {
@@ -425,6 +449,14 @@ const messages: Record<
     ratingRank: '#',
     ratingElo: 'ELO',
     ratingMatches: 'Матчей',
+    ratingWins: 'П',
+    ratingDraws: 'Н',
+    ratingLosses: 'ПР',
+    ratingGoalsFor: 'ГЗ',
+    ratingGoalsAgainst: 'ГП',
+    ratingWinRate: 'Винрейт %',
+    ratingBack: 'Назад к рейтингу',
+    playerProfileTitle: 'Профиль игрока',
     guestName: 'Гость',
   },
 }
@@ -577,8 +609,22 @@ function App() {
   const [matchMessage, setMatchMessage] = useState<string | null>(null)
   const [allMatches, setAllMatches] = useState<Array<{ match_id: number; player_a_name: string; player_b_name: string; score_a: number; score_b: number; result: string; played_at: string | null }>>([])
   const [allMatchesLoading, setAllMatchesLoading] = useState(false)
-  const [leaderboard, setLeaderboard] = useState<Array<{ rank: number; player_id: string; display_name: string | null; elo: number | null; matches_count: number }>>([])
+  type LeaderboardRow = {
+    rank: number
+    player_id: string
+    display_name: string | null
+    elo: number | null
+    matches_count: number
+    wins: number
+    draws: number
+    losses: number
+    goals_for: number
+    goals_against: number
+    win_rate: number | null
+  }
+  const [leaderboard, setLeaderboard] = useState<LeaderboardRow[]>([])
   const [leaderboardLoading, setLeaderboardLoading] = useState(false)
+  const [selectedPlayerRow, setSelectedPlayerRow] = useState<LeaderboardRow | null>(null)
   const widgetContainerRef = useRef<HTMLDivElement>(null)
 
   const tg = window.Telegram?.WebApp
@@ -936,10 +982,11 @@ function App() {
   // Загрузка рейтинга при открытии страницы «Рейтинг»
   useEffect(() => {
     if (activeView !== 'rating') return
+    setSelectedPlayerRow(null)
     setLeaderboardLoading(true)
     supabase.rpc('get_leaderboard').then(({ data, error }) => {
       setLeaderboardLoading(false)
-      if (!error && Array.isArray(data)) setLeaderboard(data)
+      if (!error && Array.isArray(data)) setLeaderboard(data as LeaderboardRow[])
       else setLeaderboard([])
     })
   }, [activeView])
@@ -1206,35 +1253,113 @@ function App() {
 
         {activeView === 'rating' && (
           <section className="panel">
-            <h3 className="panel-title">{t.ratingHeader}</h3>
-            <p className="panel-text small">{t.ratingIntro}</p>
-            {leaderboardLoading && <p className="panel-text">{t.ratingLoading}</p>}
-            {!leaderboardLoading && leaderboard.length === 0 && (
-              <p className="panel-text">{t.ratingEmpty}</p>
-            )}
-            {!leaderboardLoading && leaderboard.length > 0 && (
-              <div className="rating-table-wrap">
-                <table className="rating-table">
-                  <thead>
-                    <tr>
-                      <th>{t.ratingRank}</th>
-                      <th>{t.profilePlayerLabel}</th>
-                      <th>{t.ratingElo}</th>
-                      <th>{t.ratingMatches}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {leaderboard.map((r) => (
-                      <tr key={r.player_id}>
-                        <td>{r.rank}</td>
-                        <td>{r.display_name ?? '—'}</td>
-                        <td>{r.elo ?? '—'}</td>
-                        <td>{r.matches_count}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+            {selectedPlayerRow ? (
+              <>
+                <button
+                  type="button"
+                  className="link-button rating-back-btn"
+                  onClick={() => setSelectedPlayerRow(null)}
+                >
+                  ← {t.ratingBack}
+                </button>
+                <h3 className="panel-title">{t.playerProfileTitle}</h3>
+                <p className="panel-text player-profile-name">{selectedPlayerRow.display_name ?? '—'}</p>
+                <dl className="player-stats-dl">
+                  <div className="player-stats-row">
+                    <dt>{t.ratingRank}</dt>
+                    <dd>{selectedPlayerRow.rank}</dd>
+                  </div>
+                  <div className="player-stats-row">
+                    <dt>{t.ratingElo}</dt>
+                    <dd>{selectedPlayerRow.elo ?? '—'}</dd>
+                  </div>
+                  <div className="player-stats-row">
+                    <dt>{t.ratingMatches}</dt>
+                    <dd>{selectedPlayerRow.matches_count}</dd>
+                  </div>
+                  <div className="player-stats-row">
+                    <dt>{t.ratingWins}</dt>
+                    <dd>{selectedPlayerRow.wins}</dd>
+                  </div>
+                  <div className="player-stats-row">
+                    <dt>{t.ratingDraws}</dt>
+                    <dd>{selectedPlayerRow.draws}</dd>
+                  </div>
+                  <div className="player-stats-row">
+                    <dt>{t.ratingLosses}</dt>
+                    <dd>{selectedPlayerRow.losses}</dd>
+                  </div>
+                  <div className="player-stats-row">
+                    <dt>{t.ratingGoalsFor}</dt>
+                    <dd>{selectedPlayerRow.goals_for}</dd>
+                  </div>
+                  <div className="player-stats-row">
+                    <dt>{t.ratingGoalsAgainst}</dt>
+                    <dd>{selectedPlayerRow.goals_against}</dd>
+                  </div>
+                  <div className="player-stats-row">
+                    <dt>{t.ratingWinRate}</dt>
+                    <dd>{selectedPlayerRow.win_rate != null ? `${selectedPlayerRow.win_rate}%` : '—'}</dd>
+                  </div>
+                </dl>
+              </>
+            ) : (
+              <>
+                <h3 className="panel-title">{t.ratingHeader}</h3>
+                <p className="panel-text small">{t.ratingIntro}</p>
+                {leaderboardLoading && <p className="panel-text">{t.ratingLoading}</p>}
+                {!leaderboardLoading && leaderboard.length === 0 && (
+                  <p className="panel-text">{t.ratingEmpty}</p>
+                )}
+                {!leaderboardLoading && leaderboard.length > 0 && (
+                  <div className="rating-table-wrap">
+                    <table className="rating-table">
+                      <thead>
+                        <tr>
+                          <th>{t.ratingRank}</th>
+                          <th>{t.profilePlayerLabel}</th>
+                          <th>{t.ratingElo}</th>
+                          <th>{t.ratingMatches}</th>
+                          <th>{t.ratingWins}</th>
+                          <th>{t.ratingDraws}</th>
+                          <th>{t.ratingLosses}</th>
+                          <th>{t.ratingGoalsFor}</th>
+                          <th>{t.ratingGoalsAgainst}</th>
+                          <th>{t.ratingWinRate}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {leaderboard.map((r) => (
+                          <tr
+                            key={r.player_id}
+                            className="rating-row-clickable"
+                            onClick={() => setSelectedPlayerRow(r)}
+                            role="button"
+                            tabIndex={0}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault()
+                                setSelectedPlayerRow(r)
+                              }
+                            }}
+                          >
+                            <td>{r.rank}</td>
+                            <td className="rating-player-name">{r.display_name ?? '—'}</td>
+                            <td>{r.elo ?? '—'}</td>
+                            <td>{r.matches_count}</td>
+                            <td>{r.wins}</td>
+                            <td>{r.draws}</td>
+                            <td>{r.losses}</td>
+                            <td>{r.goals_for}</td>
+                            <td>{r.goals_against}</td>
+                            <td>{r.win_rate != null ? `${r.win_rate}%` : '—'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </>
             )}
           </section>
         )}

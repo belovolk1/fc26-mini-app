@@ -133,32 +133,66 @@ as $$
   limit 200;
 $$;
 
--- Рейтинг всех игроков (для страницы «Рейтинг»)
+-- Рейтинг всех игроков с детальной статистикой (голы, винрейт и т.д.)
+-- Меняем тип возврата — сначала удаляем старую функцию
+drop function if exists public.get_leaderboard();
 create or replace function public.get_leaderboard()
 returns table (
   rank bigint,
   player_id uuid,
   display_name text,
   elo int,
-  matches_count bigint
+  matches_count bigint,
+  wins bigint,
+  draws bigint,
+  losses bigint,
+  goals_for bigint,
+  goals_against bigint,
+  win_rate numeric
 )
 language sql
 security definer
 stable
 as $$
+  with player_stats as (
+    select
+      p.id,
+      p.elo,
+      coalesce(
+        case when p.username is not null and p.username <> '' then '@' || p.username
+          else nullif(trim(coalesce(p.first_name, '') || ' ' || coalesce(p.last_name, '')), '')
+        end, '—'
+      )::text as display_name,
+      (select count(*)::bigint from public.matches m
+       where (m.player_a_id = p.id or m.player_b_id = p.id) and m.result is distinct from 'PENDING') as matches_count,
+      (select count(*)::bigint from public.matches m
+       where ((m.player_a_id = p.id and m.result = 'A_WIN') or (m.player_b_id = p.id and m.result = 'B_WIN'))) as wins,
+      (select count(*)::bigint from public.matches m
+       where (m.player_a_id = p.id or m.player_b_id = p.id) and m.result = 'DRAW') as draws,
+      (select count(*)::bigint from public.matches m
+       where ((m.player_a_id = p.id and m.result = 'B_WIN') or (m.player_b_id = p.id and m.result = 'A_WIN'))) as losses,
+      (select coalesce(sum(case when m.player_a_id = p.id then m.score_a else m.score_b end), 0)::bigint from public.matches m
+       where (m.player_a_id = p.id or m.player_b_id = p.id) and m.result is distinct from 'PENDING') as goals_for,
+      (select coalesce(sum(case when m.player_a_id = p.id then m.score_b else m.score_a end), 0)::bigint from public.matches m
+       where (m.player_a_id = p.id or m.player_b_id = p.id) and m.result is distinct from 'PENDING') as goals_against
+    from public.players p
+  )
   select
-    row_number() over (order by p.elo desc nulls last, p.id)::bigint,
-    p.id,
-    coalesce(
-      case when p.username is not null and p.username <> '' then '@' || p.username
-        else nullif(trim(coalesce(p.first_name, '') || ' ' || coalesce(p.last_name, '')), '')
-      end, '—'
-    )::text,
-    p.elo,
-    (select count(*)::bigint from public.matches m
-     where (m.player_a_id = p.id or m.player_b_id = p.id) and m.result is distinct from 'PENDING')
-  from public.players p
-  order by p.elo desc nulls last, p.id
+    row_number() over (order by s.elo desc nulls last, s.id)::bigint,
+    s.id,
+    s.display_name,
+    s.elo,
+    s.matches_count,
+    s.wins,
+    s.draws,
+    s.losses,
+    s.goals_for,
+    s.goals_against,
+    round(
+      case when s.matches_count > 0 then (s.wins * 100.0 / s.matches_count) else null end
+    , 1)::numeric as win_rate
+  from player_stats s
+  order by s.elo desc nulls last, s.id
   limit 500;
 $$;
 
