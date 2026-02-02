@@ -9,8 +9,35 @@
   background: #0f1419;
 }
 
+/* Mini App: всегда мобильная версия (независимо от ширины окна) */
+.app--mobile {
+  max-width: 100%;
+  width: 100%;
+  padding: 0 0 72px;
+}
+.app--mobile .app-main {
+  max-width: 480px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.app--mobile .site-header {
+  max-width: 480px;
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+.app--mobile .site-footer {
+  max-width: 480px;
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* ПК: десктопная версия только на широких экранах */
 @media (min-width: 1024px) {
-  .app {
+  .app--desktop.app {
     max-width: none;
     padding: 0;
   }
@@ -28,7 +55,7 @@
 }
 
 @media (min-width: 1024px) {
-  .site-header {
+  .app--desktop .site-header {
     padding: 16px 48px;
     flex-wrap: nowrap;
     justify-content: space-between;
@@ -54,7 +81,7 @@
 }
 
 @media (min-width: 1024px) {
-  .app-title {
+  .app--desktop .app-title {
     font-size: 24px;
   }
 }
@@ -66,7 +93,7 @@
 }
 
 @media (min-width: 1024px) {
-  .app-subtitle {
+  .app--desktop .app-subtitle {
     font-size: 14px;
   }
 }
@@ -110,10 +137,10 @@
 }
 
 @media (min-width: 1024px) {
-  .app-user {
+  .app--desktop .app-user {
     font-size: 14px;
   }
-  .lang-btn {
+  .app--desktop .lang-btn {
     padding: 6px 12px;
     font-size: 12px;
   }
@@ -142,8 +169,8 @@
 }
 
 @media (min-width: 1024px) {
-  .app-main {
-    max-width: 1100px;
+  .app--desktop .app-main {
+    max-width: 1200px;
     padding: 40px 48px 48px;
     gap: 24px;
   }
@@ -155,12 +182,12 @@
 }
 
 @media (min-width: 1024px) {
-  .view-title {
+  .app--desktop .view-title {
     font-size: 20px;
     margin-bottom: 16px;
   }
-  .app-main {
-    gap: 20px;
+  .app--desktop .app-main {
+    gap: 28px;
   }
 }
 
@@ -171,7 +198,7 @@
 }
 
 @media (min-width: 1024px) {
-  .grid {
+  .app--desktop .grid {
     grid-template-columns: repeat(3, 1fr);
     gap: 24px;
   }
@@ -193,15 +220,16 @@
 }
 
 @media (min-width: 1024px) {
-  .tile {
+  .app--desktop .tile {
     padding: 24px 28px;
     border-radius: 20px;
+    transition: border-color 0.2s, background 0.2s, box-shadow 0.2s, transform 0.2s;
   }
-  .tile-title {
+  .app--desktop .tile-title {
     font-size: 18px;
     margin-bottom: 8px;
   }
-  .tile-text {
+  .app--desktop .tile-text {
     font-size: 14px;
   }
 }
@@ -237,9 +265,9 @@
 }
 
 @media (min-width: 1024px) {
-  .panel {
-    padding: 24px 32px;
-    max-width: 640px;
+  .app--desktop .panel {
+    padding: 28px 36px;
+    max-width: 720px;
   }
 }
 
@@ -249,11 +277,11 @@
 }
 
 @media (min-width: 1024px) {
-  .panel-title {
+  .app--desktop .panel-title {
     font-size: 18px;
     margin-bottom: 12px;
   }
-  .panel-text {
+  .app--desktop .panel-text {
     font-size: 15px;
   }
 }
@@ -293,7 +321,7 @@
 }
 
 @media (min-width: 1024px) {
-  .form-input {
+  .app--desktop .form-input {
     max-width: 240px;
     padding: 10px 12px;
     font-size: 16px;
@@ -570,7 +598,7 @@
 }
 
 @media (min-width: 1024px) {
-  .primary-button {
+  .app--desktop .primary-button {
     width: auto;
     min-width: 200px;
     padding: 12px 24px;
@@ -634,7 +662,7 @@
 }
 
 @media (min-width: 1024px) {
-  .app-nav {
+  .app--desktop .app-nav {
     flex: 1;
     justify-content: center;
     gap: 4px;
@@ -660,7 +688,7 @@
 }
 
 @media (min-width: 1024px) {
-  .nav-btn {
+  .app--desktop .nav-btn {
     flex: 0 0 auto;
     padding: 10px 20px;
     font-size: 14px;
@@ -693,13 +721,13 @@
 }
 
 @media (min-width: 1024px) {
-  .hero {
-    padding: 40px 0 32px;
+  .app--desktop .hero {
+    padding: 48px 0 40px;
   }
-  .hero-title {
-    font-size: 36px;
+  .app--desktop .hero-title {
+    font-size: 38px;
   }
-  .hero-subtitle {
+  .app--desktop .hero-subtitle {
     font-size: 18px;
   }
 }
@@ -727,11 +755,38 @@
 }
 
 @media (min-width: 1024px) {
-  .site-footer {
+  .app--desktop .site-footer {
     flex-direction: row;
     justify-content: center;
     align-items: center;
     gap: 8px;
     padding: 20px 48px;
+  }
+}
+
+/* ----- Десктоп: дополнительные улучшения ----- */
+@media (min-width: 1024px) {
+  .app--desktop .site-header {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  }
+  .app--desktop .panel {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  }
+  .app--desktop .tile {
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  }
+  .app--desktop .tile:hover {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.18);
+    transform: translateY(-2px);
+  }
+  .app--desktop .tile.primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 24px rgba(46, 160, 67, 0.35);
+  }
+}
+
+@media (min-width: 1280px) {
+  .app--desktop .app-main {
+    max-width: 1280px;
   }
 }

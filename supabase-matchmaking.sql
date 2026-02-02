@@ -38,6 +38,13 @@ create trigger on_queue_insert
   after insert on public.matchmaking_queue
   for each row execute function public.try_match_after_queue_insert();
 
--- Разрешить фронту (anon) вставлять/читать/удалять из очереди и читать матчи
+-- Разрешить фронту (anon) вставлять/читать/удалять из очереди (работает и в браузере на ПК, и в Mini App)
 alter table public.matchmaking_queue enable row level security;
 create policy "matchmaking_queue all" on public.matchmaking_queue for all using (true) with check (true);
+-- Явные политики для anon на случай, если "for all" не применяется к anon в вашем проекте:
+drop policy if exists "matchmaking_queue anon select" on public.matchmaking_queue;
+create policy "matchmaking_queue anon select" on public.matchmaking_queue for select to anon using (true);
+drop policy if exists "matchmaking_queue anon insert" on public.matchmaking_queue;
+create policy "matchmaking_queue anon insert" on public.matchmaking_queue for insert to anon with check (true);
+drop policy if exists "matchmaking_queue anon delete" on public.matchmaking_queue;
+create policy "matchmaking_queue anon delete" on public.matchmaking_queue for delete to anon using (true);

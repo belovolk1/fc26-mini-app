@@ -69,6 +69,9 @@ const messages: Record<
     ladderResultConfirmed: string
     ladderError: string
     ladderLoginRequired: string
+    ladderProfileLoading: string
+    ladderProfileNotReady: string
+    ladderTwoPlayersHint: string
     tournamentsHeader: string
     tournamentsIntro: string
     weeklyCupTitle: string
@@ -154,6 +157,9 @@ const messages: Record<
     ladderResultConfirmed: 'Result confirmed.',
     ladderError: 'Could not save. Try again.',
     ladderLoginRequired: 'Open the app from Telegram to play.',
+    ladderProfileLoading: 'Loading profile…',
+    ladderProfileNotReady: 'Profile not ready. Open the Profile tab and wait for it to load, or log in again.',
+    ladderTwoPlayersHint: 'Two different players must press Search at the same time (e.g. two devices or two accounts).',
     tournamentsHeader: 'Tournaments',
     tournamentsIntro:
       'Here will be a list of upcoming tournaments, registration and brackets.',
@@ -240,6 +246,9 @@ const messages: Record<
     ladderResultConfirmed: 'Rezultat confirmat.',
     ladderError: 'Nu s-a putut salva.',
     ladderLoginRequired: 'Deschide aplicația din Telegram pentru a juca.',
+    ladderProfileLoading: 'Se încarcă profilul…',
+    ladderProfileNotReady: 'Profilul nu e gata. Deschide tab-ul Profil și așteaptă încărcarea sau autentifică-te din nou.',
+    ladderTwoPlayersHint: 'Doi jucători diferiți trebuie să apese Caută în același timp (ex. două dispozitive sau două conturi).',
     tournamentsHeader: 'Turnee',
     tournamentsIntro:
       'Aici va apărea lista turneelor, înregistrarea și tabloul.',
@@ -326,6 +335,9 @@ const messages: Record<
     ladderResultConfirmed: 'Результат засчитан.',
     ladderError: 'Не удалось сохранить.',
     ladderLoginRequired: 'Откройте приложение из Telegram, чтобы играть.',
+    ladderProfileLoading: 'Загрузка профиля…',
+    ladderProfileNotReady: 'Профиль не загружен. Откройте вкладку «Профиль» и дождитесь загрузки или войдите снова.',
+    ladderTwoPlayersHint: 'Два разных игрока должны нажать «Поиск» одновременно (например, с двух устройств или двух аккаунтов).',
     tournamentsHeader: 'Турниры',
     tournamentsIntro:
       'Здесь появится список ближайших турниров, регистрация и сетка.',
@@ -799,7 +811,8 @@ function App() {
       { onConflict: 'player_id' },
     )
     if (error) {
-      setMatchMessage(t.ladderError)
+      console.error('[FC Area] matchmaking_queue upsert failed:', error)
+      setMatchMessage(t.ladderError + ' ' + (error.message || ''))
       return
     }
     setSearchStatus('searching')
@@ -882,8 +895,10 @@ function App() {
     refetchMatchesCount()
   }
 
+  const isMiniApp = !!tg
+
   return (
-    <div className="app">
+    <div className={`app ${isMiniApp ? 'app--mobile' : 'app--desktop'}`}>
       <div className="site-header">
         <header className="app-header">
           <div className="app-header-main">
@@ -1109,12 +1124,19 @@ function App() {
               <p className="panel-error">{t.ladderLoginRequired}</p>
             )}
 
-            {user && searchStatus === 'idle' && (
+            {user && !playerId && (
+              <p className="panel-text">
+                {loadingProfile ? t.ladderProfileLoading : t.ladderProfileNotReady}
+              </p>
+            )}
+
+            {user && playerId && searchStatus === 'idle' && (
               <>
                 <button type="button" className="primary-button" onClick={startSearch}>
                   {t.ladderSearchButton}
                 </button>
                 <p className="panel-hint">{t.ladderHint}</p>
+                <p className="panel-hint">{t.ladderTwoPlayersHint}</p>
               </>
             )}
 
