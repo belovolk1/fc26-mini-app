@@ -77,6 +77,8 @@ $$;
 
 -- Подтвердить результат матча (второй игрок согласен со счётом). p_match_id: text.
 -- Возвращает null при успехе, иначе текст ошибки.
+-- Удаляем обе версии, чтобы не было неоднозначности при вызове (frontend передаёт match_id как string)
+drop function if exists public.confirm_match_result(bigint, uuid);
 drop function if exists public.confirm_match_result(text, uuid);
 create or replace function public.confirm_match_result(p_match_id text, p_player_id uuid)
 returns text
@@ -291,6 +293,48 @@ as $$
   from ranked r;
 $$;
 
+-- Последние 10 матчей игрока (для страницы профиля)
+create or replace function public.get_player_recent_matches(p_player_id uuid)
+returns table (
+  match_id bigint,
+  opponent_name text,
+  my_score int,
+  opp_score int,
+  result text,
+  played_at timestamptz
+)
+language sql
+security definer
+stable
+as $$
+  select
+    m.id,
+    coalesce(
+      case when m.player_a_id = p_player_id then
+             case when pb.username is not null and pb.username <> '' then '@' || pb.username
+                  else nullif(trim(coalesce(pb.first_name, '') || ' ' || coalesce(pb.last_name, '')), '') end
+           else
+             case when pa.username is not null and pa.username <> '' then '@' || pa.username
+                  else nullif(trim(coalesce(pa.first_name, '') || ' ' || coalesce(pa.last_name, '')), '') end
+      end, '—'
+    )::text,
+    (case when m.player_a_id = p_player_id then m.score_a else m.score_b end)::int,
+    (case when m.player_a_id = p_player_id then m.score_b else m.score_a end)::int,
+    (case
+       when m.result = 'DRAW' then 'draw'
+       when (m.result = 'A_WIN' and m.player_a_id = p_player_id) or (m.result = 'B_WIN' and m.player_b_id = p_player_id) then 'win'
+       else 'loss'
+     end)::text,
+    m.played_at
+  from public.matches m
+  join public.players pa on pa.id = m.player_a_id
+  join public.players pb on pb.id = m.player_b_id
+  where (m.player_a_id = p_player_id or m.player_b_id = p_player_id)
+    and m.result is distinct from 'PENDING'
+  order by m.played_at desc nulls last
+  limit 10;
+$$;
+
 -- Разрешить anon вызывать RPC
 grant execute on function public.get_my_pending_match(uuid) to anon;
 grant execute on function public.get_my_matches_count(uuid) to anon;
@@ -299,3 +343,7 @@ grant execute on function public.confirm_match_result(text, uuid) to anon;
 grant execute on function public.get_all_played_matches() to anon;
 grant execute on function public.get_leaderboard() to anon;
 grant execute on function public.get_player_profile(uuid) to anon;
+grant execute on function public.get_player_recent_matches(uuid) to anon;
+
+-- Storage для аватаров: в Supabase Dashboard → Storage создай бакет "avatars", сделай его public.
+-- В политиках бакета разреши anon: INSERT (upload) и SELECT (read) для всех путей или для avatars/*.

@@ -965,6 +965,70 @@
   cursor: pointer;
 }
 
+.profile-recent-matches {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0 0;
+}
+
+.profile-recent-match {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 8px 16px;
+  align-items: center;
+  padding: 10px 12px;
+  margin-bottom: 6px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+}
+
+.profile-recent-match--win {
+  border-left: 3px solid var(--success);
+}
+
+.profile-recent-match--loss {
+  border-left: 3px solid var(--error);
+}
+
+.profile-recent-match--draw {
+  border-left: 3px solid var(--text-muted);
+}
+
+.profile-recent-opponent {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.profile-recent-score {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.profile-recent-result {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.profile-recent-match--win .profile-recent-result {
+  color: var(--success);
+}
+
+.profile-recent-match--loss .profile-recent-result {
+  color: var(--error);
+}
+
+.profile-recent-match--draw .profile-recent-result {
+  color: var(--text-muted);
+}
+
+.profile-recent-date {
+  grid-column: 1 / -1;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
 .player-profile-name {
   font-size: 18px;
   font-weight: 600;

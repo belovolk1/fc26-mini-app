@@ -114,6 +114,12 @@ const messages: Record<
     profileAvatarUrlPlaceholder: string
     profileStatsSummary: string
     profileMatchesWins: string
+    profileLast10Matches: string
+    profileUploadAvatar: string
+    profileResultWin: string
+    profileResultLoss: string
+    profileResultDraw: string
+    profileRecentMatchesEmpty: string
     guestName: string
   }
 > = {
@@ -237,6 +243,12 @@ const messages: Record<
     profileAvatarUrlPlaceholder: 'Avatar image URL',
     profileStatsSummary: 'Statistics',
     profileMatchesWins: 'matches, {pct}% wins',
+    profileLast10Matches: 'Last 10 matches',
+    profileUploadAvatar: 'Upload avatar',
+    profileResultWin: 'Win',
+    profileResultLoss: 'Loss',
+    profileResultDraw: 'Draw',
+    profileRecentMatchesEmpty: 'No matches yet.',
     guestName: 'Guest',
   },
   ro: {
@@ -359,6 +371,12 @@ const messages: Record<
     profileAvatarUrlPlaceholder: 'URL imagine avatar',
     profileStatsSummary: 'Statistici',
     profileMatchesWins: 'meciuri, {pct}% victorii',
+    profileLast10Matches: 'Ultimele 10 meciuri',
+    profileUploadAvatar: 'Încarcă avatar',
+    profileResultWin: 'Victorie',
+    profileResultLoss: 'Înfrângere',
+    profileResultDraw: 'Remiză',
+    profileRecentMatchesEmpty: 'Niciun meci încă.',
     guestName: 'Vizitator',
   },
   ru: {
@@ -481,6 +499,12 @@ const messages: Record<
     profileAvatarUrlPlaceholder: 'URL изображения аватара',
     profileStatsSummary: 'Статистика',
     profileMatchesWins: 'матчей, {pct}% побед',
+    profileLast10Matches: 'Последние 10 матчей',
+    profileUploadAvatar: 'Загрузить аватар',
+    profileResultWin: 'Победа',
+    profileResultLoss: 'Поражение',
+    profileResultDraw: 'Ничья',
+    profileRecentMatchesEmpty: 'Матчей пока нет.',
     guestName: 'Гость',
   },
 }
@@ -673,6 +697,10 @@ function App() {
   const [myAvatarUrl, setMyAvatarUrl] = useState<string>('')
   const [myCountryCode, setMyCountryCode] = useState<string>('')
   const [profileSaveLoading, setProfileSaveLoading] = useState(false)
+  const [avatarUploading, setAvatarUploading] = useState(false)
+  type RecentMatchRow = { match_id: number; opponent_name: string | null; my_score: number; opp_score: number; result: string; played_at: string | null }
+  const [recentMatches, setRecentMatches] = useState<RecentMatchRow[]>([])
+  const [recentMatchesLoading, setRecentMatchesLoading] = useState(false)
   const widgetContainerRef = useRef<HTMLDivElement>(null)
 
   const tg = window.Telegram?.WebApp
@@ -1045,6 +1073,20 @@ function App() {
     })
   }, [])
 
+  // Последние 10 матчей при открытии профиля игрока (из рейтинга)
+  useEffect(() => {
+    if (!selectedPlayerRow?.player_id) {
+      setRecentMatches([])
+      return
+    }
+    setRecentMatchesLoading(true)
+    supabase.rpc('get_player_recent_matches', { p_player_id: selectedPlayerRow.player_id }).then(({ data, error }) => {
+      setRecentMatchesLoading(false)
+      if (!error && Array.isArray(data)) setRecentMatches(data as RecentMatchRow[])
+      else setRecentMatches([])
+    })
+  }, [selectedPlayerRow?.player_id])
+
   // Загрузка рейтинга при открытии страницы «Рейтинг»
   useEffect(() => {
     if (activeView !== 'rating') return
@@ -1069,6 +1111,25 @@ function App() {
       .eq('id', playerId)
     setProfileSaveLoading(false)
     if (error) console.error('Failed to save profile', error)
+  }
+
+  const AVATAR_BUCKET = 'avatars'
+  const uploadAvatar = async (file: File) => {
+    if (!playerId || !file.type.startsWith('image/')) return
+    setAvatarUploading(true)
+    const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg'
+    const path = `${playerId}/avatar.${ext}`
+    const { error: uploadErr } = await supabase.storage.from(AVATAR_BUCKET).upload(path, file, { upsert: true })
+    if (uploadErr) {
+      console.error('Avatar upload failed', uploadErr)
+      setAvatarUploading(false)
+      return
+    }
+    const { data: urlData } = supabase.storage.from(AVATAR_BUCKET).getPublicUrl(path)
+    const publicUrl = urlData.publicUrl
+    const { error: updateErr } = await supabase.from('players').update({ avatar_url: publicUrl }).eq('id', playerId)
+    if (!updateErr) setMyAvatarUrl(publicUrl)
+    setAvatarUploading(false)
   }
 
   const opponentId = currentMatch
@@ -1412,6 +1473,31 @@ function App() {
                         <span className="profile-stat-label">{t.ratingWinRate}</span>
                       </div>
                     </div>
+                    <h4 className="profile-stats-heading">{t.profileLast10Matches}</h4>
+                    {recentMatchesLoading && <p className="panel-text small">…</p>}
+                    {!recentMatchesLoading && recentMatches.length === 0 && (
+                      <p className="panel-text small">{t.profileRecentMatchesEmpty}</p>
+                    )}
+                    {!recentMatchesLoading && recentMatches.length > 0 && (
+                      <ul className="profile-recent-matches">
+                        {recentMatches.map((match) => (
+                          <li key={match.match_id} className={`profile-recent-match profile-recent-match--${match.result}`}>
+                            <span className="profile-recent-opponent">{match.opponent_name ?? '—'}</span>
+                            <span className="profile-recent-score">
+                              {match.my_score} : {match.opp_score}
+                            </span>
+                            <span className="profile-recent-result">
+                              {match.result === 'win' ? t.profileResultWin : match.result === 'loss' ? t.profileResultLoss : t.profileResultDraw}
+                            </span>
+                            {match.played_at && (
+                              <span className="profile-recent-date">
+                                {new Date(match.played_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                              </span>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1506,6 +1592,21 @@ function App() {
             {user && playerId && (
               <div className="profile-edit-section">
                 <h4 className="panel-subtitle">{t.profileAvatar}</h4>
+                <div className="form-row">
+                  <label className="form-label">{t.profileUploadAvatar}</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="form-input"
+                    disabled={avatarUploading}
+                    onChange={(e) => {
+                      const f = e.target.files?.[0]
+                      if (f) uploadAvatar(f)
+                      e.target.value = ''
+                    }}
+                  />
+                  {avatarUploading && <p className="panel-text small">…</p>}
+                </div>
                 <div className="form-row">
                   <label className="form-label">{t.profileAvatarUrlPlaceholder}</label>
                   <input
