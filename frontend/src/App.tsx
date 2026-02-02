@@ -28,6 +28,7 @@ const messages: Record<
     profileTelegramId: string
     profileTelegramNotConnected: string
     profileTelegramLoginLabel: string
+    profileTelegramLoginButton: string
     profileTelegramSameTab: string
     profileTelegramSetDomainOne: string
     profileLogout: string
@@ -66,6 +67,7 @@ const messages: Record<
     ladderProfileLoading: string
     ladderProfileNotReady: string
     ladderTwoPlayersHint: string
+    ladderActiveLobbyBanner: string
     tournamentsHeader: string
     tournamentsIntro: string
     weeklyCupTitle: string
@@ -146,6 +148,7 @@ const messages: Record<
     profileTelegramId: 'Telegram ID',
     profileTelegramNotConnected: 'Log in with Telegram to link your profile and see stats.',
     profileTelegramLoginLabel: 'Log in with Telegram:',
+    profileTelegramLoginButton: 'Log in with Telegram',
     profileTelegramSameTab: 'After login you\'ll return here. If you still see Guest, add this domain in BotFather: /setdomain',
     profileTelegramSetDomainOne: 'If still Guest after login: in BotFather run /setdomain and add this domain:',
     profileLogout: 'Log out',
@@ -187,6 +190,7 @@ const messages: Record<
     ladderProfileLoading: 'Loading profile…',
     ladderProfileNotReady: 'Profile not ready. Open the Profile tab and wait for it to load, or log in again.',
     ladderTwoPlayersHint: 'Two different players must press Search at the same time (e.g. two devices or two accounts).',
+    ladderActiveLobbyBanner: 'You have an active lobby — return',
     tournamentsHeader: 'Tournaments',
     tournamentsIntro:
       'Here will be a list of upcoming tournaments, registration and brackets.',
@@ -268,6 +272,7 @@ const messages: Record<
     profileTelegramId: 'ID Telegram',
     profileTelegramNotConnected: 'Autentifică-te cu Telegram pentru a lega profilul și a vedea statisticile.',
     profileTelegramLoginLabel: 'Autentificare cu Telegram:',
+    profileTelegramLoginButton: 'Autentificare cu Telegram',
     profileTelegramSameTab: 'După login vei reveni aici. Dacă tot vezi „oaspete”, adaugă domeniul în BotFather: /setdomain',
     profileTelegramSetDomainOne: 'Dacă tot vezi „oaspete” după login: în BotFather rulează /setdomain și adaugă domeniul:',
     profileLogout: 'Deconectare',
@@ -309,6 +314,7 @@ const messages: Record<
     ladderProfileLoading: 'Se încarcă profilul…',
     ladderProfileNotReady: 'Profilul nu e gata. Deschide tab-ul Profil și așteaptă încărcarea sau autentifică-te din nou.',
     ladderTwoPlayersHint: 'Doi jucători diferiți trebuie să apese Caută în același timp (ex. două dispozitive sau două conturi).',
+    ladderActiveLobbyBanner: 'Ai un lobby activ — întoarce-te',
     tournamentsHeader: 'Turnee',
     tournamentsIntro:
       'Aici va apărea lista turneelor, înregistrarea și tabloul.',
@@ -390,6 +396,7 @@ const messages: Record<
     profileTelegramId: 'ID в Telegram',
     profileTelegramNotConnected: 'Войдите через Telegram, чтобы привязать профиль и видеть статистику.',
     profileTelegramLoginLabel: 'Вход через Telegram:',
+    profileTelegramLoginButton: 'Войти через Telegram',
     profileTelegramSameTab: 'После входа вы вернётесь сюда. Если всё ещё «Гость» — добавьте этот домен в BotFather: /setdomain',
     profileTelegramSetDomainOne: 'Если после входа всё ещё «Гость»: в BotFather выполните /setdomain и добавьте домен:',
     profileLogout: 'Выйти',
@@ -431,6 +438,7 @@ const messages: Record<
     ladderProfileLoading: 'Загрузка профиля…',
     ladderProfileNotReady: 'Профиль не загружен. Откройте вкладку «Профиль» и дождитесь загрузки или войдите снова.',
     ladderTwoPlayersHint: 'Два разных игрока должны нажать «Поиск» одновременно (например, с двух устройств или двух аккаунтов).',
+    ladderActiveLobbyBanner: 'У вас активное лобби — вернуться',
     tournamentsHeader: 'Турниры',
     tournamentsIntro:
       'Здесь появится список ближайших турниров, регистрация и сетка.',
@@ -645,6 +653,8 @@ function App() {
   const [myRecentMatches, setMyRecentMatches] = useState<RecentMatchRow[]>([])
   const [myProfileStatsLoading, setMyProfileStatsLoading] = useState(false)
   const widgetContainerRef = useRef<HTMLDivElement>(null)
+  const chatMessagesScrollRef = useRef<HTMLDivElement>(null)
+  const chatMessagesEndRef = useRef<HTMLDivElement>(null)
 
   // Парсим редирект один раз при загрузке (до первого рендера)
   const parsedRedirectRef = useRef<TelegramUser | null>(null)
@@ -996,7 +1006,7 @@ function App() {
         .order('created_at', { ascending: true })
       if (error) {
         console.error('[FC Area] chat_messages load error:', error)
-        setChatLoadError(error.message || 'Failed to load messages')
+        setChatLoadError(error.message || t.ladderChatLoadError)
         setChatMessages([])
         return
       }
@@ -1018,7 +1028,13 @@ function App() {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [searchStatus, currentMatch?.id])
+  }, [searchStatus, currentMatch?.id, t])
+
+  // Автоскролл чата к последнему сообщению
+  useLayoutEffect(() => {
+    if (searchStatus !== 'in_lobby' || !chatMessages.length) return
+    chatMessagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
+  }, [searchStatus, chatMessages.length, chatMessages])
 
   // Опрос (fallback): когда в поиске — раз в 1 сек проверяем матч (если Realtime не сработал)
   useEffect(() => {
@@ -1371,6 +1387,17 @@ function App() {
       </div>
 
       <main className="app-main">
+        {user && searchStatus === 'in_lobby' && currentMatch && activeView !== 'ladder' && (
+          <button
+            type="button"
+            className="active-lobby-banner"
+            onClick={() => setActiveView('ladder')}
+          >
+            <span className="active-lobby-banner-icon" aria-hidden="true">●</span>
+            {t.ladderActiveLobbyBanner}
+          </button>
+        )}
+
         {activeView === 'home' && (
           <section className="hero">
             <h2 className="hero-title">{t.appTitle}</h2>
@@ -1864,7 +1891,7 @@ function App() {
                       className="telegram-login-fallback primary-button"
                       rel="noopener noreferrer"
                     >
-                      Log in with Telegram
+                      {t.profileTelegramLoginButton}
                     </a>
                     <p className="panel-hint profile-telegram-same-tab">{t.profileTelegramSameTab}</p>
                   </>
@@ -1921,15 +1948,16 @@ function App() {
             )}
 
             {user && searchStatus === 'in_lobby' && currentMatch && (
-              <>
-                <h4 className="panel-subtitle">{t.ladderLobbyTitle}</h4>
-                <p className="panel-text lobby-vs">
-                  {t.ladderLobbyVs.replace('{name}', opponentName)}
-                </p>
+              <div className="lobby-page">
+                <header className="lobby-header">
+                  <span className="lobby-header-badge">{t.ladderLobbyTitle}</span>
+                  <h2 className="lobby-header-vs">{t.ladderLobbyVs.replace('{name}', opponentName)}</h2>
+                  <p className="lobby-header-hint">{t.ladderLobbyAgree}</p>
+                </header>
 
-                <div className="lobby-chat">
-                  <h4 className="panel-subtitle lobby-chat-title">{t.ladderChatTitle}</h4>
-                  <div className="lobby-chat-messages" role="log" aria-live="polite">
+                <section className="lobby-chat">
+                  <h3 className="lobby-chat-title">{t.ladderChatTitle}</h3>
+                  <div ref={chatMessagesScrollRef} className="lobby-chat-messages" role="log" aria-live="polite">
                     {chatLoadError && (
                       <p className="panel-text small lobby-chat-empty lobby-chat-error">{t.ladderChatLoadError}</p>
                     )}
@@ -1947,6 +1975,7 @@ function App() {
                         </span>
                       </div>
                     ))}
+                    <div ref={chatMessagesEndRef} className="lobby-chat-anchor" aria-hidden="true" />
                   </div>
                   <div className="lobby-chat-form">
                     <input
@@ -1966,83 +1995,84 @@ function App() {
                       {chatSending ? '…' : t.ladderChatSend}
                     </button>
                   </div>
-                </div>
+                </section>
 
                 {currentMatch.score_submitted_by == null && (
-                  <>
-                    <p className="panel-text small">{t.ladderLobbyAgree}</p>
-                    <div className="form-row">
-                      <label className="form-label">{t.ladderMyScore}</label>
-                      <input
-                        type="number"
-                        min={0}
-                        className="form-input"
-                        value={scoreA}
-                        onChange={(e) => setScoreA(e.target.value)}
-                      />
-                    </div>
-                    <div className="form-row">
-                      <label className="form-label">{t.ladderOppScore}</label>
-                      <input
-                        type="number"
-                        min={0}
-                        className="form-input"
-                        value={scoreB}
-                        onChange={(e) => setScoreB(e.target.value)}
-                      />
+                  <section className="lobby-score-card">
+                    <h3 className="lobby-score-title">{t.ladderManualTitle}</h3>
+                    <div className="lobby-score-row">
+                      <div className="lobby-score-field">
+                        <label className="lobby-score-label">{t.ladderMyScore}</label>
+                        <input
+                          type="number"
+                          min={0}
+                          className="form-input lobby-score-input"
+                          value={scoreA}
+                          onChange={(e) => setScoreA(e.target.value)}
+                        />
+                      </div>
+                      <span className="lobby-score-sep">–</span>
+                      <div className="lobby-score-field">
+                        <label className="lobby-score-label">{t.ladderOppScore}</label>
+                        <input
+                          type="number"
+                          min={0}
+                          className="form-input lobby-score-input"
+                          value={scoreB}
+                          onChange={(e) => setScoreB(e.target.value)}
+                        />
+                      </div>
                     </div>
                     {matchMessage && (
-                      <p className={matchMessage === t.ladderSaved ? 'panel-success' : 'panel-error'}>
+                      <p className={matchMessage === t.ladderSaved ? 'lobby-message lobby-message--success' : 'lobby-message lobby-message--error'}>
                         {matchMessage}
                       </p>
                     )}
                     <button
                       type="button"
-                      className="primary-button"
+                      className="primary-button lobby-score-submit"
                       disabled={savingMatch}
                       onClick={submitLobbyScore}
                     >
                       {savingMatch ? '…' : t.ladderSubmitScore}
                     </button>
-                  </>
+                  </section>
                 )}
 
                 {currentMatch.score_submitted_by === playerId && (
-                  <>
-                    <p className="panel-text">
+                  <section className="lobby-status-card lobby-status-card--waiting">
+                    <p className="lobby-status-text">
                       {t.ladderMyScore}: {currentMatch.player_a_id === playerId ? (currentMatch.score_a ?? 0) : (currentMatch.score_b ?? 0)} — {t.ladderOppScore}: {currentMatch.player_a_id === playerId ? (currentMatch.score_b ?? 0) : (currentMatch.score_a ?? 0)}
                     </p>
-                    <p className="panel-text small">{t.ladderWaitingConfirm}</p>
-                    {matchMessage && (
-                      <p className="panel-success">{matchMessage}</p>
-                    )}
-                  </>
+                    <p className="lobby-status-hint">{t.ladderWaitingConfirm}</p>
+                    {matchMessage && <p className="lobby-message lobby-message--success">{matchMessage}</p>}
+                  </section>
                 )}
 
                 {currentMatch.score_submitted_by === opponentId && (
-                  <>
-                    <p className="panel-text">
+                  <section className="lobby-status-card lobby-status-card--confirm">
+                    <p className="lobby-status-text">
                       {t.ladderOpponentProposed.replace(
                         '{score}',
                         `${currentMatch.score_a ?? 0} – ${currentMatch.score_b ?? 0}`,
                       )}
                     </p>
                     {matchMessage && (
-                      <p className={matchMessage === t.ladderResultConfirmed ? 'panel-success' : 'panel-error'}>
+                      <p className={matchMessage === t.ladderResultConfirmed ? 'lobby-message lobby-message--success' : 'lobby-message lobby-message--error'}>
                         {matchMessage}
                       </p>
                     )}
                     <button
                       type="button"
-                      className="primary-button"
+                      className="primary-button lobby-score-submit"
                       disabled={savingMatch}
                       onClick={confirmLobbyResult}
                     >
                       {savingMatch ? '…' : t.ladderConfirmResult}
                     </button>
-                  </>
+                  </section>
                 )}
-              </>
+              </div>
             )}
 
             {user && searchStatus === 'idle' && matchMessage && (
