@@ -31,6 +31,8 @@ const messages: Record<
     profileTelegramOpenBtn: string
     profileTelegramOrOpen: string
     profileTelegramLoginLabel: string
+    profileTelegramWidgetHint: string
+    profileTelegramChatOnly: string
     profileTelegramMenuHint: string
     profileTelegramStep2: string
     profileTelegramBotfatherHint: string
@@ -105,6 +107,8 @@ const messages: Record<
     profileTelegramOpenBtn: 'Open in Telegram',
     profileTelegramOrOpen: 'Or open the bot in Telegram:',
     profileTelegramLoginLabel: 'Log in with Telegram to link your profile and see stats here:',
+    profileTelegramWidgetHint: 'Use the blue "Log in with Telegram" button above (from Telegram). Do NOT click "Open in Telegram" — that only opens the bot chat and does not log you in.',
+    profileTelegramChatOnly: 'If the blue button only opens the bot chat and you don\'t see "Allow to log you in?", run /setdomain in BotFather and add your site domain (see below).',
     profileTelegramMenuHint: 'In the bot chat, tap the menu button (☰) or the button below the input to open the app.',
     profileTelegramStep2: 'If only the chat opened: tap the menu button (☰) next to the input, or the button below the input (e.g. "FC Area") to open the app.',
     profileTelegramBotfatherHint: 'If there is no app button: in BotFather run /setmenubutton, select your bot, choose "Web App", enter URL (e.g. https://www.fcarea.com) and button name (e.g. FC Area).',
@@ -183,6 +187,8 @@ const messages: Record<
     profileTelegramOpenBtn: 'Deschide în Telegram',
     profileTelegramOrOpen: 'Sau deschide botul în Telegram:',
     profileTelegramLoginLabel: 'Autentifică-te cu Telegram pentru a lega profilul și a vedea statisticile aici:',
+    profileTelegramWidgetHint: 'Folosește butonul albastru "Log in with Telegram" de mai sus (de la Telegram). NU apăsa "Deschide în Telegram" — acela deschide doar chat-ul cu botul și nu te autentifică.',
+    profileTelegramChatOnly: 'Dacă butonul albastru deschide doar chat-ul cu botul și nu vezi "Allow to log you in?", rulează /setdomain în BotFather și adaugă domeniul site-ului (vezi mai jos).',
     profileTelegramMenuHint: 'În chat cu botul, apasă butonul de meniu (☰) sau butonul de sub input pentru a deschide aplicația.',
     profileTelegramStep2: 'Dacă s-a deschis doar chat-ul: apasă butonul de meniu (☰) lângă câmpul de input sau butonul de sub input (ex. "FC Area") pentru a deschide aplicația.',
     profileTelegramBotfatherHint: 'Dacă nu există buton pentru aplicație: în BotFather rulează /setmenubutton, selectează botul, alege "Web App", introdu URL (ex. https://www.fcarea.com) și numele butonului (ex. FC Area).',
@@ -261,6 +267,8 @@ const messages: Record<
     profileTelegramOpenBtn: 'Открыть в Telegram',
     profileTelegramOrOpen: 'Или откройте бота в Telegram:',
     profileTelegramLoginLabel: 'Войдите через Telegram, чтобы привязать профиль и видеть статистику здесь:',
+    profileTelegramWidgetHint: 'Нажимайте синюю кнопку «Log in with Telegram» выше (от Telegram). Не нажимайте «Открыть в Telegram» — это только ссылка на чат с ботом, она не выполняет вход.',
+    profileTelegramChatOnly: 'Если при нажатии синей кнопки открывается только чат с ботом и нет окна «Разрешить вход?» — в BotFather выполните /setdomain и добавьте домен сайта (см. ниже).',
     profileTelegramMenuHint: 'В чате с ботом нажмите кнопку меню (☰) или кнопку под полем ввода, чтобы открыть приложение.',
     profileTelegramStep2: 'Если открылся только чат: нажмите кнопку меню (☰) слева от поля ввода или кнопку под полем ввода (например «FC Area») — откроется приложение.',
     profileTelegramBotfatherHint: 'Если такой кнопки нет: в BotFather выполните /setmenubutton → выберите бота → Web App → укажите URL (например https://www.fcarea.com) и название кнопки (например FC Area).',
@@ -861,9 +869,11 @@ function App() {
                   <p className="panel-text profile-telegram-not">{t.profileTelegramNotConnected}</p>
                   <p className="panel-hint profile-telegram-login-label">{t.profileTelegramLoginLabel}</p>
                   <div ref={widgetContainerRef} className="profile-telegram-widget" />
+                  <p className="panel-hint profile-telegram-widget-hint">{t.profileTelegramWidgetHint}</p>
                   <p className="panel-hint profile-telegram-menu-hint">
                     {t.profileTelegramMenuHint}
                   </p>
+                  <p className="panel-hint profile-telegram-or-open-label">{t.profileTelegramOrOpen}</p>
                   <a
                     href={`https://t.me/${(import.meta.env.VITE_TELEGRAM_BOT_USERNAME as string) || 'fcarea_bot'}`}
                     target="_blank"
@@ -873,6 +883,7 @@ function App() {
                     {t.profileTelegramOpenBtn}
                   </a>
                   <div className="profile-telegram-steps">
+                    <p className="panel-hint profile-telegram-chat-only">{t.profileTelegramChatOnly}</p>
                     <p className="panel-hint profile-telegram-no-redirect">
                       {t.profileTelegramNoRedirect}{' '}
                       <strong className="profile-telegram-domain">{typeof window !== 'undefined' ? window.location.host : ''}</strong>
