@@ -701,7 +701,7 @@ function App() {
         .from('matches')
         .select('id', { count: 'exact', head: true })
         .neq('result', 'PENDING')
-        .or(`player_a_id.eq.${upserted.id},player_b_id.eq.${upserted.id}`)
+        .or(`player_a_id.eq."${upserted.id}",player_b_id.eq."${upserted.id}"`)
 
       if (!matchesError) {
         setMatchesCount(count ?? 0)
@@ -725,7 +725,7 @@ function App() {
       .from('matches')
       .select('id', { count: 'exact', head: true })
       .neq('result', 'PENDING')
-      .or(`player_a_id.eq.${playerId},player_b_id.eq.${playerId}`)
+      .or(`player_a_id.eq."${playerId}",player_b_id.eq."${playerId}"`)
     if (!error) setMatchesCount(count ?? 0)
   }
 
@@ -746,7 +746,7 @@ function App() {
         .from('matches')
         .select('id, player_a_id, player_b_id, score_a, score_b, score_submitted_by')
         .eq('result', 'PENDING')
-        .or(`player_a_id.eq.${playerId},player_b_id.eq.${playerId}`)
+        .or(`player_a_id.eq."${playerId}",player_b_id.eq."${playerId}"`)
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle()
@@ -792,7 +792,7 @@ function App() {
       .from('matches')
       .select('id, player_a_id, player_b_id, score_a, score_b, score_submitted_by')
       .eq('result', 'PENDING')
-      .or(`player_a_id.eq.${playerId},player_b_id.eq.${playerId}`)
+      .or(`player_a_id.eq."${playerId}",player_b_id.eq."${playerId}"`)
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle()
@@ -810,7 +810,7 @@ function App() {
       .channel('matchmaking-matches')
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'matches', filter: `player_a_id=eq.${playerId}` },
+        { event: 'INSERT', schema: 'public', table: 'matches', filter: `player_a_id=eq."${playerId}"` },
         async (payload) => {
           const row = payload.new as { id: number; player_a_id: string; player_b_id: string; result?: string; score_a?: number | null; score_b?: number | null; score_submitted_by?: string | null }
           if (row.result === 'PENDING') await applyPendingMatch(row)
@@ -818,7 +818,7 @@ function App() {
       )
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'matches', filter: `player_b_id=eq.${playerId}` },
+        { event: 'INSERT', schema: 'public', table: 'matches', filter: `player_b_id=eq."${playerId}"` },
         async (payload) => {
           const row = payload.new as { id: number; player_a_id: string; player_b_id: string; result?: string; score_a?: number | null; score_b?: number | null; score_submitted_by?: string | null }
           if (row.result === 'PENDING') await applyPendingMatch(row)
