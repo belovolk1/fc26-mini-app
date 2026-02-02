@@ -120,6 +120,7 @@ const messages: Record<
     profileResultLoss: string
     profileResultDraw: string
     profileRecentMatchesEmpty: string
+    profileAvatarBucketHint: string
     guestName: string
   }
 > = {
@@ -249,6 +250,7 @@ const messages: Record<
     profileResultLoss: 'Loss',
     profileResultDraw: 'Draw',
     profileRecentMatchesEmpty: 'No matches yet.',
+    profileAvatarBucketHint: 'Create the "avatars" bucket in Supabase Dashboard → Storage (public), then try again.',
     guestName: 'Guest',
   },
   ro: {
@@ -377,6 +379,7 @@ const messages: Record<
     profileResultLoss: 'Înfrângere',
     profileResultDraw: 'Remiză',
     profileRecentMatchesEmpty: 'Niciun meci încă.',
+    profileAvatarBucketHint: 'Creează buclea "avatars" în Supabase Dashboard → Storage (public), apoi încearcă din nou.',
     guestName: 'Vizitator',
   },
   ru: {
@@ -505,6 +508,7 @@ const messages: Record<
     profileResultLoss: 'Поражение',
     profileResultDraw: 'Ничья',
     profileRecentMatchesEmpty: 'Матчей пока нет.',
+    profileAvatarBucketHint: 'Создайте бакет "avatars" в Supabase Dashboard → Storage (public), затем попробуйте снова.',
     guestName: 'Гость',
   },
 }
@@ -698,6 +702,7 @@ function App() {
   const [myCountryCode, setMyCountryCode] = useState<string>('')
   const [profileSaveLoading, setProfileSaveLoading] = useState(false)
   const [avatarUploading, setAvatarUploading] = useState(false)
+  const [avatarUploadError, setAvatarUploadError] = useState<string | null>(null)
   type RecentMatchRow = { match_id: number; opponent_name: string | null; my_score: number; opp_score: number; result: string; played_at: string | null }
   const [recentMatches, setRecentMatches] = useState<RecentMatchRow[]>([])
   const [recentMatchesLoading, setRecentMatchesLoading] = useState(false)
@@ -722,7 +727,6 @@ function App() {
     } else {
       const hash = window.location.hash?.slice(1)
       const search = window.location.search?.slice(1)
-      const saved = sessionStorage.getItem(TG_REDIRECT_KEY)
       // Не логируем ошибку если tgAuthResult=false (нормально для Mini App)
       const hasTgAuthResult = hash?.includes('tgAuthResult=') || search?.includes('tgAuthResult=')
       if (hasTgAuthResult) {
@@ -740,8 +744,6 @@ function App() {
             console.log('[FC Area] tgAuthResult present but not base64:', tgAuthResult)
           }
         }
-      } else {
-        console.log('[FC Area] No redirect params found. URL hash:', hash, 'search:', search, 'saved:', saved)
       }
     }
   }
@@ -1117,11 +1119,13 @@ function App() {
   const uploadAvatar = async (file: File) => {
     if (!playerId || !file.type.startsWith('image/')) return
     setAvatarUploading(true)
+    setAvatarUploadError(null)
     const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg'
     const path = `${playerId}/avatar.${ext}`
     const { error: uploadErr } = await supabase.storage.from(AVATAR_BUCKET).upload(path, file, { upsert: true })
     if (uploadErr) {
-      console.error('Avatar upload failed', uploadErr)
+      const isBucketNotFound = uploadErr.message?.toLowerCase().includes('bucket not found') || uploadErr.message?.toLowerCase().includes('not found')
+      setAvatarUploadError(isBucketNotFound ? t.profileAvatarBucketHint : uploadErr.message || t.ladderError)
       setAvatarUploading(false)
       return
     }
@@ -1372,23 +1376,28 @@ function App() {
               <p className="panel-text">{t.matchesEmpty}</p>
             )}
             {!allMatchesLoading && allMatches.length > 0 && (
-              <ul className="list matches-list">
+              <ul className="matches-list matches-cards">
                 {allMatches.map((m) => (
-                  <li key={m.match_id} className="list-item match-item">
-                    <span className="match-players">
-                      {m.player_a_name} — {m.player_b_name}
-                    </span>
-                    <span className="match-score">
-                      {m.score_a ?? 0} : {m.score_b ?? 0}
-                    </span>
-                    <span className="match-result">
-                      {m.result === 'A_WIN' ? t.matchResultAWin : m.result === 'B_WIN' ? t.matchResultBWin : t.matchResultDraw}
-                    </span>
-                    {m.played_at && (
-                      <span className="match-date">
-                        {new Date(m.played_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                  <li key={m.match_id} className="match-card">
+                    <div className="match-card-team match-card-team-a">
+                      <span className="match-card-player">{m.player_a_name}</span>
+                    </div>
+                    <div className="match-card-score-wrap">
+                      <span className="match-card-score">
+                        {m.score_a ?? 0} : {m.score_b ?? 0}
                       </span>
-                    )}
+                      <span className={`match-card-result match-card-result--${m.result === 'A_WIN' ? 'win' : m.result === 'B_WIN' ? 'loss' : 'draw'}`}>
+                        {m.result === 'A_WIN' ? t.matchResultAWin : m.result === 'B_WIN' ? t.matchResultBWin : t.matchResultDraw}
+                      </span>
+                      {m.played_at && (
+                        <span className="match-card-date">
+                          {new Date(m.played_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      )}
+                    </div>
+                    <div className="match-card-team match-card-team-b">
+                      <span className="match-card-player">{m.player_b_name}</span>
+                    </div>
                   </li>
                 ))}
               </ul>
@@ -1541,16 +1550,25 @@ function App() {
                               }
                             }}
                           >
-                            <td>{r.rank}</td>
-                            <td className="rating-player-name">{r.display_name ?? '—'}</td>
-                            <td>{r.elo ?? '—'}</td>
+                            <td className="rating-rank-cell">{r.rank}</td>
+                            <td className="rating-player-cell">
+                              <div className="rating-player-avatar">
+                                {r.avatar_url ? (
+                                  <img src={r.avatar_url} alt="" />
+                                ) : (
+                                  <span>{(r.display_name ?? '?').charAt(0).toUpperCase()}</span>
+                                )}
+                              </div>
+                              <span className="rating-player-name">{r.display_name ?? '—'}</span>
+                            </td>
+                            <td className="rating-elo-cell">{r.elo ?? '—'}</td>
                             <td>{r.matches_count}</td>
                             <td>{r.wins}</td>
                             <td>{r.draws}</td>
                             <td>{r.losses}</td>
                             <td>{r.goals_for}</td>
                             <td>{r.goals_against}</td>
-                            <td>{r.win_rate != null ? `${r.win_rate}%` : '—'}</td>
+                            <td className="rating-winrate-cell">{r.win_rate != null ? `${r.win_rate}%` : '—'}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -1606,6 +1624,9 @@ function App() {
                     }}
                   />
                   {avatarUploading && <p className="panel-text small">…</p>}
+                  {avatarUploadError && (
+                    <p className="panel-text panel-error profile-avatar-hint">{avatarUploadError}</p>
+                  )}
                 </div>
                 <div className="form-row">
                   <label className="form-label">{t.profileAvatarUrlPlaceholder}</label>

@@ -704,8 +704,94 @@
   opacity: 0.7;
 }
 
+/* ----- Список матчей: карточки (FACEIT-style) ----- */
 .matches-list {
   margin-top: 12px;
+  list-style: none;
+  padding: 0;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.matches-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.match-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.match-card:hover {
+  border-color: var(--border-hover);
+  box-shadow: var(--shadow);
+}
+
+.match-card-team {
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.match-card-team-b {
+  text-align: right;
+}
+
+.match-card-player {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.match-card-score-wrap {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 0 8px;
+}
+
+.match-card-score {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: -0.02em;
+}
+
+.match-card-result {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.match-card-result--win {
+  color: var(--success);
+}
+
+.match-card-result--loss {
+  color: var(--error);
+}
+
+.match-card-result--draw {
+  color: var(--text-muted);
+}
+
+.match-card-date {
+  font-size: 11px;
+  color: var(--text-muted);
 }
 
 .match-item {
@@ -734,9 +820,27 @@
   color: var(--text-muted);
 }
 
+/* ----- Таблица рейтинга (FACEIT-style): карточный контейнер, аватары ----- */
 .rating-table-wrap {
   overflow-x: auto;
-  margin-top: 12px;
+  overflow-y: visible;
+  margin-top: 16px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+}
+
+@media (min-width: 1024px) {
+  .app--desktop .rating-table-wrap {
+    border-radius: 16px;
+  }
+  .app--desktop .match-card {
+    padding: 20px 24px;
+    border-radius: 16px;
+  }
+  .app--desktop .match-card-score {
+    font-size: 24px;
+  }
 }
 
 .rating-table {
@@ -747,9 +851,13 @@
 
 .rating-table th,
 .rating-table td {
-  padding: 10px 12px;
+  padding: 12px 14px;
   text-align: left;
   border-bottom: 1px solid var(--border);
+}
+
+.rating-table tr:last-child td {
+  border-bottom: none;
 }
 
 .rating-table th {
@@ -758,11 +866,57 @@
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.04em;
+  background: rgba(0, 0, 0, 0.2);
 }
 
 .rating-table td:first-child {
   width: 2.5em;
   color: var(--text-muted);
+}
+
+.rating-rank-cell {
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.rating-player-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.rating-player-avatar {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rating-player-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.rating-player-avatar span {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.rating-elo-cell {
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.rating-winrate-cell {
+  font-weight: 600;
+  color: var(--success);
 }
 
 .rating-table td:nth-child(3),
@@ -782,11 +936,11 @@
 }
 
 .rating-row-clickable:hover {
-  background: rgba(244, 117, 33, 0.1);
+  background: rgba(244, 117, 33, 0.12);
 }
 
 .rating-player-name {
-  color: var(--accent);
+  color: var(--text);
   font-weight: 600;
 }
 
