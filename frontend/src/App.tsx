@@ -57,6 +57,7 @@ const messages: Record<
     ladderLobbyTitle: string
     ladderLobbyVs: string
     ladderMessageOpponent: string
+    ladderOpenChatLabel: string
     ladderLobbyAgree: string
     ladderManualTitle: string
     ladderMyScore: string
@@ -185,6 +186,7 @@ const messages: Record<
     ladderLobbyTitle: 'Lobby',
     ladderLobbyVs: 'You vs {name}',
     ladderMessageOpponent: 'Message opponent in Telegram',
+    ladderOpenChatLabel: 'Open chat with opponent: ',
     ladderLobbyAgree: 'Agree and enter the result below.',
     ladderManualTitle: 'Match result',
     ladderMyScore: 'My score',
@@ -314,6 +316,7 @@ const messages: Record<
     ladderLobbyTitle: 'Lobby',
     ladderLobbyVs: 'Tu vs {name}',
     ladderMessageOpponent: 'Scrie adversarului în Telegram',
+    ladderOpenChatLabel: 'Deschide chat cu adversarul: ',
     ladderLobbyAgree: 'Introdu rezultatul mai jos.',
     ladderManualTitle: 'Rezultat meci',
     ladderMyScore: 'Scorul meu',
@@ -443,6 +446,7 @@ const messages: Record<
     ladderLobbyTitle: 'Лобби',
     ladderLobbyVs: 'Вы vs {name}',
     ladderMessageOpponent: 'Написать сопернику в Telegram',
+    ladderOpenChatLabel: 'Открыть чат с соперником: ',
     ladderLobbyAgree: 'Договоритесь и введите результат ниже.',
     ladderManualTitle: 'Результат матча',
     ladderMyScore: 'Мои голы',
@@ -1874,6 +1878,7 @@ function App() {
                   {t.ladderLobbyVs.replace('{name}', opponentName)}
                 </p>
                 <p className="panel-text small">
+                  {t.ladderOpenChatLabel}
                   {(() => {
                     const linkUsername = (opponentUsername?.trim() || (typeof opponentName === 'string' && opponentName.startsWith('@') ? opponentName.slice(1).trim() : null)) || null
                     const botUsername = (import.meta.env.VITE_TELEGRAM_BOT_USERNAME as string) || 'fcarea_bot'
@@ -1883,6 +1888,7 @@ function App() {
                         ? `https://t.me/${botUsername}?start=contact_${opponentTelegramId}`
                         : null
                     const openLink = (tg as { openTelegramLink?: (u: string) => void })?.openTelegramLink
+                    const displayName = opponentName || '—'
                     return linkUrl ? (
                       <button
                         type="button"
@@ -1890,7 +1896,6 @@ function App() {
                         onClick={() => {
                           if (openLink) {
                             openLink(linkUrl)
-                            // Закрываем мини-приложение, чтобы пользователь увидел чат/ответ бота в Telegram
                             const closeMiniApp = (tg as { close?: () => void })?.close
                             if (closeMiniApp) setTimeout(closeMiniApp, 400)
                           } else {
@@ -1898,10 +1903,10 @@ function App() {
                           }
                         }}
                       >
-                        {t.ladderMessageOpponent}
+                        {displayName}
                       </button>
                     ) : (
-                      <span className="panel-text-muted">{t.ladderMessageOpponent}</span>
+                      <span className="panel-text-muted">{displayName}</span>
                     )
                   })()}
                 </p>
