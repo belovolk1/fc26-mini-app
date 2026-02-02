@@ -401,6 +401,12 @@
   font-size: 0.9em;
 }
 
+.profile-telegram-botid-hint {
+  margin: 0 0 8px 0;
+  font-size: 0.85em;
+  color: #f0ad4e;
+}
+
 .profile-telegram-chat-only {
   margin: 0 0 8px 0;
   font-size: 0.9em;
@@ -410,6 +416,23 @@
 .profile-telegram-widget {
   margin: 12px 0;
   min-height: 44px;
+}
+
+.telegram-login-fallback {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 10px 20px;
+  background: #0088cc;
+  color: #fff;
+  border-radius: 8px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: background 0.2s;
+}
+
+.telegram-login-fallback:hover {
+  background: #0077b5;
+  color: #fff;
 }
 
 .profile-telegram-widget iframe {
