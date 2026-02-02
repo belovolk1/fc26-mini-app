@@ -673,7 +673,6 @@ function App() {
   } | null>(null)
   const [opponentName, setOpponentName] = useState<string>('')
   const [opponentUsername, setOpponentUsername] = useState<string | null>(null)
-  const [opponentTelegramId, setOpponentTelegramId] = useState<number | null>(null)
   const [scoreA, setScoreA] = useState<string>('')
   const [scoreB, setScoreB] = useState<string>('')
   const [savingMatch, setSavingMatch] = useState(false)
@@ -951,11 +950,10 @@ function App() {
           score_submitted_by: pending.score_submitted_by ?? undefined,
         })
         const oppId = pending.player_a_id === playerId ? pending.player_b_id : pending.player_a_id
-        const { data: opp } = await supabase.from('players').select('username, first_name, last_name, telegram_id').eq('id', oppId).single()
+        const { data: opp } = await supabase.from('players').select('username, first_name, last_name').eq('id', oppId).single()
         const name = opp ? (opp.username ? `@${opp.username}` : [opp.first_name, opp.last_name].filter(Boolean).join(' ') || t.guestName) : t.guestName
         setOpponentName(name)
         setOpponentUsername(opp?.username?.trim() ? opp.username.trim() : null)
-        setOpponentTelegramId(opp?.telegram_id != null ? Number(opp.telegram_id) : null)
         setSearchStatus('in_lobby')
       }
     }
@@ -975,11 +973,10 @@ function App() {
       score_submitted_by: match.score_submitted_by ?? undefined,
     })
     const oppId = match.player_a_id === playerId ? match.player_b_id : match.player_a_id
-    const { data: opp } = await supabase.from('players').select('username, first_name, last_name, telegram_id').eq('id', oppId).single()
+    const { data: opp } = await supabase.from('players').select('username, first_name, last_name').eq('id', oppId).single()
     const name = opp ? (opp.username ? `@${opp.username}` : [opp.first_name, opp.last_name].filter(Boolean).join(' ') || t.guestName) : t.guestName
     setOpponentName(name)
     setOpponentUsername(opp?.username?.trim() ? opp.username.trim() : null)
-    setOpponentTelegramId(opp?.telegram_id != null ? Number(opp.telegram_id) : null)
     setSearchStatus('in_lobby')
   }
 
@@ -1039,7 +1036,6 @@ function App() {
             setCurrentMatch(null)
             setOpponentName('')
             setOpponentUsername(null)
-            setOpponentTelegramId(null)
             setSearchStatus('idle')
             refetchMatchesCount()
             return
@@ -1076,7 +1072,6 @@ function App() {
         setCurrentMatch(null)
         setOpponentName('')
         setOpponentUsername(null)
-        setOpponentTelegramId(null)
         setSearchStatus('idle')
         refetchMatchesCount()
         return
@@ -1285,7 +1280,6 @@ function App() {
     setScoreB('')
     setCurrentMatch(null)
     setOpponentUsername(null)
-    setOpponentTelegramId(null)
     setSearchStatus('idle')
     refetchMatchesCount()
   }
@@ -1294,6 +1288,7 @@ function App() {
   const [isWideScreen, setIsWideScreen] = useState(
     typeof window !== 'undefined' ? window.innerWidth >= 1024 : false,
   )
+  const [navOpen, setNavOpen] = useState(false)
   useEffect(() => {
     const onResize = () => setIsWideScreen(window.innerWidth >= 1024)
     window.addEventListener('resize', onResize)
@@ -1301,6 +1296,21 @@ function App() {
   }, [])
   // ПК (широкий экран) — веб-версия; узкий экран в Mini App — мобильная
   const useMobileLayout = isMiniApp && !isWideScreen
+  const showHamburger = !isWideScreen
+
+  const closeNavAnd = (view: View) => {
+    setActiveView(view)
+    setNavOpen(false)
+  }
+
+  const navLinks: { view: View; label: string }[] = [
+    { view: 'home', label: t.navHome },
+    { view: 'ladder', label: t.navPlay },
+    { view: 'tournaments', label: t.navTournaments },
+    { view: 'matches', label: t.navMatches },
+    { view: 'rating', label: t.navRating },
+    { view: 'profile', label: t.navProfile },
+  ]
 
   return (
     <div className={`app ${useMobileLayout ? 'app--mobile' : 'app--desktop'}`}>
@@ -1311,50 +1321,47 @@ function App() {
             <p className="app-subtitle">{t.appSubtitle}</p>
           </div>
         </header>
-        <nav className="app-nav">
-          <button
-            type="button"
-            className={activeView === 'home' ? 'nav-btn active' : 'nav-btn'}
-            onClick={() => setActiveView('home')}
-          >
-            {t.navHome}
-          </button>
-          <button
-            type="button"
-            className={activeView === 'ladder' ? 'nav-btn active' : 'nav-btn'}
-            onClick={() => setActiveView('ladder')}
-          >
-            {t.navPlay}
-          </button>
-          <button
-            type="button"
-            className={activeView === 'tournaments' ? 'nav-btn active' : 'nav-btn'}
-            onClick={() => setActiveView('tournaments')}
-          >
-            {t.navTournaments}
-          </button>
-          <button
-            type="button"
-            className={activeView === 'matches' ? 'nav-btn active' : 'nav-btn'}
-            onClick={() => setActiveView('matches')}
-          >
-            {t.navMatches}
-          </button>
-          <button
-            type="button"
-            className={activeView === 'rating' ? 'nav-btn active' : 'nav-btn'}
-            onClick={() => setActiveView('rating')}
-          >
-            {t.navRating}
-          </button>
-          <button
-            type="button"
-            className={activeView === 'profile' ? 'nav-btn active' : 'nav-btn'}
-            onClick={() => setActiveView('profile')}
-          >
-            {t.navProfile}
-          </button>
-        </nav>
+        {showHamburger ? (
+          <>
+            <button
+              type="button"
+              className="nav-hamburger-btn"
+              onClick={() => setNavOpen((o) => !o)}
+              aria-label="Menu"
+              aria-expanded={navOpen}
+            >
+              <span className="nav-hamburger-line" />
+              <span className="nav-hamburger-line" />
+              <span className="nav-hamburger-line" />
+            </button>
+            <div className={`nav-drawer-backdrop ${navOpen ? 'nav-drawer-backdrop--open' : ''}`} onClick={() => setNavOpen(false)} aria-hidden="true" />
+            <nav className={`nav-drawer ${navOpen ? 'nav-drawer--open' : ''}`}>
+              {navLinks.map(({ view, label }) => (
+                <button
+                  key={view}
+                  type="button"
+                  className={activeView === view ? 'nav-drawer-btn active' : 'nav-drawer-btn'}
+                  onClick={() => closeNavAnd(view)}
+                >
+                  {label}
+                </button>
+              ))}
+            </nav>
+          </>
+        ) : (
+          <nav className="app-nav">
+            {navLinks.map(({ view, label }) => (
+              <button
+                key={view}
+                type="button"
+                className={activeView === view ? 'nav-btn active' : 'nav-btn'}
+                onClick={() => setActiveView(view)}
+              >
+                {label}
+              </button>
+            ))}
+          </nav>
+        )}
         <div className="header-right">
           <div className="lang-switch">
             <button
@@ -1863,11 +1870,7 @@ function App() {
                 <p className="panel-text small">
                   {(() => {
                     const linkUsername = (opponentUsername?.trim() || (typeof opponentName === 'string' && opponentName.startsWith('@') ? opponentName.slice(1).trim() : null)) || null
-                    const linkUrl = linkUsername
-                      ? `https://t.me/${linkUsername.replace(/^@/, '')}`
-                      : opponentTelegramId != null
-                        ? `tg://user?id=${opponentTelegramId}`
-                        : null
+                    const linkUrl = linkUsername ? `https://t.me/${linkUsername.replace(/^@/, '')}` : null
                     return linkUrl ? (
                       <a
                         href={linkUrl}
