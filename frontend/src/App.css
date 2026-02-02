@@ -621,6 +621,20 @@
   background: #30363d;
 }
 
+.link-button {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: #58a6ff;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.link-button:hover {
+  color: #79b8ff;
+}
+
 .panel-text.small {
   font-size: 12px;
   margin-bottom: 8px;
@@ -651,6 +665,70 @@
   display: block;
   font-size: 11px;
   opacity: 0.7;
+}
+
+.matches-list {
+  margin-top: 12px;
+}
+
+.match-item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 12px;
+  padding: 10px 0;
+  align-items: baseline;
+}
+
+.match-players {
+  grid-column: 1 / -1;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.match-score {
+  font-size: 15px;
+  color: #e8e8e8;
+}
+
+.match-result,
+.match-date {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.rating-table-wrap {
+  overflow-x: auto;
+  margin-top: 12px;
+}
+
+.rating-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.rating-table th,
+.rating-table td {
+  padding: 8px 12px;
+  text-align: left;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.rating-table th {
+  font-weight: 600;
+  color: #8b949e;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.rating-table td:first-child {
+  width: 2.5em;
+  color: #8b949e;
+}
+
+.rating-table td:nth-child(3),
+.rating-table td:nth-child(4) {
+  text-align: right;
 }
 
 .app-nav {

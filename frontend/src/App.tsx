@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import './App.css'
 import { supabase } from './supabaseClient'
 
-type View = 'home' | 'profile' | 'ladder' | 'tournaments'
+type View = 'home' | 'profile' | 'ladder' | 'tournaments' | 'matches' | 'rating'
 type Lang = 'en' | 'ro' | 'ru'
 
 const messages: Record<
@@ -56,6 +56,7 @@ const messages: Record<
     ladderCancelSearch: string
     ladderLobbyTitle: string
     ladderLobbyVs: string
+    ladderMessageOpponent: string
     ladderLobbyAgree: string
     ladderManualTitle: string
     ladderMyScore: string
@@ -83,6 +84,22 @@ const messages: Record<
     navPlay: string
     navTournaments: string
     navProfile: string
+    navMatches: string
+    navRating: string
+    matchesHeader: string
+    matchesIntro: string
+    matchesLoading: string
+    matchesEmpty: string
+    matchResultAWin: string
+    matchResultBWin: string
+    matchResultDraw: string
+    ratingHeader: string
+    ratingIntro: string
+    ratingLoading: string
+    ratingEmpty: string
+    ratingRank: string
+    ratingElo: string
+    ratingMatches: string
     guestName: string
   }
 > = {
@@ -94,6 +111,8 @@ const messages: Record<
       profile: 'Profile',
       ladder: 'Quick play',
       tournaments: 'Tournaments',
+      matches: 'Matches',
+      rating: 'Rating',
     },
     quickPlayTitle: 'Quick play',
     quickPlayText:
@@ -144,6 +163,7 @@ const messages: Record<
     ladderCancelSearch: 'Cancel',
     ladderLobbyTitle: 'Lobby',
     ladderLobbyVs: 'You vs {name}',
+    ladderMessageOpponent: 'Message opponent in Telegram',
     ladderLobbyAgree: 'Agree and enter the result below.',
     ladderManualTitle: 'Match result',
     ladderMyScore: 'My score',
@@ -173,6 +193,22 @@ const messages: Record<
     navPlay: 'Play',
     navTournaments: 'Tournaments',
     navProfile: 'Profile',
+    navMatches: 'Matches',
+    navRating: 'Rating',
+    matchesHeader: 'All matches',
+    matchesIntro: 'Recently played matches.',
+    matchesLoading: 'Loading matches…',
+    matchesEmpty: 'No matches yet.',
+    matchResultAWin: 'Player A win',
+    matchResultBWin: 'Player B win',
+    matchResultDraw: 'Draw',
+    ratingHeader: 'Player rating',
+    ratingIntro: 'All players by ELO.',
+    ratingLoading: 'Loading rating…',
+    ratingEmpty: 'No players yet.',
+    ratingRank: '#',
+    ratingElo: 'ELO',
+    ratingMatches: 'Matches',
     guestName: 'Guest',
   },
   ro: {
@@ -183,6 +219,8 @@ const messages: Record<
       profile: 'Profil',
       ladder: 'Joc rapid',
       tournaments: 'Turnee',
+      matches: 'Meciuri',
+      rating: 'Clasament',
     },
     quickPlayTitle: 'Joc rapid',
     quickPlayText:
@@ -233,6 +271,7 @@ const messages: Record<
     ladderCancelSearch: 'Anulare',
     ladderLobbyTitle: 'Lobby',
     ladderLobbyVs: 'Tu vs {name}',
+    ladderMessageOpponent: 'Scrie adversarului în Telegram',
     ladderLobbyAgree: 'Introdu rezultatul mai jos.',
     ladderManualTitle: 'Rezultat meci',
     ladderMyScore: 'Scorul meu',
@@ -262,6 +301,22 @@ const messages: Record<
     navPlay: 'Joacă',
     navTournaments: 'Turnee',
     navProfile: 'Profil',
+    navMatches: 'Meciuri',
+    navRating: 'Clasament',
+    matchesHeader: 'Toate meciurile',
+    matchesIntro: 'Meciuri jucate recent.',
+    matchesLoading: 'Se încarcă meciurile…',
+    matchesEmpty: 'Niciun meci încă.',
+    matchResultAWin: 'Victorie jucător A',
+    matchResultBWin: 'Victorie jucător B',
+    matchResultDraw: 'Remiză',
+    ratingHeader: 'Clasament jucători',
+    ratingIntro: 'Toți jucătorii după ELO.',
+    ratingLoading: 'Se încarcă clasamentul…',
+    ratingEmpty: 'Niciun jucător încă.',
+    ratingRank: '#',
+    ratingElo: 'ELO',
+    ratingMatches: 'Meciuri',
     guestName: 'Vizitator',
   },
   ru: {
@@ -272,6 +327,8 @@ const messages: Record<
       profile: 'Профиль',
       ladder: 'Быстрая игра',
       tournaments: 'Турниры',
+      matches: 'Матчи',
+      rating: 'Рейтинг',
     },
     quickPlayTitle: 'Быстрая игра',
     quickPlayText:
@@ -322,6 +379,7 @@ const messages: Record<
     ladderCancelSearch: 'Отмена',
     ladderLobbyTitle: 'Лобби',
     ladderLobbyVs: 'Вы vs {name}',
+    ladderMessageOpponent: 'Написать сопернику в Telegram',
     ladderLobbyAgree: 'Договоритесь и введите результат ниже.',
     ladderManualTitle: 'Результат матча',
     ladderMyScore: 'Мои голы',
@@ -351,6 +409,22 @@ const messages: Record<
     navPlay: 'Игра',
     navTournaments: 'Турниры',
     navProfile: 'Профиль',
+    navMatches: 'Матчи',
+    navRating: 'Рейтинг',
+    matchesHeader: 'Все матчи',
+    matchesIntro: 'Недавно сыгранные матчи.',
+    matchesLoading: 'Загрузка матчей…',
+    matchesEmpty: 'Матчей пока нет.',
+    matchResultAWin: 'Победа игрока A',
+    matchResultBWin: 'Победа игрока B',
+    matchResultDraw: 'Ничья',
+    ratingHeader: 'Рейтинг игроков',
+    ratingIntro: 'Все игроки по ELO.',
+    ratingLoading: 'Загрузка рейтинга…',
+    ratingEmpty: 'Игроков пока нет.',
+    ratingRank: '#',
+    ratingElo: 'ELO',
+    ratingMatches: 'Матчей',
     guestName: 'Гость',
   },
 }
@@ -496,10 +570,15 @@ function App() {
     score_submitted_by?: string | null
   } | null>(null)
   const [opponentName, setOpponentName] = useState<string>('')
+  const [opponentUsername, setOpponentUsername] = useState<string | null>(null)
   const [scoreA, setScoreA] = useState<string>('')
   const [scoreB, setScoreB] = useState<string>('')
   const [savingMatch, setSavingMatch] = useState(false)
   const [matchMessage, setMatchMessage] = useState<string | null>(null)
+  const [allMatches, setAllMatches] = useState<Array<{ match_id: number; player_a_name: string; player_b_name: string; score_a: number; score_b: number; result: string; played_at: string | null }>>([])
+  const [allMatchesLoading, setAllMatchesLoading] = useState(false)
+  const [leaderboard, setLeaderboard] = useState<Array<{ rank: number; player_id: string; display_name: string | null; elo: number | null; matches_count: number }>>([])
+  const [leaderboardLoading, setLeaderboardLoading] = useState(false)
   const widgetContainerRef = useRef<HTMLDivElement>(null)
 
   const tg = window.Telegram?.WebApp
@@ -766,6 +845,7 @@ function App() {
     const { data: opp } = await supabase.from('players').select('username, first_name, last_name').eq('id', oppId).single()
     const name = opp ? (opp.username ? `@${opp.username}` : [opp.first_name, opp.last_name].filter(Boolean).join(' ') || t.guestName) : t.guestName
     setOpponentName(name)
+    setOpponentUsername(opp?.username ?? null)
     setSearchStatus('in_lobby')
   }
 
@@ -842,6 +922,28 @@ function App() {
     setSearchStatus('idle')
   }
 
+  // Загрузка всех матчей при открытии страницы «Матчи»
+  useEffect(() => {
+    if (activeView !== 'matches') return
+    setAllMatchesLoading(true)
+    supabase.rpc('get_all_played_matches').then(({ data, error }) => {
+      setAllMatchesLoading(false)
+      if (!error && Array.isArray(data)) setAllMatches(data)
+      else setAllMatches([])
+    })
+  }, [activeView])
+
+  // Загрузка рейтинга при открытии страницы «Рейтинг»
+  useEffect(() => {
+    if (activeView !== 'rating') return
+    setLeaderboardLoading(true)
+    supabase.rpc('get_leaderboard').then(({ data, error }) => {
+      setLeaderboardLoading(false)
+      if (!error && Array.isArray(data)) setLeaderboard(data)
+      else setLeaderboard([])
+    })
+  }, [activeView])
+
   const opponentId = currentMatch
     ? currentMatch.player_a_id === playerId
       ? currentMatch.player_b_id
@@ -905,14 +1007,25 @@ function App() {
     setScoreA('')
     setScoreB('')
     setCurrentMatch(null)
+    setOpponentUsername(null)
     setSearchStatus('idle')
     refetchMatchesCount()
   }
 
   const isMiniApp = !!tg
+  const [isWideScreen, setIsWideScreen] = useState(
+    typeof window !== 'undefined' ? window.innerWidth >= 1024 : false,
+  )
+  useEffect(() => {
+    const onResize = () => setIsWideScreen(window.innerWidth >= 1024)
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
+  // ПК (широкий экран) — веб-версия; узкий экран в Mini App — мобильная
+  const useMobileLayout = isMiniApp && !isWideScreen
 
   return (
-    <div className={`app ${isMiniApp ? 'app--mobile' : 'app--desktop'}`}>
+    <div className={`app ${useMobileLayout ? 'app--mobile' : 'app--desktop'}`}>
       <div className="site-header">
         <header className="app-header">
           <div className="app-header-main">
@@ -941,6 +1054,20 @@ function App() {
             onClick={() => setActiveView('tournaments')}
           >
             {t.navTournaments}
+          </button>
+          <button
+            type="button"
+            className={activeView === 'matches' ? 'nav-btn active' : 'nav-btn'}
+            onClick={() => setActiveView('matches')}
+          >
+            {t.navMatches}
+          </button>
+          <button
+            type="button"
+            className={activeView === 'rating' ? 'nav-btn active' : 'nav-btn'}
+            onClick={() => setActiveView('rating')}
+          >
+            {t.navRating}
           </button>
           <button
             type="button"
@@ -1018,11 +1145,97 @@ function App() {
             <button
               type="button"
               className="tile"
+              onClick={() => setActiveView('matches')}
+            >
+              <span className="tile-title">{t.matchesHeader}</span>
+              <span className="tile-text">{t.matchesIntro}</span>
+            </button>
+
+            <button
+              type="button"
+              className="tile"
+              onClick={() => setActiveView('rating')}
+            >
+              <span className="tile-title">{t.ratingHeader}</span>
+              <span className="tile-text">{t.ratingIntro}</span>
+            </button>
+
+            <button
+              type="button"
+              className="tile"
               onClick={() => setActiveView('profile')}
             >
               <span className="tile-title">{t.profileTileTitle}</span>
               <span className="tile-text">{t.profileTileText}</span>
             </button>
+          </section>
+        )}
+
+        {activeView === 'matches' && (
+          <section className="panel">
+            <h3 className="panel-title">{t.matchesHeader}</h3>
+            <p className="panel-text small">{t.matchesIntro}</p>
+            {allMatchesLoading && <p className="panel-text">{t.matchesLoading}</p>}
+            {!allMatchesLoading && allMatches.length === 0 && (
+              <p className="panel-text">{t.matchesEmpty}</p>
+            )}
+            {!allMatchesLoading && allMatches.length > 0 && (
+              <ul className="list matches-list">
+                {allMatches.map((m) => (
+                  <li key={m.match_id} className="list-item match-item">
+                    <span className="match-players">
+                      {m.player_a_name} — {m.player_b_name}
+                    </span>
+                    <span className="match-score">
+                      {m.score_a ?? 0} : {m.score_b ?? 0}
+                    </span>
+                    <span className="match-result">
+                      {m.result === 'A_WIN' ? t.matchResultAWin : m.result === 'B_WIN' ? t.matchResultBWin : t.matchResultDraw}
+                    </span>
+                    {m.played_at && (
+                      <span className="match-date">
+                        {new Date(m.played_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        )}
+
+        {activeView === 'rating' && (
+          <section className="panel">
+            <h3 className="panel-title">{t.ratingHeader}</h3>
+            <p className="panel-text small">{t.ratingIntro}</p>
+            {leaderboardLoading && <p className="panel-text">{t.ratingLoading}</p>}
+            {!leaderboardLoading && leaderboard.length === 0 && (
+              <p className="panel-text">{t.ratingEmpty}</p>
+            )}
+            {!leaderboardLoading && leaderboard.length > 0 && (
+              <div className="rating-table-wrap">
+                <table className="rating-table">
+                  <thead>
+                    <tr>
+                      <th>{t.ratingRank}</th>
+                      <th>{t.profilePlayerLabel}</th>
+                      <th>{t.ratingElo}</th>
+                      <th>{t.ratingMatches}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {leaderboard.map((r) => (
+                      <tr key={r.player_id}>
+                        <td>{r.rank}</td>
+                        <td>{r.display_name ?? '—'}</td>
+                        <td>{r.elo ?? '—'}</td>
+                        <td>{r.matches_count}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </section>
         )}
 
@@ -1169,6 +1382,22 @@ function App() {
                 <p className="panel-text lobby-vs">
                   {t.ladderLobbyVs.replace('{name}', opponentName)}
                 </p>
+                {opponentUsername && (
+                  <p className="panel-text small">
+                    <button
+                      type="button"
+                      className="link-button"
+                      onClick={() => {
+                        const url = `https://t.me/${opponentUsername}`
+                        const openLink = (tg as { openTelegramLink?: (u: string) => void })?.openTelegramLink
+                        if (openLink) openLink(url)
+                        else window.open(url, '_blank', 'noopener,noreferrer')
+                      }}
+                    >
+                      {t.ladderMessageOpponent}
+                    </button>
+                  </p>
+                )}
 
                 {currentMatch.score_submitted_by == null && (
                   <>

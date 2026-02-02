@@ -1,6 +1,14 @@
 -- RPC для запросов к matches по player_id (UUID в теле запроса — без 400 от PostgREST).
 -- Выполни в Supabase → SQL Editor.
 
+-- Колонка: кто ввёл счёт (второй игрок должен подтвердить)
+alter table public.matches
+  add column if not exists score_submitted_by uuid references public.players(id);
+
+-- Колонка: когда матч подтверждён (для подтверждения результата)
+alter table public.matches
+  add column if not exists played_at timestamptz;
+
 -- Один PENDING-матч игрока (для лобби и опроса при поиске). UUID передаётся в теле запроса — нет 400.
 create or replace function public.get_my_pending_match(p_player_id uuid)
 returns setof public.matches
@@ -86,8 +94,78 @@ begin
 end;
 $$;
 
+-- Все сыгранные матчи (с именами игроков) для страницы «Все матчи»
+create or replace function public.get_all_played_matches()
+returns table (
+  match_id bigint,
+  player_a_name text,
+  player_b_name text,
+  score_a int,
+  score_b int,
+  result text,
+  played_at timestamptz
+)
+language sql
+security definer
+stable
+as $$
+  select
+    m.id,
+    coalesce(
+      case when pa.username is not null and pa.username <> '' then '@' || pa.username
+        else nullif(trim(coalesce(pa.first_name, '') || ' ' || coalesce(pa.last_name, '')), '')
+      end, '—'
+    )::text,
+    coalesce(
+      case when pb.username is not null and pb.username <> '' then '@' || pb.username
+        else nullif(trim(coalesce(pb.first_name, '') || ' ' || coalesce(pb.last_name, '')), '')
+      end, '—'
+    )::text,
+    m.score_a,
+    m.score_b,
+    m.result,
+    m.played_at
+  from public.matches m
+  join public.players pa on pa.id = m.player_a_id
+  join public.players pb on pb.id = m.player_b_id
+  where m.result is distinct from 'PENDING'
+  order by m.played_at desc nulls last
+  limit 200;
+$$;
+
+-- Рейтинг всех игроков (для страницы «Рейтинг»)
+create or replace function public.get_leaderboard()
+returns table (
+  rank bigint,
+  player_id uuid,
+  display_name text,
+  elo int,
+  matches_count bigint
+)
+language sql
+security definer
+stable
+as $$
+  select
+    row_number() over (order by p.elo desc nulls last, p.id)::bigint,
+    p.id,
+    coalesce(
+      case when p.username is not null and p.username <> '' then '@' || p.username
+        else nullif(trim(coalesce(p.first_name, '') || ' ' || coalesce(p.last_name, '')), '')
+      end, '—'
+    )::text,
+    p.elo,
+    (select count(*)::bigint from public.matches m
+     where (m.player_a_id = p.id or m.player_b_id = p.id) and m.result is distinct from 'PENDING')
+  from public.players p
+  order by p.elo desc nulls last, p.id
+  limit 500;
+$$;
+
 -- Разрешить anon вызывать RPC
 grant execute on function public.get_my_pending_match(uuid) to anon;
 grant execute on function public.get_my_matches_count(uuid) to anon;
 grant execute on function public.submit_match_score(text, uuid, int, int) to anon, authenticated;
 grant execute on function public.confirm_match_result(text, uuid) to anon;
+grant execute on function public.get_all_played_matches() to anon;
+grant execute on function public.get_leaderboard() to anon;
