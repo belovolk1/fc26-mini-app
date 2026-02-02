@@ -953,7 +953,7 @@ function App() {
         const { data: opp } = await supabase.from('players').select('username, first_name, last_name').eq('id', oppId).single()
         const name = opp ? (opp.username ? `@${opp.username}` : [opp.first_name, opp.last_name].filter(Boolean).join(' ') || t.guestName) : t.guestName
         setOpponentName(name)
-        setOpponentUsername(opp?.username ?? null)
+        setOpponentUsername(opp?.username?.trim() ? opp.username.trim() : null)
         setSearchStatus('in_lobby')
       }
     }
@@ -976,7 +976,7 @@ function App() {
     const { data: opp } = await supabase.from('players').select('username, first_name, last_name').eq('id', oppId).single()
     const name = opp ? (opp.username ? `@${opp.username}` : [opp.first_name, opp.last_name].filter(Boolean).join(' ') || t.guestName) : t.guestName
     setOpponentName(name)
-    setOpponentUsername(opp?.username ?? null)
+    setOpponentUsername(opp?.username?.trim() ? opp.username.trim() : null)
     setSearchStatus('in_lobby')
   }
 
@@ -1855,25 +1855,28 @@ function App() {
                   {t.ladderLobbyVs.replace('{name}', opponentName)}
                 </p>
                 <p className="panel-text small">
-                  {opponentUsername ? (
-                    <a
-                      href={`https://t.me/${opponentUsername.replace(/^@/, '')}`}
-                      className="link-button"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={(e) => {
-                        const openLink = (tg as { openTelegramLink?: (u: string) => void })?.openTelegramLink
-                        if (openLink) {
-                          e.preventDefault()
-                          openLink((e.currentTarget as HTMLAnchorElement).href)
-                        }
-                      }}
-                    >
-                      {t.ladderMessageOpponent}
-                    </a>
-                  ) : (
-                    <span className="panel-text-muted">{t.ladderMessageOpponent}</span>
-                  )}
+                  {(() => {
+                    const linkUsername = (opponentUsername?.trim() || (typeof opponentName === 'string' && opponentName.startsWith('@') ? opponentName.slice(1).trim() : null)) || null
+                    return linkUsername ? (
+                      <a
+                        href={`https://t.me/${linkUsername.replace(/^@/, '')}`}
+                        className="link-button"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => {
+                          const openLink = (tg as { openTelegramLink?: (u: string) => void })?.openTelegramLink
+                          if (openLink) {
+                            e.preventDefault()
+                            openLink((e.currentTarget as HTMLAnchorElement).href)
+                          }
+                        }}
+                      >
+                        {t.ladderMessageOpponent}
+                      </a>
+                    ) : (
+                      <span className="panel-text-muted">{t.ladderMessageOpponent}</span>
+                    )
+                  })()}
                 </p>
 
                 {currentMatch.score_submitted_by == null && (
