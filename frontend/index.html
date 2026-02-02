@@ -11,9 +11,10 @@
     <div id="root"></div>
     <script>
       (function() {
-        var q = window.location.search, h = window.location.hash;
-        if ((q && q.indexOf('id=') !== -1) || (h && h.indexOf('id=') !== -1)) {
-          try { sessionStorage.setItem('tg_redirect', q || h.slice(1)); } catch (e) {}
+        var q = window.location.search.slice(1), h = window.location.hash.slice(1);
+        var params = q || h || '';
+        if (params && (params.indexOf('id=') !== -1 || params.indexOf('user_id=') !== -1)) {
+          try { sessionStorage.setItem('tg_redirect', params); } catch (e) {}
         }
       })();
     </script>

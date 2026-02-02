@@ -437,7 +437,32 @@ function App() {
   const widgetContainerRef = useRef<HTMLDivElement>(null)
 
   const tg = window.Telegram?.WebApp
-  const [widgetUser, setWidgetUser] = useState<TelegramUser | null>(() => parseWidgetRedirect() || getStoredWidgetUser())
+  
+  // Парсим редирект один раз при загрузке (до первого рендера)
+  const parsedRedirectRef = useRef<TelegramUser | null>(null)
+  if (parsedRedirectRef.current === null) {
+    const parsed = parseWidgetRedirect()
+    if (parsed) {
+      console.log('[FC Area] Parsed Telegram redirect:', parsed)
+      // Сохраняем в localStorage сразу
+      try {
+        localStorage.setItem(WIDGET_USER_KEY, JSON.stringify(parsed))
+        console.log('[FC Area] Saved to localStorage')
+      } catch (e) {
+        console.error('[FC Area] Failed to save to localStorage:', e)
+      }
+      parsedRedirectRef.current = parsed
+    } else {
+      const hash = window.location.hash?.slice(1)
+      const search = window.location.search?.slice(1)
+      const saved = sessionStorage.getItem(TG_REDIRECT_KEY)
+      console.log('[FC Area] No redirect params found. URL hash:', hash, 'search:', search, 'saved:', saved)
+    }
+  }
+  
+  const [widgetUser, setWidgetUser] = useState<TelegramUser | null>(() => {
+    return parsedRedirectRef.current || getStoredWidgetUser()
+  })
   const [cameFromTelegram, setCameFromTelegram] = useState(false)
 
   useEffect(() => {
@@ -446,18 +471,18 @@ function App() {
     tg.expand()
   }, [tg])
 
-  // Сохраняем пользователя из редиректа в localStorage и очищаем URL / sessionStorage
+  // Если был редирект — очищаем URL/sessionStorage и переключаемся на профиль
   useEffect(() => {
-    const parsed = parseWidgetRedirect()
-    if (parsed) {
-      setStoredWidgetUser(parsed)
-      setWidgetUser(parsed)
+    if (parsedRedirectRef.current) {
+      setWidgetUser(parsedRedirectRef.current)
       setActiveView('profile')
       setCameFromTelegram(false)
       try {
         sessionStorage.removeItem(TG_REDIRECT_KEY)
       } catch (_) {}
       window.history.replaceState(null, '', window.location.pathname)
+      // Очищаем ref чтобы не обрабатывать повторно
+      parsedRedirectRef.current = null
     } else if (
       typeof document !== 'undefined' &&
       document.referrer &&
@@ -507,6 +532,15 @@ function App() {
   }, [showWidget])
 
   const user = tg?.initDataUnsafe?.user ?? widgetUser
+  
+  // Отладка: логируем состояние пользователя
+  useEffect(() => {
+    if (user) {
+      console.log('[FC Area] User set:', { id: user.id, username: user.username, from: tg ? 'WebApp' : 'widget' })
+    } else {
+      console.log('[FC Area] No user. tg:', !!tg, 'widgetUser:', widgetUser)
+    }
+  }, [user, tg, widgetUser])
 
   // авто-выбор языка по Telegram, если ещё не меняли вручную
   useEffect(() => {
