@@ -103,6 +103,8 @@ const messages: Record<
     ratingWinRate: string
     ratingBack: string
     playerProfileTitle: string
+    profileRankLevel: string
+    profileRankElite: string
     profileAvatar: string
     profileCountry: string
     profileSave: string
@@ -228,6 +230,8 @@ const messages: Record<
     ratingWinRate: 'W%',
     ratingBack: 'Back to rating',
     playerProfileTitle: 'Player profile',
+    profileRankLevel: 'Level {n}',
+    profileRankElite: 'Elite',
     profileAvatar: 'Avatar',
     profileCountry: 'Country',
     profileSave: 'Save profile',
@@ -352,6 +356,8 @@ const messages: Record<
     ratingWinRate: 'V%',
     ratingBack: 'Înapoi la clasament',
     playerProfileTitle: 'Profil jucător',
+    profileRankLevel: 'Nivel {n}',
+    profileRankElite: 'Elită',
     profileAvatar: 'Avatar',
     profileCountry: 'Țara',
     profileSave: 'Salvează profilul',
@@ -476,6 +482,8 @@ const messages: Record<
     ratingWinRate: 'Винрейт %',
     ratingBack: 'Назад к рейтингу',
     playerProfileTitle: 'Профиль игрока',
+    profileRankLevel: 'Уровень {n}',
+    profileRankElite: 'Элита',
     profileAvatar: 'Аватар',
     profileCountry: 'Страна',
     profileSave: 'Сохранить профиль',
@@ -589,6 +597,21 @@ function getStoredWidgetUser(): TelegramUser | null {
 function setStoredWidgetUser(user: TelegramUser | null) {
   if (user) localStorage.setItem(WIDGET_USER_KEY, JSON.stringify(user))
   else localStorage.removeItem(WIDGET_USER_KEY)
+}
+
+/** Ранг по ELO: Level 1 (1–800) … Level 9 (1851–2000), Level 10 = Elite (2001+). */
+function getRankFromElo(elo: number | null): { level: number; isElite: boolean } | null {
+  if (elo == null || elo < 1) return null
+  if (elo >= 2001) return { level: 10, isElite: true }
+  if (elo <= 800) return { level: 1, isElite: false }
+  if (elo <= 950) return { level: 2, isElite: false }
+  if (elo <= 1100) return { level: 3, isElite: false }
+  if (elo <= 1250) return { level: 4, isElite: false }
+  if (elo <= 1400) return { level: 5, isElite: false }
+  if (elo <= 1550) return { level: 6, isElite: false }
+  if (elo <= 1700) return { level: 7, isElite: false }
+  if (elo <= 1850) return { level: 8, isElite: false }
+  return { level: 9, isElite: false }
 }
 
 function App() {
@@ -1538,6 +1561,14 @@ function App() {
                     <div className="profile-rank-card">
                       <span className="profile-rank-badge">#{selectedPlayerRow.rank}</span>
                       <span className="profile-elo-big">{selectedPlayerRow.elo ?? '—'}</span>
+                      {(() => {
+                        const rank = getRankFromElo(selectedPlayerRow.elo ?? null)
+                        return rank ? (
+                          <span className="profile-rank-level">
+                            {rank.isElite ? `${t.profileRankElite} 🔥` : t.profileRankLevel.replace('{n}', String(rank.level))}
+                          </span>
+                        ) : null
+                      })()}
                       <p className="profile-matches-summary">
                         {selectedPlayerRow.matches_count} {t.profileMatchesWins.replace('{pct}', selectedPlayerRow.win_rate != null ? String(selectedPlayerRow.win_rate) : '0')}
                       </p>
@@ -1719,6 +1750,14 @@ function App() {
                             #{myProfileStats?.rank ?? '—'}
                           </span>
                           <span className="profile-elo-big">{myProfileStats?.elo ?? elo ?? '—'}</span>
+                          {(() => {
+                            const rank = getRankFromElo(myProfileStats?.elo ?? elo ?? null)
+                            return rank ? (
+                              <span className="profile-rank-level">
+                                {rank.isElite ? `${t.profileRankElite} 🔥` : t.profileRankLevel.replace('{n}', String(rank.level))}
+                              </span>
+                            ) : null
+                          })()}
                           <p className="profile-matches-summary">
                             {myProfileStats?.matches_count ?? matchesCount ?? 0} {t.profileMatchesWins.replace('{pct}', myProfileStats?.win_rate != null ? String(myProfileStats.win_rate) : '0')}
                           </p>
@@ -1929,13 +1968,9 @@ function App() {
             )}
 
             {user && playerId && searchStatus === 'idle' && (
-              <>
-                <button type="button" className="primary-button" onClick={startSearch}>
-                  {t.ladderSearchButton}
-                </button>
-                <p className="panel-hint">{t.ladderHint}</p>
-                <p className="panel-hint">{t.ladderTwoPlayersHint}</p>
-              </>
+              <button type="button" className="primary-button" onClick={startSearch}>
+                {t.ladderSearchButton}
+              </button>
             )}
 
             {user && searchStatus === 'searching' && (

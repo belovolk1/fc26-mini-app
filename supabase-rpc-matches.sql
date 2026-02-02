@@ -16,6 +16,9 @@ alter table public.players
   add column if not exists country_code text;
 alter table public.players
   add column if not exists display_name text;
+-- ELO рейтинг (классическая формула с переменным K)
+alter table public.players
+  add column if not exists elo int default 1200;
 
 -- Один PENDING-матч игрока (для лобби и опроса при поиске). UUID передаётся в теле запроса — нет 400.
 create or replace function public.get_my_pending_match(p_player_id uuid)
@@ -78,8 +81,9 @@ end;
 $$;
 
 -- Подтвердить результат матча (второй игрок согласен со счётом). p_match_id: text.
+-- После подтверждения пересчитывает ELO обоих игроков по классической формуле с переменным K:
+-- 0–10 матчей → K=80, 11–30 → K=60, 31–100 → K=40, 100+ → K=30.
 -- Возвращает null при успехе, иначе текст ошибки.
--- Удаляем обе версии, чтобы не было неоднозначности при вызове (frontend передаёт match_id как string)
 drop function if exists public.confirm_match_result(bigint, uuid);
 drop function if exists public.confirm_match_result(text, uuid);
 create or replace function public.confirm_match_result(p_match_id text, p_player_id uuid)
@@ -88,21 +92,38 @@ language plpgsql
 security definer
 as $$
 declare
+  v_match record;
   v_score_a int;
   v_score_b int;
   v_result text;
   v_updated int;
+  v_elo_a int;
+  v_elo_b int;
+  v_matches_a bigint;
+  v_matches_b bigint;
+  v_k_a int;
+  v_k_b int;
+  v_expected_a numeric;
+  v_expected_b numeric;
+  v_score_actual_a numeric;
+  v_score_actual_b numeric;
+  v_new_elo_a int;
+  v_new_elo_b int;
+  v_default_elo int := 1200;
 begin
-  select score_a, score_b into v_score_a, v_score_b
+  select id, player_a_id, player_b_id, score_a, score_b into v_match
   from public.matches
   where id::text = p_match_id and result = 'PENDING' and score_submitted_by is not null
     and (player_a_id = p_player_id or player_b_id = p_player_id);
   if not found then
     return 'Match not found or you are not the opponent who must confirm';
   end if;
+  v_score_a := v_match.score_a;
+  v_score_b := v_match.score_b;
   if v_score_a > v_score_b then v_result := 'A_WIN';
   elsif v_score_b > v_score_a then v_result := 'B_WIN';
   else v_result := 'DRAW'; end if;
+
   update public.matches
   set result = v_result, played_at = coalesce(played_at, now())
   where id::text = p_match_id and result = 'PENDING';
@@ -110,6 +131,46 @@ begin
   if v_updated = 0 then
     return 'Could not update match';
   end if;
+
+  -- ELO: текущий рейтинг (или 1200 для новичков)
+  select coalesce(elo, v_default_elo) into v_elo_a from public.players where id = v_match.player_a_id;
+  select coalesce(elo, v_default_elo) into v_elo_b from public.players where id = v_match.player_b_id;
+  v_elo_a := coalesce(v_elo_a, v_default_elo);
+  v_elo_b := coalesce(v_elo_b, v_default_elo);
+
+  -- Количество подтверждённых матчей (уже включая этот)
+  select count(*)::bigint into v_matches_a from public.matches
+  where (player_a_id = v_match.player_a_id or player_b_id = v_match.player_a_id) and result is distinct from 'PENDING';
+  select count(*)::bigint into v_matches_b from public.matches
+  where (player_a_id = v_match.player_b_id or player_b_id = v_match.player_b_id) and result is distinct from 'PENDING';
+
+  -- K по числу матчей: 0–10 → 80, 11–30 → 60, 31–100 → 40, 100+ → 30
+  v_k_a := case when v_matches_a <= 10 then 80 when v_matches_a <= 30 then 60 when v_matches_a <= 100 then 40 else 30 end;
+  v_k_b := case when v_matches_b <= 10 then 80 when v_matches_b <= 30 then 60 when v_matches_b <= 100 then 40 else 30 end;
+
+  -- Ожидаемый счёт (классическая формула): E_A = 1 / (1 + 10^((R_B - R_A)/400))
+  v_expected_a := 1.0 / (1.0 + power(10, (v_elo_b - v_elo_a) / 400.0));
+  v_expected_b := 1.0 - v_expected_a;
+
+  -- Фактический счёт: победа 1, ничья 0.5, поражение 0
+  if v_result = 'A_WIN' then
+    v_score_actual_a := 1; v_score_actual_b := 0;
+  elsif v_result = 'B_WIN' then
+    v_score_actual_a := 0; v_score_actual_b := 1;
+  else
+    v_score_actual_a := 0.5; v_score_actual_b := 0.5;
+  end if;
+
+  v_new_elo_a := round(v_elo_a + v_k_a * (v_score_actual_a - v_expected_a))::int;
+  v_new_elo_b := round(v_elo_b + v_k_b * (v_score_actual_b - v_expected_b))::int;
+
+  -- Не опускаем ниже 0
+  v_new_elo_a := greatest(v_new_elo_a, 0);
+  v_new_elo_b := greatest(v_new_elo_b, 0);
+
+  update public.players set elo = v_new_elo_a where id = v_match.player_a_id;
+  update public.players set elo = v_new_elo_b where id = v_match.player_b_id;
+
   return null;
 exception when others then
   return SQLERRM;
