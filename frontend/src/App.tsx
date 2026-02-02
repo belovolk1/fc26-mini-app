@@ -862,14 +862,12 @@ function App() {
 
     setSavingMatch(true)
     setMatchMessage(null)
-    const { error } = await supabase
-      .from('matches')
-      .update({
-        score_a: scoreAVal,
-        score_b: scoreBVal,
-        score_submitted_by: playerId,
-      })
-      .eq('id', currentMatch.id)
+    const { error } = await supabase.rpc('submit_match_score', {
+      p_match_id: Number(currentMatch.id),
+      p_player_id: playerId,
+      p_score_a: scoreAVal,
+      p_score_b: scoreBVal,
+    })
 
     setSavingMatch(false)
     if (error) {
@@ -884,21 +882,13 @@ function App() {
 
   const confirmLobbyResult = async () => {
     if (!currentMatch || !playerId) return
-    const sa = currentMatch.score_a ?? 0
-    const sb = currentMatch.score_b ?? 0
-    let result: 'A_WIN' | 'B_WIN' | 'DRAW' = 'DRAW'
-    if (sa > sb) result = 'A_WIN'
-    else if (sb > sa) result = 'B_WIN'
 
     setSavingMatch(true)
     setMatchMessage(null)
-    const { error } = await supabase
-      .from('matches')
-      .update({
-        result,
-        played_at: new Date().toISOString(),
-      })
-      .eq('id', currentMatch.id)
+    const { error } = await supabase.rpc('confirm_match_result', {
+      p_match_id: Number(currentMatch.id),
+      p_player_id: playerId,
+    })
 
     setSavingMatch(false)
     if (error) {
