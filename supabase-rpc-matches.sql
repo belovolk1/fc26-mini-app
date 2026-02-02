@@ -9,11 +9,13 @@ alter table public.matches
 alter table public.matches
   add column if not exists played_at timestamptz;
 
--- Профиль игрока: аватар (URL) и страна (код, напр. RU, GB)
+-- Профиль игрока: аватар (URL), страна (код), никнейм (редактируемый; данные Telegram хранятся для админа)
 alter table public.players
   add column if not exists avatar_url text;
 alter table public.players
   add column if not exists country_code text;
+alter table public.players
+  add column if not exists display_name text;
 
 -- Один PENDING-матч игрока (для лобби и опроса при поиске). UUID передаётся в теле запроса — нет 400.
 create or replace function public.get_my_pending_match(p_player_id uuid)
@@ -183,9 +185,11 @@ as $$
       p.avatar_url,
       p.country_code,
       coalesce(
+        nullif(trim(p.display_name), ''),
         case when p.username is not null and p.username <> '' then '@' || p.username
           else nullif(trim(coalesce(p.first_name, '') || ' ' || coalesce(p.last_name, '')), '')
-        end, '—'
+        end,
+        '—'
       )::text as display_name,
       (select count(*)::bigint from public.matches m
        where (m.player_a_id = p.id or m.player_b_id = p.id) and m.result is distinct from 'PENDING') as matches_count,
@@ -251,9 +255,11 @@ as $$
       p.avatar_url,
       p.country_code,
       coalesce(
+        nullif(trim(p.display_name), ''),
         case when p.username is not null and p.username <> '' then '@' || p.username
           else nullif(trim(coalesce(p.first_name, '') || ' ' || coalesce(p.last_name, '')), '')
-        end, '—'
+        end,
+        '—'
       )::text as display_name,
       (select count(*)::bigint from public.matches m
        where (m.player_a_id = p.id or m.player_b_id = p.id) and m.result is distinct from 'PENDING') as matches_count,
