@@ -31,7 +31,8 @@ $$;
 
 -- Отправить счёт матча (игрок ввёл счёт, ждём подтверждения соперника).
 -- Возвращает null при успехе, иначе текст ошибки.
--- DROP нужен, если меняем тип возврата (было void, стало text).
+-- Удаляем обе версии, чтобы осталась только одна (p_match_id text).
+drop function if exists public.submit_match_score(bigint, uuid, integer, integer);
 drop function if exists public.submit_match_score(text, uuid, integer, integer);
 create or replace function public.submit_match_score(
   p_match_id text,
