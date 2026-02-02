@@ -953,6 +953,7 @@ function App() {
         const { data: opp } = await supabase.from('players').select('username, first_name, last_name').eq('id', oppId).single()
         const name = opp ? (opp.username ? `@${opp.username}` : [opp.first_name, opp.last_name].filter(Boolean).join(' ') || t.guestName) : t.guestName
         setOpponentName(name)
+        setOpponentUsername(opp?.username ?? null)
         setSearchStatus('in_lobby')
       }
     }
