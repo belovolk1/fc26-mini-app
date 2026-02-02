@@ -9,6 +9,12 @@ alter table public.matches
 alter table public.matches
   add column if not exists played_at timestamptz;
 
+-- Профиль игрока: аватар (URL) и страна (код, напр. RU, GB)
+alter table public.players
+  add column if not exists avatar_url text;
+alter table public.players
+  add column if not exists country_code text;
+
 -- Один PENDING-матч игрока (для лобби и опроса при поиске). UUID передаётся в теле запроса — нет 400.
 create or replace function public.get_my_pending_match(p_player_id uuid)
 returns setof public.matches
@@ -153,6 +159,8 @@ returns table (
   rank bigint,
   player_id uuid,
   display_name text,
+  avatar_url text,
+  country_code text,
   elo int,
   matches_count bigint,
   wins bigint,
@@ -170,6 +178,8 @@ as $$
     select
       p.id,
       p.elo,
+      p.avatar_url,
+      p.country_code,
       coalesce(
         case when p.username is not null and p.username <> '' then '@' || p.username
           else nullif(trim(coalesce(p.first_name, '') || ' ' || coalesce(p.last_name, '')), '')
@@ -193,6 +203,8 @@ as $$
     row_number() over (order by s.elo desc nulls last, s.id)::bigint,
     s.id,
     s.display_name,
+    s.avatar_url,
+    s.country_code,
     s.elo,
     s.matches_count,
     s.wins,
@@ -208,12 +220,15 @@ as $$
   limit 500;
 $$;
 
--- Профиль одного игрока по ID (для открытия в новой вкладке по #player=uuid)
+-- Профиль одного игрока по ID
+drop function if exists public.get_player_profile(uuid);
 create or replace function public.get_player_profile(p_player_id uuid)
 returns table (
   rank bigint,
   player_id uuid,
   display_name text,
+  avatar_url text,
+  country_code text,
   elo int,
   matches_count bigint,
   wins bigint,
@@ -231,6 +246,8 @@ as $$
     select
       p.id,
       p.elo,
+      p.avatar_url,
+      p.country_code,
       coalesce(
         case when p.username is not null and p.username <> '' then '@' || p.username
           else nullif(trim(coalesce(p.first_name, '') || ' ' || coalesce(p.last_name, '')), '')
@@ -261,6 +278,8 @@ as $$
     r.rk,
     r.id as player_id,
     r.display_name,
+    r.avatar_url,
+    r.country_code,
     r.elo,
     r.matches_count,
     r.wins,

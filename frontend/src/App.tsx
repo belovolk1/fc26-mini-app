@@ -108,6 +108,12 @@ const messages: Record<
     ratingWinRate: string
     ratingBack: string
     playerProfileTitle: string
+    profileAvatar: string
+    profileCountry: string
+    profileSave: string
+    profileAvatarUrlPlaceholder: string
+    profileStatsSummary: string
+    profileMatchesWins: string
     guestName: string
   }
 > = {
@@ -225,6 +231,12 @@ const messages: Record<
     ratingWinRate: 'W%',
     ratingBack: 'Back to rating',
     playerProfileTitle: 'Player profile',
+    profileAvatar: 'Avatar',
+    profileCountry: 'Country',
+    profileSave: 'Save profile',
+    profileAvatarUrlPlaceholder: 'Avatar image URL',
+    profileStatsSummary: 'Statistics',
+    profileMatchesWins: 'matches, {pct}% wins',
     guestName: 'Guest',
   },
   ro: {
@@ -341,6 +353,12 @@ const messages: Record<
     ratingWinRate: 'V%',
     ratingBack: 'Înapoi la clasament',
     playerProfileTitle: 'Profil jucător',
+    profileAvatar: 'Avatar',
+    profileCountry: 'Țara',
+    profileSave: 'Salvează profilul',
+    profileAvatarUrlPlaceholder: 'URL imagine avatar',
+    profileStatsSummary: 'Statistici',
+    profileMatchesWins: 'meciuri, {pct}% victorii',
     guestName: 'Vizitator',
   },
   ru: {
@@ -457,11 +475,35 @@ const messages: Record<
     ratingWinRate: 'Винрейт %',
     ratingBack: 'Назад к рейтингу',
     playerProfileTitle: 'Профиль игрока',
+    profileAvatar: 'Аватар',
+    profileCountry: 'Страна',
+    profileSave: 'Сохранить профиль',
+    profileAvatarUrlPlaceholder: 'URL изображения аватара',
+    profileStatsSummary: 'Статистика',
+    profileMatchesWins: 'матчей, {pct}% побед',
     guestName: 'Гость',
   },
 }
 
 const WIDGET_USER_KEY = 'fc_area_telegram_user'
+
+const COUNTRIES: { code: string; name: string; flag: string }[] = [
+  { code: 'RU', name: 'Russia', flag: '🇷🇺' },
+  { code: 'GB', name: 'United Kingdom', flag: '🇬🇧' },
+  { code: 'RO', name: 'Romania', flag: '🇷🇴' },
+  { code: 'DE', name: 'Germany', flag: '🇩🇪' },
+  { code: 'FR', name: 'France', flag: '🇫🇷' },
+  { code: 'UA', name: 'Ukraine', flag: '🇺🇦' },
+  { code: 'ES', name: 'Spain', flag: '🇪🇸' },
+  { code: 'IT', name: 'Italy', flag: '🇮🇹' },
+  { code: 'PL', name: 'Poland', flag: '🇵🇱' },
+  { code: 'BR', name: 'Brazil', flag: '🇧🇷' },
+  { code: 'US', name: 'United States', flag: '🇺🇸' },
+  { code: 'KZ', name: 'Kazakhstan', flag: '🇰🇿' },
+  { code: 'BY', name: 'Belarus', flag: '🇧🇾' },
+  { code: 'MD', name: 'Moldova', flag: '🇲🇩' },
+  { code: 'OTHER', name: 'Other', flag: '🌐' },
+]
 
 type TelegramUser = {
   id: number
@@ -613,6 +655,8 @@ function App() {
     rank: number
     player_id: string
     display_name: string | null
+    avatar_url?: string | null
+    country_code?: string | null
     elo: number | null
     matches_count: number
     wins: number
@@ -626,6 +670,9 @@ function App() {
   const [leaderboardLoading, setLeaderboardLoading] = useState(false)
   const [selectedPlayerRow, setSelectedPlayerRow] = useState<LeaderboardRow | null>(null)
   const [profileFromHashLoading, setProfileFromHashLoading] = useState(false)
+  const [myAvatarUrl, setMyAvatarUrl] = useState<string>('')
+  const [myCountryCode, setMyCountryCode] = useState<string>('')
+  const [profileSaveLoading, setProfileSaveLoading] = useState(false)
   const widgetContainerRef = useRef<HTMLDivElement>(null)
 
   const tg = window.Telegram?.WebApp
@@ -821,6 +868,9 @@ function App() {
 
       setPlayerId((upserted as { id: string })?.id ?? null)
       setElo((upserted as { elo?: number })?.elo ?? null)
+      const u = upserted as { avatar_url?: string | null; country_code?: string | null }
+      setMyAvatarUrl(u?.avatar_url ?? '')
+      setMyCountryCode(u?.country_code ?? '')
 
       // считаем подтверждённые матчи через RPC (UUID в теле — без 400)
       const { data: count, error: countErr } = await supabase.rpc('get_my_matches_count', { p_player_id: upserted.id })
@@ -1006,6 +1056,20 @@ function App() {
       else setLeaderboard([])
     })
   }, [activeView])
+
+  const saveProfileAvatarCountry = async () => {
+    if (!playerId) return
+    setProfileSaveLoading(true)
+    const { error } = await supabase
+      .from('players')
+      .update({
+        avatar_url: myAvatarUrl.trim() || null,
+        country_code: myCountryCode || null,
+      })
+      .eq('id', playerId)
+    setProfileSaveLoading(false)
+    if (error) console.error('Failed to save profile', error)
+  }
 
   const opponentId = currentMatch
     ? currentMatch.player_a_id === playerId
@@ -1276,7 +1340,7 @@ function App() {
             {profileFromHashLoading && !selectedPlayerRow ? (
               <p className="panel-text">{t.ratingLoading}</p>
             ) : selectedPlayerRow ? (
-              <>
+              <div className="profile-page">
                 <button
                   type="button"
                   className="link-button rating-back-btn"
@@ -1288,47 +1352,69 @@ function App() {
                 >
                   ← {t.ratingBack}
                 </button>
-                <h3 className="panel-title">{t.playerProfileTitle}</h3>
-                <p className="panel-text player-profile-name">{selectedPlayerRow.display_name ?? '—'}</p>
-                <dl className="player-stats-dl">
-                  <div className="player-stats-row">
-                    <dt>{t.ratingRank}</dt>
-                    <dd>{selectedPlayerRow.rank}</dd>
+                <div className="profile-page-layout">
+                  <aside className="profile-sidebar">
+                    <div className="profile-avatar-wrap">
+                      {selectedPlayerRow.avatar_url ? (
+                        <img src={selectedPlayerRow.avatar_url} alt="" className="profile-avatar-img" />
+                      ) : (
+                        <div className="profile-avatar-placeholder">
+                          {(selectedPlayerRow.display_name ?? '?').charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                    </div>
+                    <h2 className="profile-display-name">{selectedPlayerRow.display_name ?? '—'}</h2>
+                    {selectedPlayerRow.country_code && (
+                      <p className="profile-country-badge">
+                        {COUNTRIES.find((c) => c.code === selectedPlayerRow!.country_code)?.flag ?? '🌐'}{' '}
+                        {COUNTRIES.find((c) => c.code === selectedPlayerRow!.country_code)?.name ?? selectedPlayerRow.country_code}
+                      </p>
+                    )}
+                  </aside>
+                  <div className="profile-main">
+                    <div className="profile-rank-card">
+                      <span className="profile-rank-badge">#{selectedPlayerRow.rank}</span>
+                      <span className="profile-elo-big">{selectedPlayerRow.elo ?? '—'}</span>
+                      <p className="profile-matches-summary">
+                        {selectedPlayerRow.matches_count} {t.profileMatchesWins.replace('{pct}', selectedPlayerRow.win_rate != null ? String(selectedPlayerRow.win_rate) : '0')}
+                      </p>
+                    </div>
+                    <h4 className="profile-stats-heading">{t.profileStatsSummary}</h4>
+                    <div className="profile-stats-grid">
+                      <div className="profile-stat-card">
+                        <span className="profile-stat-value">{selectedPlayerRow.matches_count}</span>
+                        <span className="profile-stat-label">{t.ratingMatches}</span>
+                      </div>
+                      <div className="profile-stat-card">
+                        <span className="profile-stat-value">{selectedPlayerRow.wins}</span>
+                        <span className="profile-stat-label">{t.ratingWins}</span>
+                      </div>
+                      <div className="profile-stat-card">
+                        <span className="profile-stat-value">{selectedPlayerRow.draws}</span>
+                        <span className="profile-stat-label">{t.ratingDraws}</span>
+                      </div>
+                      <div className="profile-stat-card">
+                        <span className="profile-stat-value">{selectedPlayerRow.losses}</span>
+                        <span className="profile-stat-label">{t.ratingLosses}</span>
+                      </div>
+                      <div className="profile-stat-card">
+                        <span className="profile-stat-value">{selectedPlayerRow.goals_for}</span>
+                        <span className="profile-stat-label">{t.ratingGoalsFor}</span>
+                      </div>
+                      <div className="profile-stat-card">
+                        <span className="profile-stat-value">{selectedPlayerRow.goals_against}</span>
+                        <span className="profile-stat-label">{t.ratingGoalsAgainst}</span>
+                      </div>
+                      <div className="profile-stat-card profile-stat-card-accent">
+                        <span className="profile-stat-value">
+                          {selectedPlayerRow.win_rate != null ? `${selectedPlayerRow.win_rate}%` : '—'}
+                        </span>
+                        <span className="profile-stat-label">{t.ratingWinRate}</span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="player-stats-row">
-                    <dt>{t.ratingElo}</dt>
-                    <dd>{selectedPlayerRow.elo ?? '—'}</dd>
-                  </div>
-                  <div className="player-stats-row">
-                    <dt>{t.ratingMatches}</dt>
-                    <dd>{selectedPlayerRow.matches_count}</dd>
-                  </div>
-                  <div className="player-stats-row">
-                    <dt>{t.ratingWins}</dt>
-                    <dd>{selectedPlayerRow.wins}</dd>
-                  </div>
-                  <div className="player-stats-row">
-                    <dt>{t.ratingDraws}</dt>
-                    <dd>{selectedPlayerRow.draws}</dd>
-                  </div>
-                  <div className="player-stats-row">
-                    <dt>{t.ratingLosses}</dt>
-                    <dd>{selectedPlayerRow.losses}</dd>
-                  </div>
-                  <div className="player-stats-row">
-                    <dt>{t.ratingGoalsFor}</dt>
-                    <dd>{selectedPlayerRow.goals_for}</dd>
-                  </div>
-                  <div className="player-stats-row">
-                    <dt>{t.ratingGoalsAgainst}</dt>
-                    <dd>{selectedPlayerRow.goals_against}</dd>
-                  </div>
-                  <div className="player-stats-row">
-                    <dt>{t.ratingWinRate}</dt>
-                    <dd>{selectedPlayerRow.win_rate != null ? `${selectedPlayerRow.win_rate}%` : '—'}</dd>
-                  </div>
-                </dl>
-              </>
+                </div>
+              </div>
             ) : (
               <>
                 <h3 className="panel-title">{t.ratingHeader}</h3>
@@ -1416,6 +1502,43 @@ function App() {
                 {matchesCount === null ? '—' : matchesCount}
               </span>
             </div>
+
+            {user && playerId && (
+              <div className="profile-edit-section">
+                <h4 className="panel-subtitle">{t.profileAvatar}</h4>
+                <div className="form-row">
+                  <label className="form-label">{t.profileAvatarUrlPlaceholder}</label>
+                  <input
+                    type="url"
+                    className="form-input"
+                    value={myAvatarUrl}
+                    onChange={(e) => setMyAvatarUrl(e.target.value)}
+                    placeholder="https://..."
+                  />
+                </div>
+                <h4 className="panel-subtitle">{t.profileCountry}</h4>
+                <select
+                  className="form-input profile-country-select"
+                  value={myCountryCode}
+                  onChange={(e) => setMyCountryCode(e.target.value)}
+                >
+                  <option value="">—</option>
+                  {COUNTRIES.map((c) => (
+                    <option key={c.code} value={c.code}>
+                      {c.flag} {c.name}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  className="primary-button"
+                  disabled={profileSaveLoading}
+                  onClick={saveProfileAvatarCountry}
+                >
+                  {profileSaveLoading ? '…' : t.profileSave}
+                </button>
+              </div>
+            )}
 
             <div className="profile-telegram">
               <h4 className="panel-subtitle">{t.profileTelegramTitle}</h4>
