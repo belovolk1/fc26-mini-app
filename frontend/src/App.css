@@ -435,6 +435,12 @@
   color: #fff;
 }
 
+.profile-telegram-new-tab {
+  margin-top: 6px;
+  font-size: 0.9em;
+  color: var(--muted, #888);
+}
+
 .profile-telegram-widget iframe {
   max-width: 100%;
 }
@@ -488,6 +494,12 @@
 .profile-error {
   color: #e74c3c;
   margin: 8px 0;
+}
+
+.profile-error-rls {
+  margin-top: 4px;
+  font-size: 0.9em;
+  color: var(--muted, #888);
 }
 
 .profile-telegram-hint a {

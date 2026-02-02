@@ -32,6 +32,7 @@ const messages: Record<
     profileTelegramOrOpen: string
     profileTelegramLoginLabel: string
     profileTelegramWidgetHint: string
+    profileTelegramNewTab: string
     profileTelegramChatOnly: string
     profileTelegramMenuHint: string
     profileTelegramStep2: string
@@ -42,6 +43,7 @@ const messages: Record<
     profileLogout: string
     profileHint: string
     profileError: string
+    profileErrorRlsHint: string
     ladderHeader: string
     ladderText: string
     ladderButton: string
@@ -109,6 +111,7 @@ const messages: Record<
     profileTelegramOrOpen: 'Or open the bot in Telegram:',
     profileTelegramLoginLabel: 'Log in with Telegram to link your profile and see stats here:',
     profileTelegramWidgetHint: 'Use the blue "Log in with Telegram" button above (from Telegram). Do NOT click "Open in Telegram" — that only opens the bot chat and does not log you in.',
+    profileTelegramNewTab: 'Opens in a new tab. After login you\'ll return to the site there; then refresh this page or use that tab.',
     profileTelegramChatOnly: 'If the blue button only opens the bot chat and you don\'t see "Allow to log you in?", run /setdomain in BotFather and add your site domain (see below).',
     profileTelegramMenuHint: 'In the bot chat, tap the menu button (☰) or the button below the input to open the app.',
     profileTelegramStep2: 'If only the chat opened: tap the menu button (☰) next to the input, or the button below the input (e.g. "FC Area") to open the app.',
@@ -120,6 +123,7 @@ const messages: Record<
     profileHint:
       'Profile and rating are already stored in Supabase. Later we will add match history and advanced stats.',
     profileError: 'Failed to load profile. Check your connection and try again.',
+    profileErrorRlsHint: 'If the error mentions RLS or policy: run the script supabase-rls-players-matches.sql in Supabase (SQL Editor).',
     ladderHeader: 'Quick play (ladder)',
     ladderText:
       'Here will be real‑time matchmaking: game mode, queue, 40‑minute deadline and result input.',
@@ -190,6 +194,7 @@ const messages: Record<
     profileTelegramOrOpen: 'Sau deschide botul în Telegram:',
     profileTelegramLoginLabel: 'Autentifică-te cu Telegram pentru a lega profilul și a vedea statisticile aici:',
     profileTelegramWidgetHint: 'Folosește butonul albastru "Log in with Telegram" de mai sus (de la Telegram). NU apăsa "Deschide în Telegram" — acela deschide doar chat-ul cu botul și nu te autentifică.',
+    profileTelegramNewTab: 'Se deschide într-un tab nou. După login vei reveni pe site acolo; reîmprospătează această pagină sau folosește acel tab.',
     profileTelegramChatOnly: 'Dacă butonul albastru deschide doar chat-ul cu botul și nu vezi "Allow to log you in?", rulează /setdomain în BotFather și adaugă domeniul site-ului (vezi mai jos).',
     profileTelegramMenuHint: 'În chat cu botul, apasă butonul de meniu (☰) sau butonul de sub input pentru a deschide aplicația.',
     profileTelegramStep2: 'Dacă s-a deschis doar chat-ul: apasă butonul de meniu (☰) lângă câmpul de input sau butonul de sub input (ex. "FC Area") pentru a deschide aplicația.',
@@ -201,6 +206,7 @@ const messages: Record<
     profileHint:
       'Profilul și ratingul sunt deja stocate în Supabase. Mai târziu vom adăuga istoric și statistici avansate.',
     profileError: 'Profilul nu s-a putut încărca. Verifică conexiunea și încearcă din nou.',
+    profileErrorRlsHint: 'Dacă eroarea menționează RLS sau policy: rulează scriptul supabase-rls-players-matches.sql în Supabase (SQL Editor).',
     ladderHeader: 'Joc rapid (ladder)',
     ladderText:
       'Aici va fi matchmaking în timp real: mod de joc, coadă, termen de 40 de minute și introducerea rezultatului.',
@@ -271,6 +277,7 @@ const messages: Record<
     profileTelegramOrOpen: 'Или откройте бота в Telegram:',
     profileTelegramLoginLabel: 'Войдите через Telegram, чтобы привязать профиль и видеть статистику здесь:',
     profileTelegramWidgetHint: 'Нажимайте синюю кнопку «Log in with Telegram» выше (от Telegram). Не нажимайте «Открыть в Telegram» — это только ссылка на чат с ботом, она не выполняет вход.',
+    profileTelegramNewTab: 'Откроется в новой вкладке. После входа вы вернётесь на сайт там; обновите эту страницу или работайте в той вкладке.',
     profileTelegramChatOnly: 'Если при нажатии синей кнопки открывается только чат с ботом и нет окна «Разрешить вход?» — в BotFather выполните /setdomain и добавьте домен сайта (см. ниже).',
     profileTelegramMenuHint: 'В чате с ботом нажмите кнопку меню (☰) или кнопку под полем ввода, чтобы открыть приложение.',
     profileTelegramStep2: 'Если открылся только чат: нажмите кнопку меню (☰) слева от поля ввода или кнопку под полем ввода (например «FC Area») — откроется приложение.',
@@ -282,6 +289,7 @@ const messages: Record<
     profileHint:
       'Профиль и рейтинг уже хранятся в Supabase. Позже добавим историю матчей и расширенную статистику.',
     profileError: 'Не удалось загрузить профиль. Проверьте подключение и попробуйте снова.',
+    profileErrorRlsHint: 'Если в ошибке упоминается RLS или policy: выполните в Supabase (SQL Editor) скрипт supabase-rls-players-matches.sql.',
     ladderHeader: 'Быстрая игра (ладдер)',
     ladderText:
       'Здесь будет поиск соперника в реальном времени: выбор режима, очередь, дедлайн 40 минут и ввод результата.',
@@ -338,7 +346,7 @@ function parseWidgetRedirect(): TelegramUser | null {
   const hash = window.location.hash?.slice(1)
   const search = window.location.search?.slice(1)
   const params = new URLSearchParams(hash || search)
-  const id = params.get('id')
+  const id = params.get('id') || params.get('user_id')
   const first_name = params.get('first_name')
   if (!id || !first_name) return null
   const numId = parseInt(id, 10)
@@ -423,6 +431,7 @@ function App() {
     if (parsed) {
       setStoredWidgetUser(parsed)
       setWidgetUser(parsed)
+      setActiveView('profile')
       window.history.replaceState(null, '', window.location.pathname)
     }
   }, [])
@@ -436,8 +445,8 @@ function App() {
     return `https://oauth.telegram.org/auth?bot_id=${encodeURIComponent(telegramBotId.trim())}&origin=${encodeURIComponent(origin)}&request_access=write`
   }, [telegramBotId])
 
-  // Виджет «Войти через Telegram» в браузере (только когда нет WebApp и нет пользователя)
-  const showWidget = !tg && !widgetUser && activeView === 'profile'
+  // Виджет «Войти через Telegram» — показываем только если нет прямой ссылки (Bot ID), иначе виджет может вызывать перезагрузку
+  const showWidget = !tg && !widgetUser && activeView === 'profile' && !telegramLoginUrl
   useLayoutEffect(() => {
     if (!showWidget) {
       widgetContainerRef.current?.replaceChildren()
@@ -831,7 +840,10 @@ function App() {
               <p className="panel-text">{t.profileLoading}</p>
             )}
             {profileLoadError && (
-              <p className="panel-text profile-error">{t.profileError}</p>
+              <>
+                <p className="panel-text profile-error">{t.profileError}</p>
+                <p className="panel-hint profile-error-rls">{t.profileErrorRlsHint}</p>
+              </>
             )}
             <div className="panel-row">
               <span className="label">{t.profilePlayerLabel}</span>
@@ -881,15 +893,20 @@ function App() {
                   <p className="panel-text profile-browser-hint">{t.profileBrowserHint}</p>
                   <p className="panel-text profile-telegram-not">{t.profileTelegramNotConnected}</p>
                   <p className="panel-hint profile-telegram-login-label">{t.profileTelegramLoginLabel}</p>
-                  <div ref={widgetContainerRef} className="profile-telegram-widget" />
-                  {telegramLoginUrl && (
-                    <a
-                      href={telegramLoginUrl}
-                      className="telegram-login-fallback primary-button"
-                      rel="noopener noreferrer"
-                    >
-                      Log in with Telegram
-                    </a>
+                  {telegramLoginUrl ? (
+                    <>
+                      <a
+                        href={telegramLoginUrl}
+                        className="telegram-login-fallback primary-button"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Log in with Telegram
+                      </a>
+                      <p className="panel-hint profile-telegram-new-tab">{t.profileTelegramNewTab}</p>
+                    </>
+                  ) : (
+                    <div ref={widgetContainerRef} className="profile-telegram-widget" />
                   )}
                   <p className="panel-hint profile-telegram-widget-hint">{t.profileTelegramWidgetHint}</p>
                   <p className="panel-hint profile-telegram-menu-hint">
