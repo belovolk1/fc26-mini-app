@@ -863,7 +863,7 @@ function App() {
     setSavingMatch(true)
     setMatchMessage(null)
     const { error } = await supabase.rpc('submit_match_score', {
-      p_match_id: Number(currentMatch.id),
+      p_match_id: String(currentMatch.id),
       p_player_id: playerId,
       p_score_a: scoreAVal,
       p_score_b: scoreBVal,
@@ -886,7 +886,7 @@ function App() {
     setSavingMatch(true)
     setMatchMessage(null)
     const { error } = await supabase.rpc('confirm_match_result', {
-      p_match_id: Number(currentMatch.id),
+      p_match_id: String(currentMatch.id),
       p_player_id: playerId,
     })
 

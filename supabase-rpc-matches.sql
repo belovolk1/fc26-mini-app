@@ -29,9 +29,10 @@ as $$
     and (player_a_id = p_player_id or player_b_id = p_player_id);
 $$;
 
--- Отправить счёт матча (игрок ввёл счёт, ждём подтверждения соперника)
+-- Отправить счёт матча (игрок ввёл счёт, ждём подтверждения соперника).
+-- p_match_id: text — подходит и для bigint id (например "7"), и для uuid.
 create or replace function public.submit_match_score(
-  p_match_id bigint,
+  p_match_id text,
   p_player_id uuid,
   p_score_a int,
   p_score_b int
@@ -43,13 +44,13 @@ as $$
 begin
   update public.matches
   set score_a = p_score_a, score_b = p_score_b, score_submitted_by = p_player_id
-  where id = p_match_id and result = 'PENDING'
+  where id::text = p_match_id and result = 'PENDING'
     and (player_a_id = p_player_id or player_b_id = p_player_id);
 end;
 $$;
 
--- Подтвердить результат матча (второй игрок согласен со счётом)
-create or replace function public.confirm_match_result(p_match_id bigint, p_player_id uuid)
+-- Подтвердить результат матча (второй игрок согласен со счётом). p_match_id: text.
+create or replace function public.confirm_match_result(p_match_id text, p_player_id uuid)
 returns void
 language plpgsql
 security definer
@@ -61,7 +62,7 @@ declare
 begin
   select score_a, score_b into v_score_a, v_score_b
   from public.matches
-  where id = p_match_id and result = 'PENDING' and score_submitted_by is not null
+  where id::text = p_match_id and result = 'PENDING' and score_submitted_by is not null
     and (player_a_id = p_player_id or player_b_id = p_player_id);
   if not found then return; end if;
   if v_score_a > v_score_b then v_result := 'A_WIN';
@@ -69,12 +70,12 @@ begin
   else v_result := 'DRAW'; end if;
   update public.matches
   set result = v_result, played_at = now()
-  where id = p_match_id and result = 'PENDING';
+  where id::text = p_match_id and result = 'PENDING';
 end;
 $$;
 
 -- Разрешить anon вызывать RPC
 grant execute on function public.get_my_pending_match(uuid) to anon;
 grant execute on function public.get_my_matches_count(uuid) to anon;
-grant execute on function public.submit_match_score(bigint, uuid, int, int) to anon;
-grant execute on function public.confirm_match_result(bigint, uuid) to anon;
+grant execute on function public.submit_match_score(text, uuid, int, int) to anon;
+grant execute on function public.confirm_match_result(text, uuid) to anon;
