@@ -27,6 +27,7 @@ const messages: Record<
     profileTelegramUsername: string
     profileTelegramId: string
     profileTelegramNotConnected: string
+    profileBrowserHint: string
     profileTelegramOpenBtn: string
     profileTelegramOrOpen: string
     profileTelegramLoginLabel: string
@@ -100,6 +101,7 @@ const messages: Record<
     profileTelegramUsername: 'Username',
     profileTelegramId: 'Telegram ID',
     profileTelegramNotConnected: 'To see your stats here in the browser, log in with Telegram using the button below. Your profile will be linked and ELO/matches will load.',
+    profileBrowserHint: 'In the browser, your profile (Telegram, ELO, matches) only appears after you log in with the button below. In the Telegram Mini App it appears automatically.',
     profileTelegramOpenBtn: 'Open in Telegram',
     profileTelegramOrOpen: 'Or open the bot in Telegram:',
     profileTelegramLoginLabel: 'Log in with Telegram to link your profile and see stats here:',
@@ -177,6 +179,7 @@ const messages: Record<
     profileTelegramUsername: 'Username',
     profileTelegramId: 'ID Telegram',
     profileTelegramNotConnected: 'Pentru a vedea statisticile aici în browser, autentifică-te cu Telegram folosind butonul de mai jos. Profilul se va lega și se vor încărca ELO și meciurile.',
+    profileBrowserHint: 'În browser, profilul tău (Telegram, ELO, meciuri) apare doar după ce te autentifici cu butonul de mai jos. În Mini App Telegram apare automat.',
     profileTelegramOpenBtn: 'Deschide în Telegram',
     profileTelegramOrOpen: 'Sau deschide botul în Telegram:',
     profileTelegramLoginLabel: 'Autentifică-te cu Telegram pentru a lega profilul și a vedea statisticile aici:',
@@ -254,6 +257,7 @@ const messages: Record<
     profileTelegramUsername: 'Username',
     profileTelegramId: 'ID в Telegram',
     profileTelegramNotConnected: 'Чтобы видеть свою статистику здесь в браузере, войдите через Telegram кнопкой ниже. Профиль привяжется и подгрузятся ELO и матчи.',
+    profileBrowserHint: 'В браузере профиль (Telegram, ELO, матчи) показывается только после входа кнопкой ниже. В мини-приложении Telegram он показывается автоматически.',
     profileTelegramOpenBtn: 'Открыть в Telegram',
     profileTelegramOrOpen: 'Или откройте бота в Telegram:',
     profileTelegramLoginLabel: 'Войдите через Telegram, чтобы привязать профиль и видеть статистику здесь:',
@@ -853,6 +857,7 @@ function App() {
                 </>
               ) : (
                 <>
+                  <p className="panel-text profile-browser-hint">{t.profileBrowserHint}</p>
                   <p className="panel-text profile-telegram-not">{t.profileTelegramNotConnected}</p>
                   <p className="panel-hint profile-telegram-login-label">{t.profileTelegramLoginLabel}</p>
                   <div ref={widgetContainerRef} className="profile-telegram-widget" />
