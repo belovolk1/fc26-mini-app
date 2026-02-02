@@ -423,10 +423,37 @@ function setStoredWidgetUser(user: TelegramUser | null) {
   else localStorage.removeItem(WIDGET_USER_KEY)
 }
 
+/** Парсит сырую строку initData (query_id=...&user=%7B...%7D&auth_date=...&hash=...). */
+function parseInitDataString(initData: string): TelegramUser | null {
+  if (!initData?.trim()) return null
+  try {
+    const params = new URLSearchParams(initData)
+    const userStr = params.get('user')
+    if (!userStr) return null
+    const raw = decodeURIComponent(userStr)
+    const data = JSON.parse(raw) as {
+      id?: number
+      first_name?: string
+      last_name?: string
+      username?: string
+    }
+    if (typeof data.id !== 'number' || typeof data.first_name !== 'string') return null
+    return {
+      id: data.id,
+      first_name: data.first_name.trim(),
+      last_name: data.last_name?.trim() || undefined,
+      username: data.username?.trim() || undefined,
+    }
+  } catch {
+    return null
+  }
+}
+
 declare global {
   interface Window {
     Telegram?: {
       WebApp?: {
+        initData?: string
         initDataUnsafe?: {
           user?: TelegramUser
         }
@@ -515,21 +542,29 @@ function App() {
     if (!tg) return
     tg.ready()
     tg.expand()
-    // Проверяем initDataUnsafe?.user после инициализации (может быть доступен не сразу)
-    const checkUser = () => {
-      if (tg.initDataUnsafe?.user && !widgetUser) {
-        console.log('[FC Area] Found user from tg.initDataUnsafe:', tg.initDataUnsafe.user)
-        setWidgetUser(tg.initDataUnsafe.user)
-        try {
-          localStorage.setItem(WIDGET_USER_KEY, JSON.stringify(tg.initDataUnsafe.user))
-        } catch (e) {
-          console.error('[FC Area] Failed to save tg user to localStorage:', e)
-        }
+    // Пользователь: initDataUnsafe.user или парсим сырую строку initData (если unsafe пуст)
+    const applyUser = (u: TelegramUser) => {
+      if (widgetUser) return
+      console.log('[FC Area] Found user from tg:', u)
+      setWidgetUser(u)
+      try {
+        localStorage.setItem(WIDGET_USER_KEY, JSON.stringify(u))
+      } catch (e) {
+        console.error('[FC Area] Failed to save tg user to localStorage:', e)
       }
     }
-    // Проверяем сразу и с небольшой задержкой (данные могут появиться асинхронно)
+    const checkUser = () => {
+      if (tg.initDataUnsafe?.user) {
+        applyUser(tg.initDataUnsafe.user)
+        return
+      }
+      if (tg.initData) {
+        const parsed = parseInitDataString(tg.initData)
+        if (parsed) applyUser(parsed)
+      }
+    }
     checkUser()
-    const timeoutId = setTimeout(checkUser, 100)
+    const timeoutId = setTimeout(checkUser, 150)
     return () => clearTimeout(timeoutId)
   }, [tg, widgetUser])
 
