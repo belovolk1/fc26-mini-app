@@ -1876,10 +1876,11 @@ function App() {
                 <p className="panel-text small">
                   {(() => {
                     const linkUsername = (opponentUsername?.trim() || (typeof opponentName === 'string' && opponentName.startsWith('@') ? opponentName.slice(1).trim() : null)) || null
+                    const botUsername = (import.meta.env.VITE_TELEGRAM_BOT_USERNAME as string) || 'fcarea_bot'
                     const linkUrl = linkUsername
                       ? `https://t.me/${linkUsername.replace(/^@/, '')}`
                       : opponentTelegramId != null
-                        ? `tg://user?id=${opponentTelegramId}`
+                        ? `https://t.me/${botUsername}?start=contact_${opponentTelegramId}`
                         : null
                     const openLink = (tg as { openTelegramLink?: (u: string) => void })?.openTelegramLink
                     return linkUrl ? (
