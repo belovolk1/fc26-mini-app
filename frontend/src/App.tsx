@@ -625,6 +625,7 @@ function App() {
   const [leaderboard, setLeaderboard] = useState<LeaderboardRow[]>([])
   const [leaderboardLoading, setLeaderboardLoading] = useState(false)
   const [selectedPlayerRow, setSelectedPlayerRow] = useState<LeaderboardRow | null>(null)
+  const [profileFromHashLoading, setProfileFromHashLoading] = useState(false)
   const widgetContainerRef = useRef<HTMLDivElement>(null)
 
   const tg = window.Telegram?.WebApp
@@ -979,10 +980,25 @@ function App() {
     })
   }, [activeView])
 
+  // При загрузке с #player=uuid — открыть рейтинг и показать профиль игрока (новая вкладка)
+  useEffect(() => {
+    const hash = window.location.hash.slice(1)
+    const m = hash.match(/player=([a-f0-9-]{36})/i)
+    if (!m) return
+    const uuid = m[1]
+    setActiveView('rating')
+    setProfileFromHashLoading(true)
+    supabase.rpc('get_player_profile', { p_player_id: uuid }).then(({ data, error }) => {
+      setProfileFromHashLoading(false)
+      if (!error && Array.isArray(data) && data.length > 0) setSelectedPlayerRow(data[0] as LeaderboardRow)
+      else setSelectedPlayerRow(null)
+    })
+  }, [])
+
   // Загрузка рейтинга при открытии страницы «Рейтинг»
   useEffect(() => {
     if (activeView !== 'rating') return
-    setSelectedPlayerRow(null)
+    if (!window.location.hash.includes('player=')) setSelectedPlayerRow(null)
     setLeaderboardLoading(true)
     supabase.rpc('get_leaderboard').then(({ data, error }) => {
       setLeaderboardLoading(false)
@@ -1253,12 +1269,18 @@ function App() {
 
         {activeView === 'rating' && (
           <section className="panel">
-            {selectedPlayerRow ? (
+            {profileFromHashLoading && !selectedPlayerRow ? (
+              <p className="panel-text">{t.ratingLoading}</p>
+            ) : selectedPlayerRow ? (
               <>
                 <button
                   type="button"
                   className="link-button rating-back-btn"
-                  onClick={() => setSelectedPlayerRow(null)}
+                  onClick={() => {
+                    setSelectedPlayerRow(null)
+                    window.history.replaceState(null, '', window.location.pathname + window.location.search)
+                    window.location.hash = ''
+                  }}
                 >
                   ← {t.ratingBack}
                 </button>
@@ -1333,13 +1355,13 @@ function App() {
                           <tr
                             key={r.player_id}
                             className="rating-row-clickable"
-                            onClick={() => setSelectedPlayerRow(r)}
-                            role="button"
+                            onClick={() => window.open(`${window.location.origin}${window.location.pathname}#player=${r.player_id}`, '_blank', 'noopener,noreferrer')}
+                            role="link"
                             tabIndex={0}
                             onKeyDown={(e) => {
                               if (e.key === 'Enter' || e.key === ' ') {
                                 e.preventDefault()
-                                setSelectedPlayerRow(r)
+                                window.open(`${window.location.origin}${window.location.pathname}#player=${r.player_id}`, '_blank', 'noopener,noreferrer')
                               }
                             }}
                           >

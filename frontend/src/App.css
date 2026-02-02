@@ -1,3 +1,21 @@
+/* FACEIT-style: тёмная тема, акцент оранжевый */
+:root {
+  --bg-main: #0d1117;
+  --bg-card: #161b22;
+  --bg-elevated: #21262d;
+  --border: #30363d;
+  --border-hover: #484f58;
+  --text: #e6edf3;
+  --text-muted: #8b949e;
+  --accent: #f47521;
+  --accent-hover: #ff8c42;
+  --success: #3fb950;
+  --error: #f85149;
+  --shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  --radius: 12px;
+  --radius-sm: 8px;
+}
+
 .app {
   min-height: 100vh;
   display: flex;
@@ -6,7 +24,8 @@
   margin: 0 auto;
   padding: 0 0 72px;
   box-sizing: border-box;
-  background: #0f1419;
+  background: var(--bg-main);
+  color: var(--text);
 }
 
 /* Mini App: всегда мобильная версия (независимо от ширины окна) */
@@ -45,13 +64,14 @@
 
 /* ----- Шапка сайта (лента) ----- */
 .site-header {
-  background: #161b22;
-  border-bottom: 1px solid #30363d;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
   padding: 12px 16px;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 12px;
+  box-shadow: var(--shadow);
 }
 
 @media (min-width: 1024px) {
@@ -89,7 +109,7 @@
 .app-subtitle {
   margin: 4px 0 0;
   font-size: 12px;
-  opacity: 0.7;
+  color: var(--text-muted);
 }
 
 @media (min-width: 1024px) {
@@ -104,23 +124,24 @@
 }
 
 .lang-btn {
-  border-radius: 6px;
-  border: 1px solid #30363d;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
   padding: 4px 10px;
   font-size: 11px;
   background: transparent;
-  color: #8b949e;
+  color: var(--text-muted);
+  transition: color 0.15s, border-color 0.15s;
 }
 
 .lang-btn:hover {
-  color: #e8e8e8;
-  border-color: #484f58;
+  color: var(--text);
+  border-color: var(--border-hover);
 }
 
 .lang-btn.active {
-  background: rgba(88, 166, 255, 0.15);
-  border-color: #58a6ff;
-  color: #58a6ff;
+  background: rgba(244, 117, 33, 0.15);
+  border-color: var(--accent);
+  color: var(--accent);
   font-weight: 600;
 }
 
@@ -205,25 +226,30 @@
 }
 
 .tile {
-  border-radius: 12px;
+  border-radius: var(--radius);
   padding: 18px 20px;
-  border: 1px solid #30363d;
+  border: 1px solid var(--border);
   text-align: left;
-  background: #161b22;
+  background: var(--bg-card);
   cursor: pointer;
-  transition: border-color 0.2s, background 0.2s;
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .tile:hover {
-  border-color: #484f58;
-  background: #21262d;
+  border-color: var(--border-hover);
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow);
 }
 
 @media (min-width: 1024px) {
   .app--desktop .tile {
     padding: 24px 28px;
-    border-radius: 20px;
+    border-radius: 16px;
     transition: border-color 0.2s, background 0.2s, box-shadow 0.2s, transform 0.2s;
+  }
+  .app--desktop .tile:hover {
+    transform: translateY(-2px);
   }
   .app--desktop .tile-title {
     font-size: 18px;
@@ -235,14 +261,14 @@
 }
 
 .tile.primary {
-  background: linear-gradient(135deg, #238636, #2ea043);
-  border-color: #2ea043;
+  background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+  border-color: var(--accent);
   color: #fff;
 }
 
 .tile.primary:hover {
-  background: linear-gradient(135deg, #2ea043, #3fb950);
-  border-color: #3fb950;
+  background: linear-gradient(135deg, var(--accent-hover), #ffa366);
+  border-color: var(--accent-hover);
 }
 
 .tile-title {
@@ -258,10 +284,16 @@
 }
 
 .panel {
-  border-radius: 12px;
+  border-radius: var(--radius);
   padding: 20px 24px;
-  background: #161b22;
-  border: 1px solid #30363d;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  transition: box-shadow 0.2s;
+}
+
+.app--desktop .panel:hover {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
 }
 
 @media (min-width: 1024px) {
@@ -308,15 +340,16 @@
   max-width: 100%;
   box-sizing: border-box;
   padding: 10px 12px;
-  border-radius: 8px;
-  border: 1px solid #30363d;
-  background: #0f1419;
-  color: #e8e8e8;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg-main);
+  color: var(--text);
   font-size: 14px;
+  transition: border-color 0.15s;
 }
 
 .form-input:focus {
-  border-color: #58a6ff;
+  border-color: var(--accent);
   outline: none;
 }
 
@@ -331,13 +364,13 @@
 .panel-success {
   margin: 8px 0 0;
   font-size: 13px;
-  color: #3fb950;
+  color: var(--success);
 }
 
 .panel-error {
   margin: 8px 0 0;
   font-size: 13px;
-  color: #f85149;
+  color: var(--error);
 }
 
 .panel-text {
@@ -371,7 +404,7 @@
 .profile-telegram {
   margin-top: 20px;
   padding-top: 16px;
-  border-top: 1px solid #30363d;
+  border-top: 1px solid var(--border);
 }
 
 .profile-telegram-status {
@@ -389,9 +422,9 @@
 .profile-browser-hint {
   margin-bottom: 8px;
   padding: 8px 10px;
-  background: rgba(88, 166, 255, 0.15);
-  border-radius: 6px;
-  border-left: 3px solid #58a6ff;
+  background: rgba(244, 117, 33, 0.12);
+  border-radius: var(--radius-sm);
+  border-left: 3px solid var(--accent);
   font-size: 0.95em;
 }
 
@@ -421,13 +454,14 @@
 .profile-telegram-link-text {
   display: inline-block;
   margin-top: 8px;
-  color: #58a6ff;
+  color: var(--accent);
   text-decoration: none;
   font-size: 0.9em;
 }
 
 .profile-telegram-link-text:hover {
   text-decoration: underline;
+  color: var(--accent-hover);
 }
 
 .profile-telegram-login-label {
@@ -518,9 +552,9 @@
 .profile-telegram-steps {
   margin-top: 12px;
   padding: 10px 12px;
-  background: var(--panel-bg, rgba(255, 255, 255, 0.06));
-  border-radius: 8px;
-  border-left: 3px solid #58a6ff;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: var(--radius-sm);
+  border-left: 3px solid var(--accent);
 }
 
 .profile-telegram-no-redirect {
@@ -530,7 +564,7 @@
 }
 
 .profile-telegram-domain {
-  color: #58a6ff;
+  color: var(--accent);
   font-family: monospace;
 }
 
@@ -562,7 +596,7 @@
 }
 
 .profile-telegram-hint a {
-  color: #58a6ff;
+  color: var(--accent);
 }
 
 .profile-logout-btn {
@@ -570,31 +604,33 @@
   padding: 8px 16px;
   font-size: 13px;
   background: transparent;
-  border: 1px solid #30363d;
-  color: #8b949e;
-  border-radius: 8px;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  border-radius: var(--radius-sm);
   cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
 }
 
 .profile-logout-btn:hover {
-  border-color: #484f58;
-  color: #e8e8e8;
+  border-color: var(--border-hover);
+  color: var(--text);
 }
 
 .primary-button {
   width: 100%;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   padding: 12px 20px;
   border: none;
-  background: #238636;
+  background: var(--accent);
   color: #fff;
   font-weight: 600;
   margin-top: 8px;
   font-size: 14px;
+  transition: background 0.2s;
 }
 
 .primary-button:hover {
-  background: #2ea043;
+  background: var(--accent-hover);
 }
 
 @media (min-width: 1024px) {
@@ -611,14 +647,14 @@
 }
 
 .primary-button.secondary {
-  background: #21262d;
-  color: #e8e8e8;
-  border: 1px solid #30363d;
+  background: var(--bg-elevated);
+  color: var(--text);
+  border: 1px solid var(--border);
   margin-top: 8px;
 }
 
 .primary-button.secondary:hover {
-  background: #30363d;
+  background: var(--border-hover);
 }
 
 .link-button {
@@ -626,13 +662,14 @@
   border: none;
   padding: 0;
   font: inherit;
-  color: #58a6ff;
+  color: var(--accent);
   text-decoration: underline;
   cursor: pointer;
+  transition: color 0.15s;
 }
 
 .link-button:hover {
-  color: #79b8ff;
+  color: var(--accent-hover);
 }
 
 .panel-text.small {
@@ -653,7 +690,7 @@
 
 .list-item {
   padding: 6px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid var(--border);
 }
 
 .list-title {
@@ -687,13 +724,14 @@
 
 .match-score {
   font-size: 15px;
-  color: #e8e8e8;
+  font-weight: 600;
+  color: var(--text);
 }
 
 .match-result,
 .match-date {
   font-size: 12px;
-  opacity: 0.8;
+  color: var(--text-muted);
 }
 
 .rating-table-wrap {
@@ -709,21 +747,22 @@
 
 .rating-table th,
 .rating-table td {
-  padding: 8px 12px;
+  padding: 10px 12px;
   text-align: left;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid var(--border);
 }
 
 .rating-table th {
   font-weight: 600;
-  color: #8b949e;
-  font-size: 12px;
+  color: var(--text-muted);
+  font-size: 11px;
   text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .rating-table td:first-child {
   width: 2.5em;
-  color: #8b949e;
+  color: var(--text-muted);
 }
 
 .rating-table td:nth-child(3),
@@ -739,15 +778,16 @@
 
 .rating-row-clickable {
   cursor: pointer;
+  transition: background 0.15s;
 }
 
 .rating-row-clickable:hover {
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(244, 117, 33, 0.1);
 }
 
 .rating-player-name {
-  color: #58a6ff;
-  font-weight: 500;
+  color: var(--accent);
+  font-weight: 600;
 }
 
 .rating-back-btn {
@@ -772,19 +812,23 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  margin-bottom: 4px;
+  background: rgba(255, 255, 255, 0.02);
 }
 
 .player-stats-row dt {
   margin: 0;
   font-weight: 500;
-  color: #8b949e;
+  color: var(--text-muted);
 }
 
 .player-stats-row dd {
   margin: 0;
   font-weight: 600;
+  color: var(--text);
 }
 
 .app-nav {
@@ -817,7 +861,7 @@
 }
 
 .nav-btn:hover {
-  color: #e8e8e8;
+  color: var(--text);
   background: rgba(255, 255, 255, 0.06);
 }
 
@@ -830,9 +874,10 @@
 }
 
 .nav-btn.active {
-  background: rgba(88, 166, 255, 0.15);
-  color: #58a6ff;
+  background: rgba(244, 117, 33, 0.2);
+  color: var(--accent);
   font-weight: 600;
+  border: 1px solid rgba(244, 117, 33, 0.4);
 }
 
 /* ----- Герой на главной ----- */
@@ -851,7 +896,7 @@
 .hero-subtitle {
   margin: 0;
   font-size: 15px;
-  color: #8b949e;
+  color: var(--text-muted);
 }
 
 @media (min-width: 1024px) {
@@ -870,8 +915,8 @@
 .site-footer {
   margin-top: auto;
   padding: 16px 24px;
-  background: #161b22;
-  border-top: 1px solid #30363d;
+  background: var(--bg-card);
+  border-top: 1px solid var(--border);
   text-align: center;
   display: flex;
   flex-direction: column;
@@ -885,7 +930,7 @@
 
 .site-footer-copy {
   font-size: 12px;
-  color: #8b949e;
+  color: var(--text-muted);
 }
 
 @media (min-width: 1024px) {
@@ -915,7 +960,7 @@
   }
   .app--desktop .tile.primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 24px rgba(46, 160, 67, 0.35);
+    box-shadow: 0 6px 24px rgba(244, 117, 33, 0.35);
   }
 }
 

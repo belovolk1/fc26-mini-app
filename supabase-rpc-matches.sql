@@ -196,6 +196,70 @@ as $$
   limit 500;
 $$;
 
+-- Профиль одного игрока по ID (для открытия в новой вкладке по #player=uuid)
+create or replace function public.get_player_profile(p_player_id uuid)
+returns table (
+  rank bigint,
+  player_id uuid,
+  display_name text,
+  elo int,
+  matches_count bigint,
+  wins bigint,
+  draws bigint,
+  losses bigint,
+  goals_for bigint,
+  goals_against bigint,
+  win_rate numeric
+)
+language sql
+security definer
+stable
+as $$
+  with player_stats as (
+    select
+      p.id,
+      p.elo,
+      coalesce(
+        case when p.username is not null and p.username <> '' then '@' || p.username
+          else nullif(trim(coalesce(p.first_name, '') || ' ' || coalesce(p.last_name, '')), '')
+        end, '—'
+      )::text as display_name,
+      (select count(*)::bigint from public.matches m
+       where (m.player_a_id = p.id or m.player_b_id = p.id) and m.result is distinct from 'PENDING') as matches_count,
+      (select count(*)::bigint from public.matches m
+       where ((m.player_a_id = p.id and m.result = 'A_WIN') or (m.player_b_id = p.id and m.result = 'B_WIN'))) as wins,
+      (select count(*)::bigint from public.matches m
+       where (m.player_a_id = p.id or m.player_b_id = p.id) and m.result = 'DRAW') as draws,
+      (select count(*)::bigint from public.matches m
+       where ((m.player_a_id = p.id and m.result = 'B_WIN') or (m.player_b_id = p.id and m.result = 'A_WIN'))) as losses,
+      (select coalesce(sum(case when m.player_a_id = p.id then m.score_a else m.score_b end), 0)::bigint from public.matches m
+       where (m.player_a_id = p.id or m.player_b_id = p.id) and m.result is distinct from 'PENDING') as goals_for,
+      (select coalesce(sum(case when m.player_a_id = p.id then m.score_b else m.score_a end), 0)::bigint from public.matches m
+       where (m.player_a_id = p.id or m.player_b_id = p.id) and m.result is distinct from 'PENDING') as goals_against
+    from public.players p
+    where p.id = p_player_id
+  ),
+  ranked as (
+    select
+      s.*,
+      (select count(*)::bigint + 1 from public.players p2 where p2.elo > s.elo or (p2.elo = s.elo and p2.id < s.id)) as rk
+    from player_stats s
+  )
+  select
+    r.rk,
+    r.id as player_id,
+    r.display_name,
+    r.elo,
+    r.matches_count,
+    r.wins,
+    r.draws,
+    r.losses,
+    r.goals_for,
+    r.goals_against,
+    round(case when r.matches_count > 0 then (r.wins * 100.0 / r.matches_count) else null end, 1)::numeric
+  from ranked r;
+$$;
+
 -- Разрешить anon вызывать RPC
 grant execute on function public.get_my_pending_match(uuid) to anon;
 grant execute on function public.get_my_matches_count(uuid) to anon;
@@ -203,3 +267,4 @@ grant execute on function public.submit_match_score(text, uuid, int, int) to ano
 grant execute on function public.confirm_match_result(text, uuid) to anon;
 grant execute on function public.get_all_played_matches() to anon;
 grant execute on function public.get_leaderboard() to anon;
+grant execute on function public.get_player_profile(uuid) to anon;
