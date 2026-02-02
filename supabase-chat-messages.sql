@@ -23,5 +23,5 @@ create policy "chat_messages anon insert" on public.chat_messages
 
 comment on table public.chat_messages is 'Сообщения чата между двумя игроками по матчу (один чат = один матч)';
 
--- Для мгновенной доставки сообщений включи Realtime для таблицы:
--- Supabase Dashboard → Database → Replication → включи публикацию для public.chat_messages
+-- Realtime: новые сообщения приходят в приложение без перезагрузки
+alter publication supabase_realtime add table public.chat_messages;

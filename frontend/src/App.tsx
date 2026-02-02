@@ -50,6 +50,7 @@ const messages: Record<
     ladderChatPlaceholder: string
     ladderChatSend: string
     ladderChatEmpty: string
+    ladderChatLoadError: string
     ladderManualTitle: string
     ladderMyScore: string
     ladderOppScore: string
@@ -170,6 +171,7 @@ const messages: Record<
     ladderChatPlaceholder: 'Message…',
     ladderChatSend: 'Send',
     ladderChatEmpty: 'No messages yet.',
+    ladderChatLoadError: 'Could not load messages. Check that chat_messages table exists and RLS allows select.',
     ladderManualTitle: 'Match result',
     ladderMyScore: 'My score',
     ladderOppScore: 'Opponent score',
@@ -291,6 +293,7 @@ const messages: Record<
     ladderChatPlaceholder: 'Mesaj…',
     ladderChatSend: 'Trimite',
     ladderChatEmpty: 'Niciun mesaj încă.',
+    ladderChatLoadError: 'Nu s-au putut încărca mesajele. Verifică tabelul chat_messages și RLS.',
     ladderManualTitle: 'Rezultat meci',
     ladderMyScore: 'Scorul meu',
     ladderOppScore: 'Scorul adversarului',
@@ -412,6 +415,7 @@ const messages: Record<
     ladderChatPlaceholder: 'Сообщение…',
     ladderChatSend: 'Отправить',
     ladderChatEmpty: 'Пока нет сообщений.',
+    ladderChatLoadError: 'Не удалось загрузить сообщения. Проверьте таблицу chat_messages и RLS.',
     ladderManualTitle: 'Результат матча',
     ladderMyScore: 'Мои голы',
     ladderOppScore: 'Голы соперника',
@@ -606,6 +610,7 @@ function App() {
   const [chatMessages, setChatMessages] = useState<ChatMessageRow[]>([])
   const [chatInput, setChatInput] = useState('')
   const [chatSending, setChatSending] = useState(false)
+  const [chatLoadError, setChatLoadError] = useState<string | null>(null)
   const [allMatches, setAllMatches] = useState<Array<{ match_id: number; player_a_name: string; player_b_name: string; score_a: number; score_b: number; result: string; played_at: string | null }>>([])
   const [allMatchesLoading, setAllMatchesLoading] = useState(false)
   type LeaderboardRow = {
@@ -978,16 +983,25 @@ function App() {
   useEffect(() => {
     if (searchStatus !== 'in_lobby' || !currentMatch?.id) {
       setChatMessages([])
+      setChatLoadError(null)
       return
     }
     const matchId = currentMatch.id
+    setChatLoadError(null)
     const loadChat = async () => {
       const { data, error } = await supabase
         .from('chat_messages')
         .select('id, match_id, sender_id, body, created_at')
         .eq('match_id', matchId)
         .order('created_at', { ascending: true })
-      if (!error && data) setChatMessages(data as ChatMessageRow[])
+      if (error) {
+        console.error('[FC Area] chat_messages load error:', error)
+        setChatLoadError(error.message || 'Failed to load messages')
+        setChatMessages([])
+        return
+      }
+      setChatLoadError(null)
+      setChatMessages((Array.isArray(data) ? data : []) as ChatMessageRow[])
     }
     void loadChat()
     const channel = supabase
@@ -997,7 +1011,7 @@ function App() {
         { event: 'INSERT', schema: 'public', table: 'chat_messages', filter: `match_id=eq.${matchId}` },
         (payload) => {
           const row = payload.new as ChatMessageRow
-          setChatMessages((prev) => [...prev, row])
+          setChatMessages((prev) => (prev.some((m) => m.id === row.id) ? prev : [...prev, row]))
         },
       )
       .subscribe()
@@ -1202,13 +1216,20 @@ function App() {
     const text = chatInput.trim()
     if (!text || !currentMatch?.id || !playerId || chatSending) return
     setChatSending(true)
-    const { error } = await supabase.from('chat_messages').insert({
-      match_id: currentMatch.id,
-      sender_id: playerId,
-      body: text,
-    })
+    const { data: inserted, error } = await supabase
+      .from('chat_messages')
+      .insert({
+        match_id: currentMatch.id,
+        sender_id: playerId,
+        body: text,
+      })
+      .select('id, match_id, sender_id, body, created_at')
+      .single()
     setChatSending(false)
-    if (!error) setChatInput('')
+    if (!error && inserted) {
+      setChatInput('')
+      setChatMessages((prev) => (prev.some((m) => m.id === (inserted as ChatMessageRow).id) ? prev : [...prev, inserted as ChatMessageRow]))
+    }
   }
 
   const [isWideScreen, setIsWideScreen] = useState(
@@ -1909,7 +1930,10 @@ function App() {
                 <div className="lobby-chat">
                   <h4 className="panel-subtitle lobby-chat-title">{t.ladderChatTitle}</h4>
                   <div className="lobby-chat-messages" role="log" aria-live="polite">
-                    {chatMessages.length === 0 && (
+                    {chatLoadError && (
+                      <p className="panel-text small lobby-chat-empty lobby-chat-error">{t.ladderChatLoadError}</p>
+                    )}
+                    {!chatLoadError && chatMessages.length === 0 && (
                       <p className="panel-text small lobby-chat-empty">{t.ladderChatEmpty}</p>
                     )}
                     {chatMessages.map((msg) => (

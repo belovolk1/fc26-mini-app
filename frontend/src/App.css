@@ -761,6 +761,10 @@
   text-align: center;
 }
 
+.lobby-chat-error {
+  color: var(--error);
+}
+
 .lobby-chat-msg {
   display: flex;
   flex-direction: column;
