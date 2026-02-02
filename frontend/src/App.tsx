@@ -1030,7 +1030,16 @@ function App() {
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'matches', filter: `id=eq.${matchId}` },
         (payload) => {
-          const row = payload.new as { id: number; player_a_id: string; player_b_id: string; score_a?: number | null; score_b?: number | null; score_submitted_by?: string | null }
+          const row = payload.new as { id: number; result?: string; player_a_id: string; player_b_id: string; score_a?: number | null; score_b?: number | null; score_submitted_by?: string | null }
+          if (row.result && row.result !== 'PENDING') {
+            setMatchMessage(t.ladderResultConfirmed)
+            setCurrentMatch(null)
+            setOpponentName('')
+            setOpponentUsername(null)
+            setSearchStatus('idle')
+            refetchMatchesCount()
+            return
+          }
           setCurrentMatch((prev) =>
             prev && prev.id === row.id
               ? {
@@ -1049,15 +1058,25 @@ function App() {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [searchStatus, currentMatch?.id])
+  }, [searchStatus, currentMatch?.id, t])
 
-  // Опрос (fallback) в лобби: обновляем данные матча (счёт, score_submitted_by), если соперник ввёл счёт, а Realtime не сработал
+  // Опрос (fallback) в лобби: обновляем данные матча (счёт, score_submitted_by) или закрываем лобби, если соперник подтвердил
   useEffect(() => {
     if (searchStatus !== 'in_lobby' || !playerId || !currentMatch?.id) return
+    const matchId = currentMatch.id
     const interval = setInterval(async () => {
       const { data: rows, error } = await supabase.rpc('get_my_pending_match', { p_player_id: playerId })
       const data = Array.isArray(rows) ? rows[0] : rows
-      if (!error && data && data.id === currentMatch.id) {
+      if (!error && !data) {
+        setMatchMessage(t.ladderResultConfirmed)
+        setCurrentMatch(null)
+        setOpponentName('')
+        setOpponentUsername(null)
+        setSearchStatus('idle')
+        refetchMatchesCount()
+        return
+      }
+      if (!error && data && (data as { id: number }).id === matchId) {
         setCurrentMatch((prev) =>
           prev
             ? {
@@ -1837,19 +1856,21 @@ function App() {
                 </p>
                 <p className="panel-text small">
                   {opponentUsername ? (
-                    <button
-                      type="button"
+                    <a
+                      href={`https://t.me/${opponentUsername.replace(/^@/, '')}`}
                       className="link-button"
-                      onClick={() => {
-                        const username = opponentUsername.replace(/^@/, '')
-                        const url = `https://t.me/${username}`
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => {
                         const openLink = (tg as { openTelegramLink?: (u: string) => void })?.openTelegramLink
-                        if (openLink) openLink(url)
-                        else window.open(url, '_blank', 'noopener,noreferrer')
+                        if (openLink) {
+                          e.preventDefault()
+                          openLink((e.currentTarget as HTMLAnchorElement).href)
+                        }
                       }}
                     >
                       {t.ladderMessageOpponent}
-                    </button>
+                    </a>
                   ) : (
                     <span className="panel-text-muted">{t.ladderMessageOpponent}</span>
                   )}
@@ -1933,7 +1954,7 @@ function App() {
             )}
 
             {user && searchStatus === 'idle' && matchMessage && (
-              <p className="panel-error">{matchMessage}</p>
+              <p className={matchMessage === t.ladderResultConfirmed ? 'panel-success' : 'panel-error'}>{matchMessage}</p>
             )}
           </section>
         )}
