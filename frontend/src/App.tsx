@@ -980,7 +980,7 @@ function App() {
     })
   }, [activeView])
 
-  // При загрузке с #player=uuid — открыть рейтинг и показать профиль игрока (новая вкладка)
+  // При загрузке с #player=uuid — открыть рейтинг и показать профиль игрока в той же вкладке
   useEffect(() => {
     const hash = window.location.hash.slice(1)
     const m = hash.match(/player=([a-f0-9-]{36})/i)
@@ -1056,14 +1056,18 @@ function App() {
 
     setSavingMatch(true)
     setMatchMessage(null)
-    const { error } = await supabase.rpc('confirm_match_result', {
+    const { data: msg, error } = await supabase.rpc('confirm_match_result', {
       p_match_id: String(currentMatch.id),
       p_player_id: playerId,
     })
 
     setSavingMatch(false)
     if (error) {
-      setMatchMessage(t.ladderError)
+      setMatchMessage(t.ladderError + (error.message ? ' ' + error.message : ''))
+      return
+    }
+    if (msg && typeof msg === 'string') {
+      setMatchMessage(msg)
       return
     }
     setMatchMessage(t.ladderResultConfirmed)
@@ -1355,13 +1359,13 @@ function App() {
                           <tr
                             key={r.player_id}
                             className="rating-row-clickable"
-                            onClick={() => window.open(`${window.location.origin}${window.location.pathname}#player=${r.player_id}`, '_blank', 'noopener,noreferrer')}
-                            role="link"
+                            onClick={() => setSelectedPlayerRow(r)}
+                            role="button"
                             tabIndex={0}
                             onKeyDown={(e) => {
                               if (e.key === 'Enter' || e.key === ' ') {
                                 e.preventDefault()
-                                window.open(`${window.location.origin}${window.location.pathname}#player=${r.player_id}`, '_blank', 'noopener,noreferrer')
+                                setSelectedPlayerRow(r)
                               }
                             }}
                           >
@@ -1438,7 +1442,7 @@ function App() {
                       }}
                     >
                       {t.profileLogout}
-                    </button>
+        </button>
                   )}
                 </>
               ) : (
@@ -1448,8 +1452,8 @@ function App() {
                       <p className="panel-text">{t.profileTelegramReturnedNoParams}</p>
                       <p className="panel-hint">
                         <strong className="profile-telegram-domain">{typeof window !== 'undefined' ? window.location.host : ''}</strong>
-                      </p>
-                    </div>
+        </p>
+      </div>
                   )}
                   <p className="panel-text profile-browser-hint">{t.profileBrowserHint}</p>
                   <p className="panel-text profile-telegram-not">{t.profileTelegramNotConnected}</p>

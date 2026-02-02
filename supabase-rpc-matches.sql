@@ -70,8 +70,10 @@ end;
 $$;
 
 -- Подтвердить результат матча (второй игрок согласен со счётом). p_match_id: text.
+-- Возвращает null при успехе, иначе текст ошибки.
+drop function if exists public.confirm_match_result(text, uuid);
 create or replace function public.confirm_match_result(p_match_id text, p_player_id uuid)
-returns void
+returns text
 language plpgsql
 security definer
 as $$
@@ -79,18 +81,28 @@ declare
   v_score_a int;
   v_score_b int;
   v_result text;
+  v_updated int;
 begin
   select score_a, score_b into v_score_a, v_score_b
   from public.matches
   where id::text = p_match_id and result = 'PENDING' and score_submitted_by is not null
     and (player_a_id = p_player_id or player_b_id = p_player_id);
-  if not found then return; end if;
+  if not found then
+    return 'Match not found or you are not the opponent who must confirm';
+  end if;
   if v_score_a > v_score_b then v_result := 'A_WIN';
   elsif v_score_b > v_score_a then v_result := 'B_WIN';
   else v_result := 'DRAW'; end if;
   update public.matches
-  set result = v_result, played_at = now()
+  set result = v_result, played_at = coalesce(played_at, now())
   where id::text = p_match_id and result = 'PENDING';
+  get diagnostics v_updated = row_count;
+  if v_updated = 0 then
+    return 'Could not update match';
+  end if;
+  return null;
+exception when others then
+  return SQLERRM;
 end;
 $$;
 
