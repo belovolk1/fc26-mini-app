@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import './App.css'
 import { supabase } from './supabaseClient'
 
@@ -22,7 +22,22 @@ const messages: Record<
     profileEloLabel: string
     profileMatchesLabel: string
     profileLoading: string
+    profileTelegramTitle: string
+    profileTelegramConnected: string
+    profileTelegramUsername: string
+    profileTelegramId: string
+    profileTelegramNotConnected: string
+    profileTelegramOpenBtn: string
+    profileTelegramOrOpen: string
+    profileTelegramLoginLabel: string
+    profileTelegramMenuHint: string
+    profileTelegramStep2: string
+    profileTelegramBotfatherHint: string
+    profileTelegramSetDomain: string
+    profileTelegramNoRedirect: string
+    profileLogout: string
     profileHint: string
+    profileError: string
     ladderHeader: string
     ladderText: string
     ladderButton: string
@@ -38,6 +53,11 @@ const messages: Record<
     ladderOppScore: string
     ladderSave: string
     ladderSaved: string
+    ladderSubmitScore: string
+    ladderWaitingConfirm: string
+    ladderOpponentProposed: string
+    ladderConfirmResult: string
+    ladderResultConfirmed: string
     ladderError: string
     ladderLoginRequired: string
     tournamentsHeader: string
@@ -75,8 +95,23 @@ const messages: Record<
     profileEloLabel: 'Global ELO rating',
     profileMatchesLabel: 'Matches played',
     profileLoading: 'Loading profile…',
+    profileTelegramTitle: 'Telegram',
+    profileTelegramConnected: 'Account linked to Telegram',
+    profileTelegramUsername: 'Username',
+    profileTelegramId: 'Telegram ID',
+    profileTelegramNotConnected: 'To see your stats here in the browser, log in with Telegram using the button below. Your profile will be linked and ELO/matches will load.',
+    profileTelegramOpenBtn: 'Open in Telegram',
+    profileTelegramOrOpen: 'Or open the bot in Telegram:',
+    profileTelegramLoginLabel: 'Log in with Telegram to link your profile and see stats here:',
+    profileTelegramMenuHint: 'In the bot chat, tap the menu button (☰) or the button below the input to open the app.',
+    profileTelegramStep2: 'If only the chat opened: tap the menu button (☰) next to the input, or the button below the input (e.g. "FC Area") to open the app.',
+    profileTelegramBotfatherHint: 'If there is no app button: in BotFather run /setmenubutton, select your bot, choose "Web App", enter URL (e.g. https://www.fcarea.com) and button name (e.g. FC Area).',
+    profileTelegramSetDomain: 'If you still appear as a guest after logging in: in BotFather run /setdomain, select your bot, and add your site domain (e.g. www.fcarea.com).',
+    profileTelegramNoRedirect: 'If Telegram does not redirect you back to the site: in BotFather run /setdomain, select your bot, and add this domain:',
+    profileLogout: 'Log out',
     profileHint:
       'Profile and rating are already stored in Supabase. Later we will add match history and advanced stats.',
+    profileError: 'Failed to load profile. Check your connection and try again.',
     ladderHeader: 'Quick play (ladder)',
     ladderText:
       'Here will be real‑time matchmaking: game mode, queue, 40‑minute deadline and result input.',
@@ -92,8 +127,13 @@ const messages: Record<
     ladderManualTitle: 'Match result',
     ladderMyScore: 'My score',
     ladderOppScore: 'Opponent score',
-    ladderSave: 'Submit result',
+    ladderSave: 'Submit score',
     ladderSaved: 'Result saved.',
+    ladderSubmitScore: 'Submit score',
+    ladderWaitingConfirm: 'Waiting for opponent to confirm.',
+    ladderOpponentProposed: 'Opponent proposed score: {score}.',
+    ladderConfirmResult: 'Confirm result',
+    ladderResultConfirmed: 'Result confirmed.',
     ladderError: 'Could not save. Try again.',
     ladderLoginRequired: 'Open the app from Telegram to play.',
     tournamentsHeader: 'Tournaments',
@@ -132,8 +172,23 @@ const messages: Record<
     profileEloLabel: 'Rating ELO global',
     profileMatchesLabel: 'Meciuri jucate',
     profileLoading: 'Se încarcă profilul…',
+    profileTelegramTitle: 'Telegram',
+    profileTelegramConnected: 'Cont legat de Telegram',
+    profileTelegramUsername: 'Username',
+    profileTelegramId: 'ID Telegram',
+    profileTelegramNotConnected: 'Pentru a vedea statisticile aici în browser, autentifică-te cu Telegram folosind butonul de mai jos. Profilul se va lega și se vor încărca ELO și meciurile.',
+    profileTelegramOpenBtn: 'Deschide în Telegram',
+    profileTelegramOrOpen: 'Sau deschide botul în Telegram:',
+    profileTelegramLoginLabel: 'Autentifică-te cu Telegram pentru a lega profilul și a vedea statisticile aici:',
+    profileTelegramMenuHint: 'În chat cu botul, apasă butonul de meniu (☰) sau butonul de sub input pentru a deschide aplicația.',
+    profileTelegramStep2: 'Dacă s-a deschis doar chat-ul: apasă butonul de meniu (☰) lângă câmpul de input sau butonul de sub input (ex. "FC Area") pentru a deschide aplicația.',
+    profileTelegramBotfatherHint: 'Dacă nu există buton pentru aplicație: în BotFather rulează /setmenubutton, selectează botul, alege "Web App", introdu URL (ex. https://www.fcarea.com) și numele butonului (ex. FC Area).',
+    profileTelegramSetDomain: 'Dacă rămâi "oaspete" după login: în BotFather rulează /setdomain, selectează botul și adaugă domeniul site-ului (ex. www.fcarea.com).',
+    profileTelegramNoRedirect: 'Dacă Telegram nu te redirecționează înapoi pe site: în BotFather rulează /setdomain, selectează botul și adaugă acest domeniu:',
+    profileLogout: 'Deconectare',
     profileHint:
       'Profilul și ratingul sunt deja stocate în Supabase. Mai târziu vom adăuga istoric și statistici avansate.',
+    profileError: 'Profilul nu s-a putut încărca. Verifică conexiunea și încearcă din nou.',
     ladderHeader: 'Joc rapid (ladder)',
     ladderText:
       'Aici va fi matchmaking în timp real: mod de joc, coadă, termen de 40 de minute și introducerea rezultatului.',
@@ -149,8 +204,13 @@ const messages: Record<
     ladderManualTitle: 'Rezultat meci',
     ladderMyScore: 'Scorul meu',
     ladderOppScore: 'Scorul adversarului',
-    ladderSave: 'Trimite rezultatul',
+    ladderSave: 'Trimite scorul',
     ladderSaved: 'Rezultat salvat.',
+    ladderSubmitScore: 'Trimite scorul',
+    ladderWaitingConfirm: 'Se așteaptă confirmarea adversarului.',
+    ladderOpponentProposed: 'Adversarul a propus scorul: {score}.',
+    ladderConfirmResult: 'Confirmă rezultatul',
+    ladderResultConfirmed: 'Rezultat confirmat.',
     ladderError: 'Nu s-a putut salva.',
     ladderLoginRequired: 'Deschide aplicația din Telegram pentru a juca.',
     tournamentsHeader: 'Turnee',
@@ -189,8 +249,23 @@ const messages: Record<
     profileEloLabel: 'Общий рейтинг ELO',
     profileMatchesLabel: 'Матчей сыграно',
     profileLoading: 'Загружаем профиль…',
+    profileTelegramTitle: 'Telegram',
+    profileTelegramConnected: 'Аккаунт привязан к Telegram',
+    profileTelegramUsername: 'Username',
+    profileTelegramId: 'ID в Telegram',
+    profileTelegramNotConnected: 'Чтобы видеть свою статистику здесь в браузере, войдите через Telegram кнопкой ниже. Профиль привяжется и подгрузятся ELO и матчи.',
+    profileTelegramOpenBtn: 'Открыть в Telegram',
+    profileTelegramOrOpen: 'Или откройте бота в Telegram:',
+    profileTelegramLoginLabel: 'Войдите через Telegram, чтобы привязать профиль и видеть статистику здесь:',
+    profileTelegramMenuHint: 'В чате с ботом нажмите кнопку меню (☰) или кнопку под полем ввода, чтобы открыть приложение.',
+    profileTelegramStep2: 'Если открылся только чат: нажмите кнопку меню (☰) слева от поля ввода или кнопку под полем ввода (например «FC Area») — откроется приложение.',
+    profileTelegramBotfatherHint: 'Если такой кнопки нет: в BotFather выполните /setmenubutton → выберите бота → Web App → укажите URL (например https://www.fcarea.com) и название кнопки (например FC Area).',
+    profileTelegramSetDomain: 'Если после входа всё равно показывается «Гость»: в BotFather выполните /setdomain, выберите бота и добавьте домен сайта (например www.fcarea.com).',
+    profileTelegramNoRedirect: 'Если Telegram не возвращает на сайт после входа: в BotFather выполните /setdomain, выберите бота и добавьте этот домен:',
+    profileLogout: 'Выйти',
     profileHint:
       'Профиль и рейтинг уже хранятся в Supabase. Позже добавим историю матчей и расширенную статистику.',
+    profileError: 'Не удалось загрузить профиль. Проверьте подключение и попробуйте снова.',
     ladderHeader: 'Быстрая игра (ладдер)',
     ladderText:
       'Здесь будет поиск соперника в реальном времени: выбор режима, очередь, дедлайн 40 минут и ввод результата.',
@@ -206,8 +281,13 @@ const messages: Record<
     ladderManualTitle: 'Результат матча',
     ladderMyScore: 'Мои голы',
     ladderOppScore: 'Голы соперника',
-    ladderSave: 'Отправить результат',
+    ladderSave: 'Отправить счёт',
     ladderSaved: 'Результат сохранён.',
+    ladderSubmitScore: 'Отправить счёт',
+    ladderWaitingConfirm: 'Ожидаем подтверждения соперника.',
+    ladderOpponentProposed: 'Соперник предложил счёт: {score}.',
+    ladderConfirmResult: 'Подтвердить результат',
+    ladderResultConfirmed: 'Результат засчитан.',
     ladderError: 'Не удалось сохранить.',
     ladderLoginRequired: 'Откройте приложение из Telegram, чтобы играть.',
     tournamentsHeader: 'Турниры',
@@ -227,18 +307,57 @@ const messages: Record<
   },
 }
 
+const WIDGET_USER_KEY = 'fc_area_telegram_user'
+
+type TelegramUser = {
+  id: number
+  first_name: string
+  last_name?: string
+  username?: string
+  language_code?: string
+}
+
+/** Парсит данные пользователя после редиректа из Telegram Login Widget. Параметры могут быть в hash (#...) или в query (?...). */
+function parseWidgetRedirect(): TelegramUser | null {
+  const hash = window.location.hash?.slice(1)
+  const search = window.location.search?.slice(1)
+  const params = new URLSearchParams(hash || search)
+  const id = params.get('id')
+  const first_name = params.get('first_name')
+  if (!id || !first_name) return null
+  const numId = parseInt(id, 10)
+  if (Number.isNaN(numId)) return null
+  return {
+    id: numId,
+    first_name,
+    last_name: params.get('last_name') ?? undefined,
+    username: params.get('username') ?? undefined,
+  }
+}
+
+function getStoredWidgetUser(): TelegramUser | null {
+  try {
+    const raw = localStorage.getItem(WIDGET_USER_KEY)
+    if (!raw) return null
+    const data = JSON.parse(raw) as { id: number; first_name: string; last_name?: string; username?: string }
+    if (typeof data.id !== 'number' || typeof data.first_name !== 'string') return null
+    return data
+  } catch {
+    return null
+  }
+}
+
+function setStoredWidgetUser(user: TelegramUser | null) {
+  if (user) localStorage.setItem(WIDGET_USER_KEY, JSON.stringify(user))
+  else localStorage.removeItem(WIDGET_USER_KEY)
+}
+
 declare global {
   interface Window {
     Telegram?: {
       WebApp?: {
         initDataUnsafe?: {
-          user?: {
-            id: number
-            first_name: string
-            last_name?: string
-            username?: string
-            language_code?: string
-          }
+          user?: TelegramUser
         }
         themeParams?: Record<string, string>
         ready: () => void
@@ -252,6 +371,7 @@ function App() {
   const [activeView, setActiveView] = useState<View>('home')
   const [lang, setLang] = useState<Lang>('en')
   const [playerId, setPlayerId] = useState<string | null>(null)
+  const [profileLoadError, setProfileLoadError] = useState<string | null>(null)
   const [elo, setElo] = useState<number | null>(null)
   const [matchesCount, setMatchesCount] = useState<number | null>(null)
   const [loadingProfile, setLoadingProfile] = useState(false)
@@ -261,14 +381,19 @@ function App() {
     id: number
     player_a_id: string
     player_b_id: string
+    score_a?: number | null
+    score_b?: number | null
+    score_submitted_by?: string | null
   } | null>(null)
   const [opponentName, setOpponentName] = useState<string>('')
   const [scoreA, setScoreA] = useState<string>('')
   const [scoreB, setScoreB] = useState<string>('')
   const [savingMatch, setSavingMatch] = useState(false)
   const [matchMessage, setMatchMessage] = useState<string | null>(null)
+  const widgetContainerRef = useRef<HTMLDivElement>(null)
 
   const tg = window.Telegram?.WebApp
+  const [widgetUser, setWidgetUser] = useState<TelegramUser | null>(() => getStoredWidgetUser())
 
   useEffect(() => {
     if (!tg) return
@@ -276,7 +401,45 @@ function App() {
     tg.expand()
   }, [tg])
 
-  const user = tg?.initDataUnsafe?.user
+  // После редиректа из Telegram Login Widget — парсим параметры (hash или query) и сохраняем пользователя
+  useEffect(() => {
+    const parsed = parseWidgetRedirect()
+    if (parsed) {
+      setStoredWidgetUser(parsed)
+      setWidgetUser(parsed)
+      window.history.replaceState(null, '', window.location.pathname)
+    }
+  }, [])
+
+  // Виджет «Войти через Telegram» в браузере (только когда нет WebApp и нет пользователя)
+  const showWidget = !tg && !widgetUser && activeView === 'profile'
+  useLayoutEffect(() => {
+    if (!showWidget) {
+      widgetContainerRef.current?.replaceChildren()
+      return
+    }
+    const el = widgetContainerRef.current
+    if (!el) return
+    // Уже есть виджет (iframe) или скрипт ещё грузится — не пересоздаём
+    if (el.querySelector('iframe') || el.querySelector('script[src*="telegram-widget"]')) return
+    const botUsername = (import.meta.env.VITE_TELEGRAM_BOT_USERNAME as string) || 'fcarea_bot'
+    const authUrlBase = (import.meta.env.VITE_APP_URL as string) || (window.location.origin + window.location.pathname)
+    const authUrl = authUrlBase.replace(/\/$/, '') + '/'
+    const script = document.createElement('script')
+    script.src = 'https://telegram.org/js/telegram-widget.js?22'
+    script.setAttribute('data-telegram-login', botUsername)
+    script.setAttribute('data-auth-url', authUrl)
+    script.setAttribute('data-size', 'large')
+    script.setAttribute('data-request-access', 'write')
+    script.async = true
+    el.innerHTML = ''
+    el.appendChild(script)
+    return () => {
+      widgetContainerRef.current?.replaceChildren()
+    }
+  }, [showWidget])
+
+  const user = tg?.initDataUnsafe?.user ?? widgetUser
 
   // авто-выбор языка по Telegram, если ещё не меняли вручную
   useEffect(() => {
@@ -296,6 +459,7 @@ function App() {
     const loadProfile = async () => {
       if (!user) return
       setLoadingProfile(true)
+      setProfileLoadError(null)
 
       // создаём или обновляем игрока по telegram_id
       const { data: upserted, error } = await supabase
@@ -314,6 +478,7 @@ function App() {
 
       if (error) {
         console.error('Failed to sync player', error)
+        setProfileLoadError(error.message)
         setLoadingProfile(false)
         return
       }
@@ -321,10 +486,11 @@ function App() {
       setPlayerId((upserted as { id: string })?.id ?? null)
       setElo((upserted as { elo?: number })?.elo ?? null)
 
-      // считаем количество сыгранных матчей, где игрок участвует как A или B
+      // считаем только подтверждённые матчи (не PENDING)
       const { count, error: matchesError } = await supabase
         .from('matches')
         .select('id', { count: 'exact', head: true })
+        .neq('result', 'PENDING')
         .or(`player_a_id.eq.${upserted.id},player_b_id.eq.${upserted.id}`)
 
       if (!matchesError) {
@@ -348,6 +514,7 @@ function App() {
     const { count, error } = await supabase
       .from('matches')
       .select('id', { count: 'exact', head: true })
+      .neq('result', 'PENDING')
       .or(`player_a_id.eq.${playerId},player_b_id.eq.${playerId}`)
     if (!error) setMatchesCount(count ?? 0)
   }
@@ -367,14 +534,21 @@ function App() {
       }
       const { data: pending } = await supabase
         .from('matches')
-        .select('id, player_a_id, player_b_id')
+        .select('id, player_a_id, player_b_id, score_a, score_b, score_submitted_by')
         .eq('result', 'PENDING')
         .or(`player_a_id.eq.${playerId},player_b_id.eq.${playerId}`)
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle()
       if (pending) {
-        setCurrentMatch(pending as { id: number; player_a_id: string; player_b_id: string })
+        setCurrentMatch({
+          id: pending.id,
+          player_a_id: pending.player_a_id,
+          player_b_id: pending.player_b_id,
+          score_a: pending.score_a ?? undefined,
+          score_b: pending.score_b ?? undefined,
+          score_submitted_by: pending.score_submitted_by ?? undefined,
+        })
         const oppId = pending.player_a_id === playerId ? pending.player_b_id : pending.player_a_id
         const { data: opp } = await supabase.from('players').select('username, first_name, last_name').eq('id', oppId).single()
         const name = opp ? (opp.username ? `@${opp.username}` : [opp.first_name, opp.last_name].filter(Boolean).join(' ') || t.guestName) : t.guestName
@@ -391,14 +565,21 @@ function App() {
     const interval = setInterval(async () => {
       const { data } = await supabase
         .from('matches')
-        .select('id, player_a_id, player_b_id')
+        .select('id, player_a_id, player_b_id, score_a, score_b, score_submitted_by')
         .eq('result', 'PENDING')
         .or(`player_a_id.eq.${playerId},player_b_id.eq.${playerId}`)
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle()
       if (data) {
-        setCurrentMatch(data as { id: number; player_a_id: string; player_b_id: string })
+        setCurrentMatch({
+          id: data.id,
+          player_a_id: data.player_a_id,
+          player_b_id: data.player_b_id,
+          score_a: data.score_a ?? undefined,
+          score_b: data.score_b ?? undefined,
+          score_submitted_by: data.score_submitted_by ?? undefined,
+        })
         const oppId = data.player_a_id === playerId ? data.player_b_id : data.player_a_id
         const { data: opp } = await supabase.from('players').select('username, first_name, last_name').eq('id', oppId).single()
         const name = opp ? (opp.username ? `@${opp.username}` : [opp.first_name, opp.last_name].filter(Boolean).join(' ') || t.guestName) : t.guestName
@@ -432,7 +613,13 @@ function App() {
     setSearchStatus('idle')
   }
 
-  const submitLobbyResult = async () => {
+  const opponentId = currentMatch
+    ? currentMatch.player_a_id === playerId
+      ? currentMatch.player_b_id
+      : currentMatch.player_a_id
+    : null
+
+  const submitLobbyScore = async () => {
     if (!currentMatch || !playerId) return
     const myScore = parseInt(scoreA, 10)
     const oppScore = parseInt(scoreB, 10)
@@ -443,9 +630,6 @@ function App() {
     const isPlayerA = currentMatch.player_a_id === playerId
     const scoreAVal = isPlayerA ? myScore : oppScore
     const scoreBVal = isPlayerA ? oppScore : myScore
-    let result: 'A_WIN' | 'B_WIN' | 'DRAW' = 'DRAW'
-    if (scoreAVal > scoreBVal) result = 'A_WIN'
-    else if (scoreBVal > scoreAVal) result = 'B_WIN'
 
     setSavingMatch(true)
     setMatchMessage(null)
@@ -454,6 +638,34 @@ function App() {
       .update({
         score_a: scoreAVal,
         score_b: scoreBVal,
+        score_submitted_by: playerId,
+      })
+      .eq('id', currentMatch.id)
+
+    setSavingMatch(false)
+    if (error) {
+      setMatchMessage(t.ladderError)
+      return
+    }
+    setMatchMessage(t.ladderSaved)
+    setCurrentMatch((m) =>
+      m ? { ...m, score_a: scoreAVal, score_b: scoreBVal, score_submitted_by: playerId } : m,
+    )
+  }
+
+  const confirmLobbyResult = async () => {
+    if (!currentMatch || !playerId) return
+    const sa = currentMatch.score_a ?? 0
+    const sb = currentMatch.score_b ?? 0
+    let result: 'A_WIN' | 'B_WIN' | 'DRAW' = 'DRAW'
+    if (sa > sb) result = 'A_WIN'
+    else if (sb > sa) result = 'B_WIN'
+
+    setSavingMatch(true)
+    setMatchMessage(null)
+    const { error } = await supabase
+      .from('matches')
+      .update({
         result,
         played_at: new Date().toISOString(),
       })
@@ -464,7 +676,7 @@ function App() {
       setMatchMessage(t.ladderError)
       return
     }
-    setMatchMessage(t.ladderSaved)
+    setMatchMessage(t.ladderResultConfirmed)
     setScoreA('')
     setScoreB('')
     setCurrentMatch(null)
@@ -474,44 +686,87 @@ function App() {
 
   return (
     <div className="app">
-      <header className="app-header">
-        <div className="app-header-main">
-          <h1 className="app-title">{t.appTitle}</h1>
-          <p className="app-subtitle">{t.appSubtitle}</p>
-        </div>
-        <div className="lang-switch">
+      <div className="site-header">
+        <header className="app-header">
+          <div className="app-header-main">
+            <h1 className="app-title">{t.appTitle}</h1>
+            <p className="app-subtitle">{t.appSubtitle}</p>
+          </div>
+        </header>
+        <nav className="app-nav">
           <button
             type="button"
-            className={lang === 'en' ? 'lang-btn active' : 'lang-btn'}
-            onClick={() => setLang('en')}
+            className={activeView === 'home' ? 'nav-btn active' : 'nav-btn'}
+            onClick={() => setActiveView('home')}
           >
-            EN
+            {t.navHome}
           </button>
           <button
             type="button"
-            className={lang === 'ro' ? 'lang-btn active' : 'lang-btn'}
-            onClick={() => setLang('ro')}
+            className={activeView === 'ladder' ? 'nav-btn active' : 'nav-btn'}
+            onClick={() => setActiveView('ladder')}
           >
-            RO
+            {t.navPlay}
           </button>
           <button
             type="button"
-            className={lang === 'ru' ? 'lang-btn active' : 'lang-btn'}
-            onClick={() => setLang('ru')}
+            className={activeView === 'tournaments' ? 'nav-btn active' : 'nav-btn'}
+            onClick={() => setActiveView('tournaments')}
           >
-            RU
+            {t.navTournaments}
           </button>
+          <button
+            type="button"
+            className={activeView === 'profile' ? 'nav-btn active' : 'nav-btn'}
+            onClick={() => setActiveView('profile')}
+          >
+            {t.navProfile}
+          </button>
+        </nav>
+        <div className="header-right">
+          <div className="lang-switch">
+            <button
+              type="button"
+              className={lang === 'en' ? 'lang-btn active' : 'lang-btn'}
+              onClick={() => setLang('en')}
+            >
+              EN
+            </button>
+            <button
+              type="button"
+              className={lang === 'ro' ? 'lang-btn active' : 'lang-btn'}
+              onClick={() => setLang('ro')}
+            >
+              RO
+            </button>
+            <button
+              type="button"
+              className={lang === 'ru' ? 'lang-btn active' : 'lang-btn'}
+              onClick={() => setLang('ru')}
+            >
+              RU
+            </button>
+          </div>
+          <div className="app-user">
+            <span className="app-user-name">{displayName}</span>
+            <span className="app-user-rating">
+              ELO: {elo ?? '—'}
+            </span>
+          </div>
         </div>
-        <div className="app-user">
-          <span className="app-user-name">{displayName}</span>
-          <span className="app-user-rating">
-            ELO: {elo ?? '—'}
-          </span>
-        </div>
-      </header>
+      </div>
 
       <main className="app-main">
-        <h2 className="view-title">{t.viewTitle[activeView]}</h2>
+        {activeView === 'home' && (
+          <section className="hero">
+            <h2 className="hero-title">{t.appTitle}</h2>
+            <p className="hero-subtitle">{t.appSubtitle}</p>
+          </section>
+        )}
+
+        {activeView !== 'home' && (
+          <h2 className="view-title">{t.viewTitle[activeView]}</h2>
+        )}
 
         {activeView === 'home' && (
           <section className="grid">
@@ -550,6 +805,9 @@ function App() {
             {loadingProfile && (
               <p className="panel-text">{t.profileLoading}</p>
             )}
+            {profileLoadError && (
+              <p className="panel-text profile-error">{t.profileError}</p>
+            )}
             <div className="panel-row">
               <span className="label">{t.profilePlayerLabel}</span>
               <span className="value">{displayName}</span>
@@ -564,6 +822,74 @@ function App() {
                 {matchesCount === null ? '—' : matchesCount}
               </span>
             </div>
+
+            <div className="profile-telegram">
+              <h4 className="panel-subtitle">{t.profileTelegramTitle}</h4>
+              {user ? (
+                <>
+                  <p className="profile-telegram-status">{t.profileTelegramConnected}</p>
+                  <div className="panel-row">
+                    <span className="label">{t.profileTelegramUsername}</span>
+                    <span className="value">
+                      {user.username ? `@${user.username}` : '—'}
+                    </span>
+                  </div>
+                  <div className="panel-row">
+                    <span className="label">{t.profileTelegramId}</span>
+                    <span className="value profile-telegram-id">{user.id}</span>
+                  </div>
+                  {widgetUser && !tg && (
+                    <button
+                      type="button"
+                      className="profile-logout-btn"
+                      onClick={() => {
+                        setStoredWidgetUser(null)
+                        setWidgetUser(null)
+                      }}
+                    >
+                      {t.profileLogout}
+                    </button>
+                  )}
+                </>
+              ) : (
+                <>
+                  <p className="panel-text profile-telegram-not">{t.profileTelegramNotConnected}</p>
+                  <p className="panel-hint profile-telegram-login-label">{t.profileTelegramLoginLabel}</p>
+                  <div ref={widgetContainerRef} className="profile-telegram-widget" />
+                  <p className="panel-hint profile-telegram-menu-hint">
+                    {t.profileTelegramMenuHint}
+                  </p>
+                  <a
+                    href={`https://t.me/${(import.meta.env.VITE_TELEGRAM_BOT_USERNAME as string) || 'fcarea_bot'}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="primary-button profile-telegram-link"
+                  >
+                    {t.profileTelegramOpenBtn}
+                  </a>
+                  <div className="profile-telegram-steps">
+                    <p className="panel-hint profile-telegram-no-redirect">
+                      {t.profileTelegramNoRedirect}{' '}
+                      <strong className="profile-telegram-domain">{typeof window !== 'undefined' ? window.location.host : ''}</strong>
+                    </p>
+                    <p className="panel-hint profile-telegram-step2">{t.profileTelegramStep2}</p>
+                    <p className="panel-hint profile-telegram-botfather">{t.profileTelegramBotfatherHint}</p>
+                    <p className="panel-hint profile-telegram-setdomain">{t.profileTelegramSetDomain}</p>
+                  </div>
+                  <p className="panel-hint profile-telegram-hint">
+                    {t.profileTelegramOrOpen}{' '}
+                    <a
+                      href={`https://t.me/${(import.meta.env.VITE_TELEGRAM_BOT_USERNAME as string) || 'fcarea_bot'}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      @{(import.meta.env.VITE_TELEGRAM_BOT_USERNAME as string) || 'fcarea_bot'}
+                    </a>
+                  </p>
+                </>
+              )}
+            </div>
+
             <p className="panel-hint">
               {t.profileHint}
             </p>
@@ -603,40 +929,81 @@ function App() {
                 <p className="panel-text lobby-vs">
                   {t.ladderLobbyVs.replace('{name}', opponentName)}
                 </p>
-                <p className="panel-text small">{t.ladderLobbyAgree}</p>
-                <div className="form-row">
-                  <label className="form-label">{t.ladderMyScore}</label>
-                  <input
-                    type="number"
-                    min={0}
-                    className="form-input"
-                    value={scoreA}
-                    onChange={(e) => setScoreA(e.target.value)}
-                  />
-                </div>
-                <div className="form-row">
-                  <label className="form-label">{t.ladderOppScore}</label>
-                  <input
-                    type="number"
-                    min={0}
-                    className="form-input"
-                    value={scoreB}
-                    onChange={(e) => setScoreB(e.target.value)}
-                  />
-                </div>
-                {matchMessage && (
-                  <p className={matchMessage === t.ladderSaved ? 'panel-success' : 'panel-error'}>
-                    {matchMessage}
-                  </p>
+
+                {currentMatch.score_submitted_by == null && (
+                  <>
+                    <p className="panel-text small">{t.ladderLobbyAgree}</p>
+                    <div className="form-row">
+                      <label className="form-label">{t.ladderMyScore}</label>
+                      <input
+                        type="number"
+                        min={0}
+                        className="form-input"
+                        value={scoreA}
+                        onChange={(e) => setScoreA(e.target.value)}
+                      />
+                    </div>
+                    <div className="form-row">
+                      <label className="form-label">{t.ladderOppScore}</label>
+                      <input
+                        type="number"
+                        min={0}
+                        className="form-input"
+                        value={scoreB}
+                        onChange={(e) => setScoreB(e.target.value)}
+                      />
+                    </div>
+                    {matchMessage && (
+                      <p className={matchMessage === t.ladderSaved ? 'panel-success' : 'panel-error'}>
+                        {matchMessage}
+                      </p>
+                    )}
+                    <button
+                      type="button"
+                      className="primary-button"
+                      disabled={savingMatch}
+                      onClick={submitLobbyScore}
+                    >
+                      {savingMatch ? '…' : t.ladderSubmitScore}
+                    </button>
+                  </>
                 )}
-                <button
-                  type="button"
-                  className="primary-button"
-                  disabled={savingMatch}
-                  onClick={submitLobbyResult}
-                >
-                  {savingMatch ? '…' : t.ladderSave}
-                </button>
+
+                {currentMatch.score_submitted_by === playerId && (
+                  <>
+                    <p className="panel-text">
+                      {t.ladderMyScore}: {currentMatch.player_a_id === playerId ? (currentMatch.score_a ?? 0) : (currentMatch.score_b ?? 0)} — {t.ladderOppScore}: {currentMatch.player_a_id === playerId ? (currentMatch.score_b ?? 0) : (currentMatch.score_a ?? 0)}
+                    </p>
+                    <p className="panel-text small">{t.ladderWaitingConfirm}</p>
+                    {matchMessage && (
+                      <p className="panel-success">{matchMessage}</p>
+                    )}
+                  </>
+                )}
+
+                {currentMatch.score_submitted_by === opponentId && (
+                  <>
+                    <p className="panel-text">
+                      {t.ladderOpponentProposed.replace(
+                        '{score}',
+                        `${currentMatch.score_a ?? 0} – ${currentMatch.score_b ?? 0}`,
+                      )}
+                    </p>
+                    {matchMessage && (
+                      <p className={matchMessage === t.ladderResultConfirmed ? 'panel-success' : 'panel-error'}>
+                        {matchMessage}
+                      </p>
+                    )}
+                    <button
+                      type="button"
+                      className="primary-button"
+                      disabled={savingMatch}
+                      onClick={confirmLobbyResult}
+                    >
+                      {savingMatch ? '…' : t.ladderConfirmResult}
+                    </button>
+                  </>
+                )}
               </>
             )}
 
@@ -667,36 +1034,10 @@ function App() {
         )}
       </main>
 
-      <nav className="app-nav">
-        <button
-          type="button"
-          className={activeView === 'home' ? 'nav-btn active' : 'nav-btn'}
-          onClick={() => setActiveView('home')}
-        >
-          {t.navHome}
-        </button>
-        <button
-          type="button"
-          className={activeView === 'ladder' ? 'nav-btn active' : 'nav-btn'}
-          onClick={() => setActiveView('ladder')}
-        >
-          {t.navPlay}
-        </button>
-        <button
-          type="button"
-          className={activeView === 'tournaments' ? 'nav-btn active' : 'nav-btn'}
-          onClick={() => setActiveView('tournaments')}
-        >
-          {t.navTournaments}
-        </button>
-        <button
-          type="button"
-          className={activeView === 'profile' ? 'nav-btn active' : 'nav-btn'}
-          onClick={() => setActiveView('profile')}
-        >
-          {t.navProfile}
-        </button>
-      </nav>
+      <footer className="site-footer">
+        <span className="site-footer-brand">{t.appTitle}</span>
+        <span className="site-footer-copy">Ladder &amp; Tournaments</span>
+      </footer>
     </div>
   )
 }
