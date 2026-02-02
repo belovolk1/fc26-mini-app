@@ -940,6 +940,7 @@ function App() {
       const { data: pendingRows, error: pendingErr } = await supabase.rpc('get_my_pending_match', { p_player_id: playerId })
       const pending = Array.isArray(pendingRows) ? pendingRows[0] : pendingRows
       if (!pendingErr && pending) {
+        void supabase.from('matchmaking_queue').delete().eq('player_id', playerId)
         setCurrentMatch({
           id: pending.id,
           player_a_id: pending.player_a_id,
@@ -958,8 +959,10 @@ function App() {
     void check()
   }, [activeView, playerId, t.guestName])
 
-  // Применить найденный матч (лобби) — общий код для Realtime и опроса
+  // Применить найденный матч (лобби) — общий код для Realtime и опроса.
+  // Сразу удаляем себя из очереди поиска, чтобы не участвовать в матчмейкинге, пока снова не нажмём «Поиск».
   const applyPendingMatch = async (match: { id: number; player_a_id: string; player_b_id: string; score_a?: number | null; score_b?: number | null; score_submitted_by?: string | null }) => {
+    if (playerId) void supabase.from('matchmaking_queue').delete().eq('player_id', playerId)
     setCurrentMatch({
       id: match.id,
       player_a_id: match.player_a_id,
