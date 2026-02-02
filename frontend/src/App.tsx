@@ -27,6 +27,14 @@ const messages: Record<
     ladderText: string
     ladderButton: string
     ladderHint: string
+    ladderManualTitle: string
+    ladderMyScore: string
+    ladderOppScore: string
+    ladderOppTelegramId: string
+    ladderSave: string
+    ladderSaved: string
+    ladderError: string
+    ladderLoginRequired: string
     tournamentsHeader: string
     tournamentsIntro: string
     weeklyCupTitle: string
@@ -70,6 +78,14 @@ const messages: Record<
     ladderButton: 'Search game (soon)',
     ladderHint:
       'First we will build the interface and mock data, then connect real backend and matchmaking.',
+    ladderManualTitle: 'Enter match result',
+    ladderMyScore: 'My score',
+    ladderOppScore: 'Opponent score',
+    ladderOppTelegramId: 'Opponent Telegram ID',
+    ladderSave: 'Save result',
+    ladderSaved: 'Result saved.',
+    ladderError: 'Could not save. Check opponent ID and try again.',
+    ladderLoginRequired: 'Open the app from Telegram to save results.',
     tournamentsHeader: 'Tournaments',
     tournamentsIntro:
       'Here will be a list of upcoming tournaments, registration and brackets.',
@@ -114,6 +130,14 @@ const messages: Record<
     ladderButton: 'Caută joc (în curând)',
     ladderHint:
       'Întâi construim interfața și datele mock, apoi conectăm backend‑ul real și matchmaking‑ul.',
+    ladderManualTitle: 'Introdu rezultatul meciului',
+    ladderMyScore: 'Scorul meu',
+    ladderOppScore: 'Scorul adversarului',
+    ladderOppTelegramId: 'ID Telegram adversar',
+    ladderSave: 'Salvează rezultatul',
+    ladderSaved: 'Rezultat salvat.',
+    ladderError: 'Nu s-a putut salva. Verifică ID-ul adversarului.',
+    ladderLoginRequired: 'Deschide aplicația din Telegram pentru a salva rezultate.',
     tournamentsHeader: 'Turnee',
     tournamentsIntro:
       'Aici va apărea lista turneelor, înregistrarea și tabloul.',
@@ -158,6 +182,14 @@ const messages: Record<
     ladderButton: 'Поиск игры (скоро)',
     ladderHint:
       'Сначала сделаем интерфейс и мок‑данные, затем подключим реальный бэкенд и матчмейкинг.',
+    ladderManualTitle: 'Ввести результат матча',
+    ladderMyScore: 'Мои голы',
+    ladderOppScore: 'Голы соперника',
+    ladderOppTelegramId: 'Telegram ID соперника',
+    ladderSave: 'Сохранить результат',
+    ladderSaved: 'Результат сохранён.',
+    ladderError: 'Не удалось сохранить. Проверьте ID соперника.',
+    ladderLoginRequired: 'Откройте приложение из Telegram, чтобы сохранять результаты.',
     tournamentsHeader: 'Турниры',
     tournamentsIntro:
       'Здесь появится список ближайших турниров, регистрация и сетка.',
@@ -199,9 +231,15 @@ declare global {
 function App() {
   const [activeView, setActiveView] = useState<View>('home')
   const [lang, setLang] = useState<Lang>('en')
+  const [playerId, setPlayerId] = useState<string | null>(null)
   const [elo, setElo] = useState<number | null>(null)
   const [matchesCount, setMatchesCount] = useState<number | null>(null)
   const [loadingProfile, setLoadingProfile] = useState(false)
+  const [scoreA, setScoreA] = useState<string>('')
+  const [scoreB, setScoreB] = useState<string>('')
+  const [opponentTelegramId, setOpponentTelegramId] = useState<string>('')
+  const [savingMatch, setSavingMatch] = useState(false)
+  const [matchMessage, setMatchMessage] = useState<string | null>(null)
 
   const tg = window.Telegram?.WebApp
 
@@ -253,7 +291,8 @@ function App() {
         return
       }
 
-      setElo((upserted as any)?.elo ?? null)
+      setPlayerId((upserted as { id: string })?.id ?? null)
+      setElo((upserted as { elo?: number })?.elo ?? null)
 
       // считаем количество сыгранных матчей, где игрок участвует как A или B
       const { count, error: matchesError } = await supabase
@@ -276,6 +315,77 @@ function App() {
     if (user.username) return `@${user.username}`
     return [user.first_name, user.last_name].filter(Boolean).join(' ')
   }, [t.guestName, user])
+
+  const refetchMatchesCount = async () => {
+    if (!playerId) return
+    const { count, error } = await supabase
+      .from('matches')
+      .select('id', { count: 'exact', head: true })
+      .or(`player_a_id.eq.${playerId},player_b_id.eq.${playerId}`)
+    if (!error) setMatchesCount(count ?? 0)
+  }
+
+  const handleSaveMatch = async () => {
+    if (!user || !playerId) {
+      setMatchMessage(t.ladderLoginRequired)
+      return
+    }
+    const myScore = parseInt(scoreA, 10)
+    const oppScore = parseInt(scoreB, 10)
+    const oppTgId = opponentTelegramId.trim()
+    if (oppTgId === '' || Number.isNaN(myScore) || Number.isNaN(oppScore)) {
+      setMatchMessage(t.ladderError)
+      return
+    }
+    const oppIdNum = parseInt(oppTgId, 10)
+    if (Number.isNaN(oppIdNum)) {
+      setMatchMessage(t.ladderError)
+      return
+    }
+    setSavingMatch(true)
+    setMatchMessage(null)
+
+    const { data: opponent, error: oppError } = await supabase
+      .from('players')
+      .upsert(
+        { telegram_id: oppIdNum },
+        { onConflict: 'telegram_id' },
+      )
+      .select()
+      .single()
+
+    if (oppError || !opponent) {
+      setSavingMatch(false)
+      setMatchMessage(t.ladderError)
+      return
+    }
+
+    const opponentId = (opponent as { id: string }).id
+    let result: 'A_WIN' | 'B_WIN' | 'DRAW' = 'DRAW'
+    if (myScore > oppScore) result = 'A_WIN'
+    else if (oppScore > myScore) result = 'B_WIN'
+
+    const { error: matchError } = await supabase.from('matches').insert({
+      player_a_id: playerId,
+      player_b_id: opponentId,
+      score_a: myScore,
+      score_b: oppScore,
+      result,
+      is_tournament: false,
+      played_at: new Date().toISOString(),
+    })
+
+    setSavingMatch(false)
+    if (matchError) {
+      setMatchMessage(t.ladderError)
+      return
+    }
+    setMatchMessage(t.ladderSaved)
+    setScoreA('')
+    setScoreB('')
+    setOpponentTelegramId('')
+    refetchMatchesCount()
+  }
 
   return (
     <div className="app">
@@ -379,8 +489,50 @@ function App() {
           <section className="panel">
             <h3 className="panel-title">{t.ladderHeader}</h3>
             <p className="panel-text">{t.ladderText}</p>
-            <button type="button" className="primary-button" disabled>
-              {t.ladderButton}
+            <h4 className="panel-subtitle">{t.ladderManualTitle}</h4>
+            <div className="form-row">
+              <label className="form-label">{t.ladderMyScore}</label>
+              <input
+                type="number"
+                min={0}
+                className="form-input"
+                value={scoreA}
+                onChange={(e) => setScoreA(e.target.value)}
+              />
+            </div>
+            <div className="form-row">
+              <label className="form-label">{t.ladderOppScore}</label>
+              <input
+                type="number"
+                min={0}
+                className="form-input"
+                value={scoreB}
+                onChange={(e) => setScoreB(e.target.value)}
+              />
+            </div>
+            <div className="form-row">
+              <label className="form-label">{t.ladderOppTelegramId}</label>
+              <input
+                type="text"
+                inputMode="numeric"
+                placeholder="123456789"
+                className="form-input"
+                value={opponentTelegramId}
+                onChange={(e) => setOpponentTelegramId(e.target.value)}
+              />
+            </div>
+            {matchMessage && (
+              <p className={matchMessage === t.ladderSaved ? 'panel-success' : 'panel-error'}>
+                {matchMessage}
+              </p>
+            )}
+            <button
+              type="button"
+              className="primary-button"
+              disabled={savingMatch}
+              onClick={handleSaveMatch}
+            >
+              {savingMatch ? '…' : t.ladderSave}
             </button>
             <p className="panel-hint">
               {t.ladderHint}
