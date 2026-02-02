@@ -435,10 +435,23 @@
   color: #fff;
 }
 
-.profile-telegram-new-tab {
+.profile-telegram-new-tab,
+.profile-telegram-same-tab {
   margin-top: 6px;
   font-size: 0.9em;
   color: var(--muted, #888);
+}
+
+.profile-telegram-returned-hint {
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  background: rgba(240, 173, 78, 0.2);
+  border-radius: 8px;
+  border-left: 3px solid #f0ad4e;
+}
+
+.profile-telegram-returned-hint .panel-text {
+  margin: 0 0 4px 0;
 }
 
 .profile-telegram-widget iframe {

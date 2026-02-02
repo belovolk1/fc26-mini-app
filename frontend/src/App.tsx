@@ -33,6 +33,8 @@ const messages: Record<
     profileTelegramLoginLabel: string
     profileTelegramWidgetHint: string
     profileTelegramNewTab: string
+    profileTelegramSameTab: string
+    profileTelegramReturnedNoParams: string
     profileTelegramChatOnly: string
     profileTelegramMenuHint: string
     profileTelegramStep2: string
@@ -112,6 +114,8 @@ const messages: Record<
     profileTelegramLoginLabel: 'Log in with Telegram to link your profile and see stats here:',
     profileTelegramWidgetHint: 'Use the blue "Log in with Telegram" button above (from Telegram). Do NOT click "Open in Telegram" — that only opens the bot chat and does not log you in.',
     profileTelegramNewTab: 'Opens in a new tab. After login you\'ll return to the site there; then refresh this page or use that tab.',
+    profileTelegramSameTab: 'After clicking you\'ll go to Telegram to log in, then return here. If you still see Guest after returning, add this domain in BotFather: /setdomain',
+    profileTelegramReturnedNoParams: 'You seem to have returned from Telegram but the domain was not in the allowed list. In BotFather run /setdomain, select your bot, and add this domain:',
     profileTelegramChatOnly: 'If the blue button only opens the bot chat and you don\'t see "Allow to log you in?", run /setdomain in BotFather and add your site domain (see below).',
     profileTelegramMenuHint: 'In the bot chat, tap the menu button (☰) or the button below the input to open the app.',
     profileTelegramStep2: 'If only the chat opened: tap the menu button (☰) next to the input, or the button below the input (e.g. "FC Area") to open the app.',
@@ -195,6 +199,8 @@ const messages: Record<
     profileTelegramLoginLabel: 'Autentifică-te cu Telegram pentru a lega profilul și a vedea statisticile aici:',
     profileTelegramWidgetHint: 'Folosește butonul albastru "Log in with Telegram" de mai sus (de la Telegram). NU apăsa "Deschide în Telegram" — acela deschide doar chat-ul cu botul și nu te autentifică.',
     profileTelegramNewTab: 'Se deschide într-un tab nou. După login vei reveni pe site acolo; reîmprospătează această pagină sau folosește acel tab.',
+    profileTelegramSameTab: 'După click vei merge pe Telegram pentru login, apoi vei reveni aici. Dacă tot vezi „oaspete”, adaugă domeniul în BotFather: /setdomain',
+    profileTelegramReturnedNoParams: 'Pare că ai revenit de pe Telegram, dar domeniul nu era în listă. În BotFather rulează /setdomain, selectează botul și adaugă acest domeniu:',
     profileTelegramChatOnly: 'Dacă butonul albastru deschide doar chat-ul cu botul și nu vezi "Allow to log you in?", rulează /setdomain în BotFather și adaugă domeniul site-ului (vezi mai jos).',
     profileTelegramMenuHint: 'În chat cu botul, apasă butonul de meniu (☰) sau butonul de sub input pentru a deschide aplicația.',
     profileTelegramStep2: 'Dacă s-a deschis doar chat-ul: apasă butonul de meniu (☰) lângă câmpul de input sau butonul de sub input (ex. "FC Area") pentru a deschide aplicația.',
@@ -278,6 +284,8 @@ const messages: Record<
     profileTelegramLoginLabel: 'Войдите через Telegram, чтобы привязать профиль и видеть статистику здесь:',
     profileTelegramWidgetHint: 'Нажимайте синюю кнопку «Log in with Telegram» выше (от Telegram). Не нажимайте «Открыть в Telegram» — это только ссылка на чат с ботом, она не выполняет вход.',
     profileTelegramNewTab: 'Откроется в новой вкладке. После входа вы вернётесь на сайт там; обновите эту страницу или работайте в той вкладке.',
+    profileTelegramSameTab: 'После нажатия вы перейдёте в Telegram для входа, затем вернётесь сюда. Если после возврата всё ещё «Гость» — добавьте этот домен в BotFather: /setdomain',
+    profileTelegramReturnedNoParams: 'Похоже, вы вернулись из Telegram, но домен не был в списке разрешённых. В BotFather выполните /setdomain, выберите бота и добавьте этот домен:',
     profileTelegramChatOnly: 'Если при нажатии синей кнопки открывается только чат с ботом и нет окна «Разрешить вход?» — в BotFather выполните /setdomain и добавьте домен сайта (см. ниже).',
     profileTelegramMenuHint: 'В чате с ботом нажмите кнопку меню (☰) или кнопку под полем ввода, чтобы открыть приложение.',
     profileTelegramStep2: 'Если открылся только чат: нажмите кнопку меню (☰) слева от поля ввода или кнопку под полем ввода (например «FC Area») — откроется приложение.',
@@ -418,6 +426,7 @@ function App() {
 
   const tg = window.Telegram?.WebApp
   const [widgetUser, setWidgetUser] = useState<TelegramUser | null>(() => getStoredWidgetUser())
+  const [cameFromTelegram, setCameFromTelegram] = useState(false)
 
   useEffect(() => {
     if (!tg) return
@@ -432,7 +441,16 @@ function App() {
       setStoredWidgetUser(parsed)
       setWidgetUser(parsed)
       setActiveView('profile')
+      setCameFromTelegram(false)
       window.history.replaceState(null, '', window.location.pathname)
+    } else if (
+      typeof document !== 'undefined' &&
+      document.referrer &&
+      document.referrer.includes('telegram') &&
+      !window.location.hash &&
+      !window.location.search
+    ) {
+      setCameFromTelegram(true)
     }
   }, [])
 
@@ -890,6 +908,14 @@ function App() {
                 </>
               ) : (
                 <>
+                  {cameFromTelegram && (
+                    <div className="profile-telegram-returned-hint">
+                      <p className="panel-text">{t.profileTelegramReturnedNoParams}</p>
+                      <p className="panel-hint">
+                        <strong className="profile-telegram-domain">{typeof window !== 'undefined' ? window.location.host : ''}</strong>
+                      </p>
+                    </div>
+                  )}
                   <p className="panel-text profile-browser-hint">{t.profileBrowserHint}</p>
                   <p className="panel-text profile-telegram-not">{t.profileTelegramNotConnected}</p>
                   <p className="panel-hint profile-telegram-login-label">{t.profileTelegramLoginLabel}</p>
@@ -898,12 +924,11 @@ function App() {
                       <a
                         href={telegramLoginUrl}
                         className="telegram-login-fallback primary-button"
-                        target="_blank"
                         rel="noopener noreferrer"
                       >
                         Log in with Telegram
                       </a>
-                      <p className="panel-hint profile-telegram-new-tab">{t.profileTelegramNewTab}</p>
+                      <p className="panel-hint profile-telegram-same-tab">{t.profileTelegramSameTab}</p>
                     </>
                   ) : (
                     <div ref={widgetContainerRef} className="profile-telegram-widget" />
