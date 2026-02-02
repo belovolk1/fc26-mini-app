@@ -9,6 +9,14 @@
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      (function() {
+        var q = window.location.search, h = window.location.hash;
+        if ((q && q.indexOf('id=') !== -1) || (h && h.indexOf('id=') !== -1)) {
+          try { sessionStorage.setItem('tg_redirect', q || h.slice(1)); } catch (e) {}
+        }
+      })();
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

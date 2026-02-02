@@ -349,11 +349,19 @@ type TelegramUser = {
   language_code?: string
 }
 
-/** Парсит данные пользователя после редиректа из Telegram Login Widget. Параметры могут быть в hash (#...) или в query (?...). */
+const TG_REDIRECT_KEY = 'tg_redirect'
+
+/** Парсит данные пользователя после редиректа из Telegram Login Widget. Параметры могут быть в hash (#...), query (?...) или в sessionStorage (если URL успели очистить до загрузки React). */
 function parseWidgetRedirect(): TelegramUser | null {
   const hash = window.location.hash?.slice(1)
   const search = window.location.search?.slice(1)
-  const params = new URLSearchParams(hash || search)
+  let saved: string | null = null
+  try {
+    saved = sessionStorage.getItem(TG_REDIRECT_KEY)
+    if (saved) sessionStorage.removeItem(TG_REDIRECT_KEY)
+  } catch (_) {}
+  const paramsStr = hash || search || saved || ''
+  const params = new URLSearchParams(paramsStr)
   const id = params.get('id') || params.get('user_id')
   const first_name = params.get('first_name')
   if (!id || !first_name) return null
