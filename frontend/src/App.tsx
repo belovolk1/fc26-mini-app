@@ -673,6 +673,7 @@ function App() {
   } | null>(null)
   const [opponentName, setOpponentName] = useState<string>('')
   const [opponentUsername, setOpponentUsername] = useState<string | null>(null)
+  const [opponentTelegramId, setOpponentTelegramId] = useState<number | null>(null)
   const [scoreA, setScoreA] = useState<string>('')
   const [scoreB, setScoreB] = useState<string>('')
   const [savingMatch, setSavingMatch] = useState(false)
@@ -950,10 +951,11 @@ function App() {
           score_submitted_by: pending.score_submitted_by ?? undefined,
         })
         const oppId = pending.player_a_id === playerId ? pending.player_b_id : pending.player_a_id
-        const { data: opp } = await supabase.from('players').select('username, first_name, last_name').eq('id', oppId).single()
+        const { data: opp } = await supabase.from('players').select('username, first_name, last_name, telegram_id').eq('id', oppId).single()
         const name = opp ? (opp.username ? `@${opp.username}` : [opp.first_name, opp.last_name].filter(Boolean).join(' ') || t.guestName) : t.guestName
         setOpponentName(name)
         setOpponentUsername(opp?.username?.trim() ? opp.username.trim() : null)
+        setOpponentTelegramId(opp?.telegram_id != null ? Number(opp.telegram_id) : null)
         setSearchStatus('in_lobby')
       }
     }
@@ -973,10 +975,11 @@ function App() {
       score_submitted_by: match.score_submitted_by ?? undefined,
     })
     const oppId = match.player_a_id === playerId ? match.player_b_id : match.player_a_id
-    const { data: opp } = await supabase.from('players').select('username, first_name, last_name').eq('id', oppId).single()
+    const { data: opp } = await supabase.from('players').select('username, first_name, last_name, telegram_id').eq('id', oppId).single()
     const name = opp ? (opp.username ? `@${opp.username}` : [opp.first_name, opp.last_name].filter(Boolean).join(' ') || t.guestName) : t.guestName
     setOpponentName(name)
     setOpponentUsername(opp?.username?.trim() ? opp.username.trim() : null)
+    setOpponentTelegramId(opp?.telegram_id != null ? Number(opp.telegram_id) : null)
     setSearchStatus('in_lobby')
   }
 
@@ -1036,6 +1039,7 @@ function App() {
             setCurrentMatch(null)
             setOpponentName('')
             setOpponentUsername(null)
+            setOpponentTelegramId(null)
             setSearchStatus('idle')
             refetchMatchesCount()
             return
@@ -1072,6 +1076,7 @@ function App() {
         setCurrentMatch(null)
         setOpponentName('')
         setOpponentUsername(null)
+        setOpponentTelegramId(null)
         setSearchStatus('idle')
         refetchMatchesCount()
         return
@@ -1280,6 +1285,7 @@ function App() {
     setScoreB('')
     setCurrentMatch(null)
     setOpponentUsername(null)
+    setOpponentTelegramId(null)
     setSearchStatus('idle')
     refetchMatchesCount()
   }
@@ -1870,23 +1876,23 @@ function App() {
                 <p className="panel-text small">
                   {(() => {
                     const linkUsername = (opponentUsername?.trim() || (typeof opponentName === 'string' && opponentName.startsWith('@') ? opponentName.slice(1).trim() : null)) || null
-                    const linkUrl = linkUsername ? `https://t.me/${linkUsername.replace(/^@/, '')}` : null
+                    const linkUrl = linkUsername
+                      ? `https://t.me/${linkUsername.replace(/^@/, '')}`
+                      : opponentTelegramId != null
+                        ? `tg://user?id=${opponentTelegramId}`
+                        : null
+                    const openLink = (tg as { openTelegramLink?: (u: string) => void })?.openTelegramLink
                     return linkUrl ? (
-                      <a
-                        href={linkUrl}
+                      <button
+                        type="button"
                         className="link-button"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={(e) => {
-                          const openLink = (tg as { openTelegramLink?: (u: string) => void })?.openTelegramLink
-                          if (openLink) {
-                            e.preventDefault()
-                            openLink((e.currentTarget as HTMLAnchorElement).href)
-                          }
+                        onClick={() => {
+                          if (openLink) openLink(linkUrl)
+                          else window.open(linkUrl, '_blank', 'noopener,noreferrer')
                         }}
                       >
                         {t.ladderMessageOpponent}
-                      </a>
+                      </button>
                     ) : (
                       <span className="panel-text-muted">{t.ladderMessageOpponent}</span>
                     )
