@@ -384,6 +384,24 @@
   opacity: 0.95;
 }
 
+.profile-telegram-setdomain-one {
+  margin-top: 12px;
+  font-size: 0.9em;
+  color: var(--muted, #888);
+}
+
+.profile-telegram-link-text {
+  display: inline-block;
+  margin-top: 8px;
+  color: #58a6ff;
+  text-decoration: none;
+  font-size: 0.9em;
+}
+
+.profile-telegram-link-text:hover {
+  text-decoration: underline;
+}
+
 .profile-telegram-login-label {
   margin: 8px 0 4px 0;
   font-weight: 500;

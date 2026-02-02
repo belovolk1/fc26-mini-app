@@ -40,6 +40,7 @@ const messages: Record<
     profileTelegramStep2: string
     profileTelegramBotfatherHint: string
     profileTelegramSetDomain: string
+    profileTelegramSetDomainOne: string
     profileTelegramBotIdHint: string
     profileTelegramNoRedirect: string
     profileLogout: string
@@ -121,6 +122,7 @@ const messages: Record<
     profileTelegramStep2: 'If only the chat opened: tap the menu button (☰) next to the input, or the button below the input (e.g. "FC Area") to open the app.',
     profileTelegramBotfatherHint: 'If there is no app button: in BotFather run /setmenubutton, select your bot, choose "Web App", enter URL (e.g. https://www.fcarea.com) and button name (e.g. FC Area).',
     profileTelegramSetDomain: 'If you still appear as a guest after logging in: in BotFather run /setdomain, select your bot, and add your site domain (e.g. www.fcarea.com).',
+    profileTelegramSetDomainOne: 'If still Guest after login: in BotFather run /setdomain and add this domain:',
     profileTelegramBotIdHint: 'If no blue button appears: add VITE_TELEGRAM_BOT_ID to your site env (from BotFather token, the part before \':\') and redeploy.',
     profileTelegramNoRedirect: 'If Telegram does not redirect you back to the site: in BotFather run /setdomain, select your bot, and add this domain:',
     profileLogout: 'Log out',
@@ -206,6 +208,7 @@ const messages: Record<
     profileTelegramStep2: 'Dacă s-a deschis doar chat-ul: apasă butonul de meniu (☰) lângă câmpul de input sau butonul de sub input (ex. "FC Area") pentru a deschide aplicația.',
     profileTelegramBotfatherHint: 'Dacă nu există buton pentru aplicație: în BotFather rulează /setmenubutton, selectează botul, alege "Web App", introdu URL (ex. https://www.fcarea.com) și numele butonului (ex. FC Area).',
     profileTelegramSetDomain: 'Dacă rămâi "oaspete" după login: în BotFather rulează /setdomain, selectează botul și adaugă domeniul site-ului (ex. www.fcarea.com).',
+    profileTelegramSetDomainOne: 'Dacă tot vezi „oaspete” după login: în BotFather rulează /setdomain și adaugă domeniul:',
     profileTelegramBotIdHint: 'Dacă nu apare butonul albastru: adaugă VITE_TELEGRAM_BOT_ID în env (din tokenul BotFather, partea înainte de \':\') și redeploy.',
     profileTelegramNoRedirect: 'Dacă Telegram nu te redirecționează înapoi pe site: în BotFather rulează /setdomain, selectează botul și adaugă acest domeniu:',
     profileLogout: 'Deconectare',
@@ -291,6 +294,7 @@ const messages: Record<
     profileTelegramStep2: 'Если открылся только чат: нажмите кнопку меню (☰) слева от поля ввода или кнопку под полем ввода (например «FC Area») — откроется приложение.',
     profileTelegramBotfatherHint: 'Если такой кнопки нет: в BotFather выполните /setmenubutton → выберите бота → Web App → укажите URL (например https://www.fcarea.com) и название кнопки (например FC Area).',
     profileTelegramSetDomain: 'Если после входа всё равно показывается «Гость»: в BotFather выполните /setdomain, выберите бота и добавьте домен сайта (например www.fcarea.com).',
+    profileTelegramSetDomainOne: 'Если после входа всё ещё «Гость»: в BotFather выполните /setdomain и добавьте домен:',
     profileTelegramBotIdHint: 'Если синяя кнопка не появляется: добавьте VITE_TELEGRAM_BOT_ID в переменные окружения сайта (из токена BotFather — часть до двоеточия) и пересоберите.',
     profileTelegramNoRedirect: 'Если Telegram не возвращает на сайт после входа: в BotFather выполните /setdomain, выберите бота и добавьте этот домен:',
     profileLogout: 'Выйти',
@@ -351,16 +355,16 @@ type TelegramUser = {
 
 const TG_REDIRECT_KEY = 'tg_redirect'
 
-/** Парсит данные пользователя после редиректа из Telegram Login Widget. Параметры могут быть в hash (#...), query (?...) или в sessionStorage (если URL успели очистить до загрузки React). */
+/** Парсит данные пользователя после редиректа из Telegram. Не удаляет из sessionStorage — очистка в useEffect. */
 function parseWidgetRedirect(): TelegramUser | null {
   const hash = window.location.hash?.slice(1)
   const search = window.location.search?.slice(1)
   let saved: string | null = null
   try {
     saved = sessionStorage.getItem(TG_REDIRECT_KEY)
-    if (saved) sessionStorage.removeItem(TG_REDIRECT_KEY)
   } catch (_) {}
-  const paramsStr = hash || search || saved || ''
+  const paramsStr = (hash || search || saved || '').trim()
+  if (!paramsStr) return null
   const params = new URLSearchParams(paramsStr)
   const id = params.get('id') || params.get('user_id')
   const first_name = params.get('first_name')
@@ -369,9 +373,9 @@ function parseWidgetRedirect(): TelegramUser | null {
   if (Number.isNaN(numId)) return null
   return {
     id: numId,
-    first_name,
-    last_name: params.get('last_name') ?? undefined,
-    username: params.get('username') ?? undefined,
+    first_name: first_name.trim(),
+    last_name: params.get('last_name')?.trim() || undefined,
+    username: params.get('username')?.trim() || undefined,
   }
 }
 
@@ -433,7 +437,7 @@ function App() {
   const widgetContainerRef = useRef<HTMLDivElement>(null)
 
   const tg = window.Telegram?.WebApp
-  const [widgetUser, setWidgetUser] = useState<TelegramUser | null>(() => getStoredWidgetUser())
+  const [widgetUser, setWidgetUser] = useState<TelegramUser | null>(() => parseWidgetRedirect() || getStoredWidgetUser())
   const [cameFromTelegram, setCameFromTelegram] = useState(false)
 
   useEffect(() => {
@@ -442,7 +446,7 @@ function App() {
     tg.expand()
   }, [tg])
 
-  // После редиректа из Telegram Login Widget — парсим параметры (hash или query) и сохраняем пользователя
+  // Сохраняем пользователя из редиректа в localStorage и очищаем URL / sessionStorage
   useEffect(() => {
     const parsed = parseWidgetRedirect()
     if (parsed) {
@@ -450,6 +454,9 @@ function App() {
       setWidgetUser(parsed)
       setActiveView('profile')
       setCameFromTelegram(false)
+      try {
+        sessionStorage.removeItem(TG_REDIRECT_KEY)
+      } catch (_) {}
       window.history.replaceState(null, '', window.location.pathname)
     } else if (
       typeof document !== 'undefined' &&
@@ -926,7 +933,6 @@ function App() {
                   )}
                   <p className="panel-text profile-browser-hint">{t.profileBrowserHint}</p>
                   <p className="panel-text profile-telegram-not">{t.profileTelegramNotConnected}</p>
-                  <p className="panel-hint profile-telegram-login-label">{t.profileTelegramLoginLabel}</p>
                   {telegramLoginUrl ? (
                     <>
                       <a
@@ -941,42 +947,18 @@ function App() {
                   ) : (
                     <div ref={widgetContainerRef} className="profile-telegram-widget" />
                   )}
-                  <p className="panel-hint profile-telegram-widget-hint">{t.profileTelegramWidgetHint}</p>
-                  <p className="panel-hint profile-telegram-menu-hint">
-                    {t.profileTelegramMenuHint}
+                  <p className="panel-hint profile-telegram-setdomain-one">
+                    {t.profileTelegramSetDomainOne}{' '}
+                    <strong className="profile-telegram-domain">{typeof window !== 'undefined' ? window.location.host : ''}</strong>
                   </p>
-                  <p className="panel-hint profile-telegram-or-open-label">{t.profileTelegramOrOpen}</p>
                   <a
                     href={`https://t.me/${(import.meta.env.VITE_TELEGRAM_BOT_USERNAME as string) || 'fcarea_bot'}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="primary-button profile-telegram-link"
+                    className="profile-telegram-link-text"
                   >
-                    {t.profileTelegramOpenBtn}
+                    {t.profileTelegramOrOpen} @{(import.meta.env.VITE_TELEGRAM_BOT_USERNAME as string) || 'fcarea_bot'}
                   </a>
-                  <div className="profile-telegram-steps">
-                    {!telegramLoginUrl && (
-                      <p className="panel-hint profile-telegram-botid-hint">{t.profileTelegramBotIdHint}</p>
-                    )}
-                    <p className="panel-hint profile-telegram-chat-only">{t.profileTelegramChatOnly}</p>
-                    <p className="panel-hint profile-telegram-no-redirect">
-                      {t.profileTelegramNoRedirect}{' '}
-                      <strong className="profile-telegram-domain">{typeof window !== 'undefined' ? window.location.host : ''}</strong>
-                    </p>
-                    <p className="panel-hint profile-telegram-step2">{t.profileTelegramStep2}</p>
-                    <p className="panel-hint profile-telegram-botfather">{t.profileTelegramBotfatherHint}</p>
-                    <p className="panel-hint profile-telegram-setdomain">{t.profileTelegramSetDomain}</p>
-                  </div>
-                  <p className="panel-hint profile-telegram-hint">
-                    {t.profileTelegramOrOpen}{' '}
-                    <a
-                      href={`https://t.me/${(import.meta.env.VITE_TELEGRAM_BOT_USERNAME as string) || 'fcarea_bot'}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      @{(import.meta.env.VITE_TELEGRAM_BOT_USERNAME as string) || 'fcarea_bot'}
-                    </a>
-                  </p>
                 </>
               )}
             </div>
