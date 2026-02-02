@@ -372,6 +372,8 @@ function parseWidgetRedirect(): TelegramUser | null {
   if (tgAuthResult) {
     try {
       const jsonStr = atob(tgAuthResult)
+      // Если tgAuthResult=false, значит авторизация не прошла
+      if (jsonStr === 'false') return null
       const data = JSON.parse(jsonStr) as {
         id?: number
         first_name?: string
@@ -481,7 +483,26 @@ function App() {
       const hash = window.location.hash?.slice(1)
       const search = window.location.search?.slice(1)
       const saved = sessionStorage.getItem(TG_REDIRECT_KEY)
-      console.log('[FC Area] No redirect params found. URL hash:', hash, 'search:', search, 'saved:', saved)
+      // Не логируем ошибку если tgAuthResult=false (нормально для Mini App)
+      const hasTgAuthResult = hash?.includes('tgAuthResult=') || search?.includes('tgAuthResult=')
+      if (hasTgAuthResult) {
+        const params = new URLSearchParams(hash || search || '')
+        const tgAuthResult = params.get('tgAuthResult')
+        if (tgAuthResult) {
+          try {
+            const decoded = atob(tgAuthResult)
+            if (decoded === 'false') {
+              console.log('[FC Area] tgAuthResult=false (auth cancelled or failed), will use tg.initDataUnsafe?.user')
+            } else {
+              console.log('[FC Area] tgAuthResult present but invalid:', tgAuthResult)
+            }
+          } catch (_) {
+            console.log('[FC Area] tgAuthResult present but not base64:', tgAuthResult)
+          }
+        }
+      } else {
+        console.log('[FC Area] No redirect params found. URL hash:', hash, 'search:', search, 'saved:', saved)
+      }
     }
   }
   
@@ -494,7 +515,23 @@ function App() {
     if (!tg) return
     tg.ready()
     tg.expand()
-  }, [tg])
+    // Проверяем initDataUnsafe?.user после инициализации (может быть доступен не сразу)
+    const checkUser = () => {
+      if (tg.initDataUnsafe?.user && !widgetUser) {
+        console.log('[FC Area] Found user from tg.initDataUnsafe:', tg.initDataUnsafe.user)
+        setWidgetUser(tg.initDataUnsafe.user)
+        try {
+          localStorage.setItem(WIDGET_USER_KEY, JSON.stringify(tg.initDataUnsafe.user))
+        } catch (e) {
+          console.error('[FC Area] Failed to save tg user to localStorage:', e)
+        }
+      }
+    }
+    // Проверяем сразу и с небольшой задержкой (данные могут появиться асинхронно)
+    checkUser()
+    const timeoutId = setTimeout(checkUser, 100)
+    return () => clearTimeout(timeoutId)
+  }, [tg, widgetUser])
 
   // Если был редирект — очищаем URL/sessionStorage и переключаемся на профиль
   useEffect(() => {
