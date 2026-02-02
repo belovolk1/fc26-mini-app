@@ -677,6 +677,10 @@
   margin-bottom: 8px;
 }
 
+.panel-text-muted {
+  color: var(--text-muted);
+}
+
 .lobby-vs {
   font-weight: 600;
   margin-bottom: 4px;

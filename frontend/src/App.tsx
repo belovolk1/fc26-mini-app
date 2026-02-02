@@ -1835,18 +1835,23 @@ function App() {
                   {t.ladderLobbyVs.replace('{name}', opponentName)}
                 </p>
                 <p className="panel-text small">
-                  <button
-                    type="button"
-                    className="link-button"
-                    onClick={() => {
-                      const url = opponentUsername ? `https://t.me/${opponentUsername}` : 'https://t.me'
-                      const openLink = (tg as { openTelegramLink?: (u: string) => void })?.openTelegramLink
-                      if (openLink) openLink(url)
-                      else window.open(url, '_blank', 'noopener,noreferrer')
-                    }}
-                  >
-                    {t.ladderMessageOpponent}
-                  </button>
+                  {opponentUsername ? (
+                    <button
+                      type="button"
+                      className="link-button"
+                      onClick={() => {
+                        const username = opponentUsername.replace(/^@/, '')
+                        const url = `https://t.me/${username}`
+                        const openLink = (tg as { openTelegramLink?: (u: string) => void })?.openTelegramLink
+                        if (openLink) openLink(url)
+                        else window.open(url, '_blank', 'noopener,noreferrer')
+                      }}
+                    >
+                      {t.ladderMessageOpponent}
+                    </button>
+                  ) : (
+                    <span className="panel-text-muted">{t.ladderMessageOpponent}</span>
+                  )}
                 </p>
 
                 {currentMatch.score_submitted_by == null && (
