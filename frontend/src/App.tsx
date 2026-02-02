@@ -696,15 +696,13 @@ function App() {
       setPlayerId((upserted as { id: string })?.id ?? null)
       setElo((upserted as { elo?: number })?.elo ?? null)
 
-      // считаем только подтверждённые матчи (не PENDING)
-      const { count, error: matchesError } = await supabase
-        .from('matches')
-        .select('id', { count: 'exact', head: true })
-        .neq('result', 'PENDING')
-        .or(`player_a_id.eq."${upserted.id}",player_b_id.eq."${upserted.id}"`)
-
-      if (!matchesError) {
-        setMatchesCount(count ?? 0)
+      // считаем только подтверждённые матчи (не PENDING) — два запроса без .or() из-за 400 на UUID
+      const [rA, rB] = await Promise.all([
+        supabase.from('matches').select('id', { count: 'exact', head: true }).neq('result', 'PENDING').eq('player_a_id', upserted.id),
+        supabase.from('matches').select('id', { count: 'exact', head: true }).neq('result', 'PENDING').eq('player_b_id', upserted.id),
+      ])
+      if (!rA.error && !rB.error) {
+        setMatchesCount((rA.count ?? 0) + (rB.count ?? 0))
       }
 
       setLoadingProfile(false)
@@ -721,12 +719,11 @@ function App() {
 
   const refetchMatchesCount = async () => {
     if (!playerId) return
-    const { count, error } = await supabase
-      .from('matches')
-      .select('id', { count: 'exact', head: true })
-      .neq('result', 'PENDING')
-      .or(`player_a_id.eq."${playerId}",player_b_id.eq."${playerId}"`)
-    if (!error) setMatchesCount(count ?? 0)
+    const [rA, rB] = await Promise.all([
+      supabase.from('matches').select('id', { count: 'exact', head: true }).neq('result', 'PENDING').eq('player_a_id', playerId),
+      supabase.from('matches').select('id', { count: 'exact', head: true }).neq('result', 'PENDING').eq('player_b_id', playerId),
+    ])
+    if (!rA.error && !rB.error) setMatchesCount((rA.count ?? 0) + (rB.count ?? 0))
   }
 
   // При входе на экран «Игра» проверяем: в очереди или уже есть лобби
@@ -742,14 +739,11 @@ function App() {
         setSearchStatus('searching')
         return
       }
-      const { data: pending } = await supabase
-        .from('matches')
-        .select('id, player_a_id, player_b_id, score_a, score_b, score_submitted_by')
-        .eq('result', 'PENDING')
-        .or(`player_a_id.eq."${playerId}",player_b_id.eq."${playerId}"`)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle()
+      const [mA, mB] = await Promise.all([
+        supabase.from('matches').select('id, player_a_id, player_b_id, score_a, score_b, score_submitted_by').eq('result', 'PENDING').eq('player_a_id', playerId).order('created_at', { ascending: false }).limit(1).maybeSingle(),
+        supabase.from('matches').select('id, player_a_id, player_b_id, score_a, score_b, score_submitted_by').eq('result', 'PENDING').eq('player_b_id', playerId).order('created_at', { ascending: false }).limit(1).maybeSingle(),
+      ])
+      const pending = mA.data ?? mB.data
       if (pending) {
         setCurrentMatch({
           id: pending.id,
@@ -788,14 +782,11 @@ function App() {
 
   const fetchPendingMatch = async (): Promise<boolean> => {
     if (!playerId) return false
-    const { data } = await supabase
-      .from('matches')
-      .select('id, player_a_id, player_b_id, score_a, score_b, score_submitted_by')
-      .eq('result', 'PENDING')
-      .or(`player_a_id.eq."${playerId}",player_b_id.eq."${playerId}"`)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle()
+    const [mA, mB] = await Promise.all([
+      supabase.from('matches').select('id, player_a_id, player_b_id, score_a, score_b, score_submitted_by').eq('result', 'PENDING').eq('player_a_id', playerId).order('created_at', { ascending: false }).limit(1).maybeSingle(),
+      supabase.from('matches').select('id, player_a_id, player_b_id, score_a, score_b, score_submitted_by').eq('result', 'PENDING').eq('player_b_id', playerId).order('created_at', { ascending: false }).limit(1).maybeSingle(),
+    ])
+    const data = mA.data ?? mB.data
     if (data) {
       await applyPendingMatch(data)
       return true
