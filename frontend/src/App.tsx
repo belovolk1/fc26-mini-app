@@ -27,10 +27,15 @@ const messages: Record<
     ladderText: string
     ladderButton: string
     ladderHint: string
+    ladderSearchButton: string
+    ladderSearching: string
+    ladderCancelSearch: string
+    ladderLobbyTitle: string
+    ladderLobbyVs: string
+    ladderLobbyAgree: string
     ladderManualTitle: string
     ladderMyScore: string
     ladderOppScore: string
-    ladderOppTelegramId: string
     ladderSave: string
     ladderSaved: string
     ladderError: string
@@ -75,17 +80,22 @@ const messages: Record<
     ladderHeader: 'Quick play (ladder)',
     ladderText:
       'Here will be real‑time matchmaking: game mode, queue, 40‑minute deadline and result input.',
-    ladderButton: 'Search game (soon)',
+    ladderButton: 'Search game',
     ladderHint:
-      'First we will build the interface and mock data, then connect real backend and matchmaking.',
-    ladderManualTitle: 'Enter match result',
+      'Press search — when someone else is searching, you are matched into a lobby. Agree and enter the score.',
+    ladderSearchButton: 'Search for opponent',
+    ladderSearching: 'Searching for opponent…',
+    ladderCancelSearch: 'Cancel',
+    ladderLobbyTitle: 'Lobby',
+    ladderLobbyVs: 'You vs {name}',
+    ladderLobbyAgree: 'Agree and enter the result below.',
+    ladderManualTitle: 'Match result',
     ladderMyScore: 'My score',
     ladderOppScore: 'Opponent score',
-    ladderOppTelegramId: 'Opponent Telegram ID',
-    ladderSave: 'Save result',
+    ladderSave: 'Submit result',
     ladderSaved: 'Result saved.',
-    ladderError: 'Could not save. Check opponent ID and try again.',
-    ladderLoginRequired: 'Open the app from Telegram to save results.',
+    ladderError: 'Could not save. Try again.',
+    ladderLoginRequired: 'Open the app from Telegram to play.',
     tournamentsHeader: 'Tournaments',
     tournamentsIntro:
       'Here will be a list of upcoming tournaments, registration and brackets.',
@@ -127,17 +137,22 @@ const messages: Record<
     ladderHeader: 'Joc rapid (ladder)',
     ladderText:
       'Aici va fi matchmaking în timp real: mod de joc, coadă, termen de 40 de minute și introducerea rezultatului.',
-    ladderButton: 'Caută joc (în curând)',
+    ladderButton: 'Caută joc',
     ladderHint:
-      'Întâi construim interfața și datele mock, apoi conectăm backend‑ul real și matchmaking‑ul.',
-    ladderManualTitle: 'Introdu rezultatul meciului',
+      'Apasă căutarea — când cineva caută, sunteți pereche într-un lobby. Introduceți rezultatul.',
+    ladderSearchButton: 'Caută adversar',
+    ladderSearching: 'Căutare adversar…',
+    ladderCancelSearch: 'Anulare',
+    ladderLobbyTitle: 'Lobby',
+    ladderLobbyVs: 'Tu vs {name}',
+    ladderLobbyAgree: 'Introdu rezultatul mai jos.',
+    ladderManualTitle: 'Rezultat meci',
     ladderMyScore: 'Scorul meu',
     ladderOppScore: 'Scorul adversarului',
-    ladderOppTelegramId: 'ID Telegram adversar',
-    ladderSave: 'Salvează rezultatul',
+    ladderSave: 'Trimite rezultatul',
     ladderSaved: 'Rezultat salvat.',
-    ladderError: 'Nu s-a putut salva. Verifică ID-ul adversarului.',
-    ladderLoginRequired: 'Deschide aplicația din Telegram pentru a salva rezultate.',
+    ladderError: 'Nu s-a putut salva.',
+    ladderLoginRequired: 'Deschide aplicația din Telegram pentru a juca.',
     tournamentsHeader: 'Turnee',
     tournamentsIntro:
       'Aici va apărea lista turneelor, înregistrarea și tabloul.',
@@ -179,17 +194,22 @@ const messages: Record<
     ladderHeader: 'Быстрая игра (ладдер)',
     ladderText:
       'Здесь будет поиск соперника в реальном времени: выбор режима, очередь, дедлайн 40 минут и ввод результата.',
-    ladderButton: 'Поиск игры (скоро)',
+    ladderButton: 'Поиск игры',
     ladderHint:
-      'Сначала сделаем интерфейс и мок‑данные, затем подключим реальный бэкенд и матчмейкинг.',
-    ladderManualTitle: 'Ввести результат матча',
+      'Нажмите поиск — когда кто-то тоже ищет, вас соединят в лобби. Договоритесь и введите счёт.',
+    ladderSearchButton: 'Искать соперника',
+    ladderSearching: 'Ищем соперника…',
+    ladderCancelSearch: 'Отмена',
+    ladderLobbyTitle: 'Лобби',
+    ladderLobbyVs: 'Вы vs {name}',
+    ladderLobbyAgree: 'Договоритесь и введите результат ниже.',
+    ladderManualTitle: 'Результат матча',
     ladderMyScore: 'Мои голы',
     ladderOppScore: 'Голы соперника',
-    ladderOppTelegramId: 'Telegram ID соперника',
-    ladderSave: 'Сохранить результат',
+    ladderSave: 'Отправить результат',
     ladderSaved: 'Результат сохранён.',
-    ladderError: 'Не удалось сохранить. Проверьте ID соперника.',
-    ladderLoginRequired: 'Откройте приложение из Telegram, чтобы сохранять результаты.',
+    ladderError: 'Не удалось сохранить.',
+    ladderLoginRequired: 'Откройте приложение из Telegram, чтобы играть.',
     tournamentsHeader: 'Турниры',
     tournamentsIntro:
       'Здесь появится список ближайших турниров, регистрация и сетка.',
@@ -235,9 +255,16 @@ function App() {
   const [elo, setElo] = useState<number | null>(null)
   const [matchesCount, setMatchesCount] = useState<number | null>(null)
   const [loadingProfile, setLoadingProfile] = useState(false)
+  type SearchStatus = 'idle' | 'searching' | 'in_lobby'
+  const [searchStatus, setSearchStatus] = useState<SearchStatus>('idle')
+  const [currentMatch, setCurrentMatch] = useState<{
+    id: number
+    player_a_id: string
+    player_b_id: string
+  } | null>(null)
+  const [opponentName, setOpponentName] = useState<string>('')
   const [scoreA, setScoreA] = useState<string>('')
   const [scoreB, setScoreB] = useState<string>('')
-  const [opponentTelegramId, setOpponentTelegramId] = useState<string>('')
   const [savingMatch, setSavingMatch] = useState(false)
   const [matchMessage, setMatchMessage] = useState<string | null>(null)
 
@@ -325,65 +352,123 @@ function App() {
     if (!error) setMatchesCount(count ?? 0)
   }
 
-  const handleSaveMatch = async () => {
+  // При входе на экран «Игра» проверяем: в очереди или уже есть лобби
+  useEffect(() => {
+    if (activeView !== 'ladder' || !playerId) return
+    const check = async () => {
+      const { data: inQueue } = await supabase
+        .from('matchmaking_queue')
+        .select('player_id')
+        .eq('player_id', playerId)
+        .maybeSingle()
+      if (inQueue) {
+        setSearchStatus('searching')
+        return
+      }
+      const { data: pending } = await supabase
+        .from('matches')
+        .select('id, player_a_id, player_b_id')
+        .eq('result', 'PENDING')
+        .or(`player_a_id.eq.${playerId},player_b_id.eq.${playerId}`)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+      if (pending) {
+        setCurrentMatch(pending as { id: number; player_a_id: string; player_b_id: string })
+        const oppId = pending.player_a_id === playerId ? pending.player_b_id : pending.player_a_id
+        const { data: opp } = await supabase.from('players').select('username, first_name, last_name').eq('id', oppId).single()
+        const name = opp ? (opp.username ? `@${opp.username}` : [opp.first_name, opp.last_name].filter(Boolean).join(' ') || t.guestName) : t.guestName
+        setOpponentName(name)
+        setSearchStatus('in_lobby')
+      }
+    }
+    void check()
+  }, [activeView, playerId, t.guestName])
+
+  // Опрос: когда в поиске — раз в 2 сек проверяем, появился ли матч
+  useEffect(() => {
+    if (searchStatus !== 'searching' || !playerId) return
+    const interval = setInterval(async () => {
+      const { data } = await supabase
+        .from('matches')
+        .select('id, player_a_id, player_b_id')
+        .eq('result', 'PENDING')
+        .or(`player_a_id.eq.${playerId},player_b_id.eq.${playerId}`)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+      if (data) {
+        setCurrentMatch(data as { id: number; player_a_id: string; player_b_id: string })
+        const oppId = data.player_a_id === playerId ? data.player_b_id : data.player_a_id
+        const { data: opp } = await supabase.from('players').select('username, first_name, last_name').eq('id', oppId).single()
+        const name = opp ? (opp.username ? `@${opp.username}` : [opp.first_name, opp.last_name].filter(Boolean).join(' ') || t.guestName) : t.guestName
+        setOpponentName(name)
+        setSearchStatus('in_lobby')
+      }
+    }, 2000)
+    return () => clearInterval(interval)
+  }, [searchStatus, playerId, t.guestName])
+
+  const startSearch = async () => {
     if (!user || !playerId) {
       setMatchMessage(t.ladderLoginRequired)
       return
     }
+    setMatchMessage(null)
+    const { error } = await supabase.from('matchmaking_queue').upsert(
+      { player_id: playerId, created_at: new Date().toISOString() },
+      { onConflict: 'player_id' },
+    )
+    if (error) {
+      setMatchMessage(t.ladderError)
+      return
+    }
+    setSearchStatus('searching')
+  }
+
+  const cancelSearch = async () => {
+    if (!playerId) return
+    await supabase.from('matchmaking_queue').delete().eq('player_id', playerId)
+    setSearchStatus('idle')
+  }
+
+  const submitLobbyResult = async () => {
+    if (!currentMatch || !playerId) return
     const myScore = parseInt(scoreA, 10)
     const oppScore = parseInt(scoreB, 10)
-    const oppTgId = opponentTelegramId.trim()
-    if (oppTgId === '' || Number.isNaN(myScore) || Number.isNaN(oppScore)) {
+    if (Number.isNaN(myScore) || Number.isNaN(oppScore)) {
       setMatchMessage(t.ladderError)
       return
     }
-    const oppIdNum = parseInt(oppTgId, 10)
-    if (Number.isNaN(oppIdNum)) {
-      setMatchMessage(t.ladderError)
-      return
-    }
+    const isPlayerA = currentMatch.player_a_id === playerId
+    const scoreAVal = isPlayerA ? myScore : oppScore
+    const scoreBVal = isPlayerA ? oppScore : myScore
+    let result: 'A_WIN' | 'B_WIN' | 'DRAW' = 'DRAW'
+    if (scoreAVal > scoreBVal) result = 'A_WIN'
+    else if (scoreBVal > scoreAVal) result = 'B_WIN'
+
     setSavingMatch(true)
     setMatchMessage(null)
-
-    const { data: opponent, error: oppError } = await supabase
-      .from('players')
-      .upsert(
-        { telegram_id: oppIdNum },
-        { onConflict: 'telegram_id' },
-      )
-      .select()
-      .single()
-
-    if (oppError || !opponent) {
-      setSavingMatch(false)
-      setMatchMessage(t.ladderError)
-      return
-    }
-
-    const opponentId = (opponent as { id: string }).id
-    let result: 'A_WIN' | 'B_WIN' | 'DRAW' = 'DRAW'
-    if (myScore > oppScore) result = 'A_WIN'
-    else if (oppScore > myScore) result = 'B_WIN'
-
-    const { error: matchError } = await supabase.from('matches').insert({
-      player_a_id: playerId,
-      player_b_id: opponentId,
-      score_a: myScore,
-      score_b: oppScore,
-      result,
-      is_tournament: false,
-      played_at: new Date().toISOString(),
-    })
+    const { error } = await supabase
+      .from('matches')
+      .update({
+        score_a: scoreAVal,
+        score_b: scoreBVal,
+        result,
+        played_at: new Date().toISOString(),
+      })
+      .eq('id', currentMatch.id)
 
     setSavingMatch(false)
-    if (matchError) {
+    if (error) {
       setMatchMessage(t.ladderError)
       return
     }
     setMatchMessage(t.ladderSaved)
     setScoreA('')
     setScoreB('')
-    setOpponentTelegramId('')
+    setCurrentMatch(null)
+    setSearchStatus('idle')
     refetchMatchesCount()
   }
 
@@ -489,54 +574,75 @@ function App() {
           <section className="panel">
             <h3 className="panel-title">{t.ladderHeader}</h3>
             <p className="panel-text">{t.ladderText}</p>
-            <h4 className="panel-subtitle">{t.ladderManualTitle}</h4>
-            <div className="form-row">
-              <label className="form-label">{t.ladderMyScore}</label>
-              <input
-                type="number"
-                min={0}
-                className="form-input"
-                value={scoreA}
-                onChange={(e) => setScoreA(e.target.value)}
-              />
-            </div>
-            <div className="form-row">
-              <label className="form-label">{t.ladderOppScore}</label>
-              <input
-                type="number"
-                min={0}
-                className="form-input"
-                value={scoreB}
-                onChange={(e) => setScoreB(e.target.value)}
-              />
-            </div>
-            <div className="form-row">
-              <label className="form-label">{t.ladderOppTelegramId}</label>
-              <input
-                type="text"
-                inputMode="numeric"
-                placeholder="123456789"
-                className="form-input"
-                value={opponentTelegramId}
-                onChange={(e) => setOpponentTelegramId(e.target.value)}
-              />
-            </div>
-            {matchMessage && (
-              <p className={matchMessage === t.ladderSaved ? 'panel-success' : 'panel-error'}>
-                {matchMessage}
-              </p>
+
+            {!user && (
+              <p className="panel-error">{t.ladderLoginRequired}</p>
             )}
-            <button
-              type="button"
-              className="primary-button"
-              disabled={savingMatch}
-              onClick={handleSaveMatch}
-            >
-              {savingMatch ? '…' : t.ladderSave}
-            </button>
-            <p className="panel-hint">
-              {t.ladderHint}
-            </p>
+
+            {user && searchStatus === 'idle' && (
+              <>
+                <button type="button" className="primary-button" onClick={startSearch}>
+                  {t.ladderSearchButton}
+                </button>
+                <p className="panel-hint">{t.ladderHint}</p>
+              </>
+            )}
+
+            {user && searchStatus === 'searching' && (
+              <>
+                <p className="panel-text">{t.ladderSearching}</p>
+                <button type="button" className="primary-button secondary" onClick={cancelSearch}>
+                  {t.ladderCancelSearch}
+                </button>
+              </>
+            )}
+
+            {user && searchStatus === 'in_lobby' && currentMatch && (
+              <>
+                <h4 className="panel-subtitle">{t.ladderLobbyTitle}</h4>
+                <p className="panel-text lobby-vs">
+                  {t.ladderLobbyVs.replace('{name}', opponentName)}
+                </p>
+                <p className="panel-text small">{t.ladderLobbyAgree}</p>
+                <div className="form-row">
+                  <label className="form-label">{t.ladderMyScore}</label>
+                  <input
+                    type="number"
+                    min={0}
+                    className="form-input"
+                    value={scoreA}
+                    onChange={(e) => setScoreA(e.target.value)}
+                  />
+                </div>
+                <div className="form-row">
+                  <label className="form-label">{t.ladderOppScore}</label>
+                  <input
+                    type="number"
+                    min={0}
+                    className="form-input"
+                    value={scoreB}
+                    onChange={(e) => setScoreB(e.target.value)}
+                  />
+                </div>
+                {matchMessage && (
+                  <p className={matchMessage === t.ladderSaved ? 'panel-success' : 'panel-error'}>
+                    {matchMessage}
+                  </p>
+                )}
+                <button
+                  type="button"
+                  className="primary-button"
+                  disabled={savingMatch}
+                  onClick={submitLobbyResult}
+                >
+                  {savingMatch ? '…' : t.ladderSave}
+                </button>
+              </>
+            )}
+
+            {user && searchStatus === 'idle' && matchMessage && (
+              <p className="panel-error">{matchMessage}</p>
+            )}
           </section>
         )}
 
