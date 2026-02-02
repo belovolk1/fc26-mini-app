@@ -366,6 +366,31 @@ function parseWidgetRedirect(): TelegramUser | null {
   const paramsStr = (hash || search || saved || '').trim()
   if (!paramsStr) return null
   const params = new URLSearchParams(paramsStr)
+
+  // Формат Mini App / OAuth: tgAuthResult=<base64_json>
+  const tgAuthResult = params.get('tgAuthResult')
+  if (tgAuthResult) {
+    try {
+      const jsonStr = atob(tgAuthResult)
+      const data = JSON.parse(jsonStr) as {
+        id?: number
+        first_name?: string
+        last_name?: string
+        username?: string
+      }
+      if (typeof data.id === 'number' && typeof data.first_name === 'string') {
+        return {
+          id: data.id,
+          first_name: data.first_name.trim(),
+          last_name: data.last_name?.trim() || undefined,
+          username: data.username?.trim() || undefined,
+        }
+      }
+    } catch (_) {
+      // невалидный base64/JSON — fallback к обычным параметрам
+    }
+  }
+
   const id = params.get('id') || params.get('user_id')
   const first_name = params.get('first_name')
   if (!id || !first_name) return null
