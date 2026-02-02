@@ -1019,7 +1019,7 @@ function App() {
     }
   }, [searchStatus, playerId])
 
-  // Realtime: обновление матча в лобби — когда соперник ввёл счёт, второй сразу видит «Подтвердить» и счёт
+  // Realtime: обновление матча (соперник ввёл счёт) — второй игрок сразу видит предложенный счёт и кнопку «Подтвердить»
   useEffect(() => {
     if (searchStatus !== 'in_lobby' || !currentMatch?.id) return
     const matchId = currentMatch.id
@@ -1029,29 +1029,48 @@ function App() {
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'matches', filter: `id=eq.${matchId}` },
         (payload) => {
-          const row = payload.new as { id: number; player_a_id: string; player_b_id: string; result?: string; score_a?: number | null; score_b?: number | null; score_submitted_by?: string | null }
-          setCurrentMatch((m) =>
-            m && m.id === matchId
-              ? { ...m, score_a: row.score_a ?? m.score_a, score_b: row.score_b ?? m.score_b, score_submitted_by: row.score_submitted_by ?? m.score_submitted_by }
-              : m,
+          const row = payload.new as { id: number; player_a_id: string; player_b_id: string; score_a?: number | null; score_b?: number | null; score_submitted_by?: string | null }
+          setCurrentMatch((prev) =>
+            prev && prev.id === row.id
+              ? {
+                  ...prev,
+                  score_a: row.score_a ?? undefined,
+                  score_b: row.score_b ?? undefined,
+                  score_submitted_by: row.score_submitted_by ?? undefined,
+                }
+              : prev,
           )
-          if (row.result && row.result !== 'PENDING') {
-            setScoreA('')
-            setScoreB('')
-            setCurrentMatch(null)
-            setOpponentUsername(null)
-            setSearchStatus('idle')
-            refetchMatchesCount()
-          }
         },
       )
       .subscribe((status) => {
-        if (status === 'SUBSCRIBED') console.log('[FC Area] Realtime: subscribed to match updates', matchId)
+        if (status === 'SUBSCRIBED') console.log('[FC Area] Realtime: subscribed to match update', matchId)
       })
     return () => {
       supabase.removeChannel(channel)
     }
   }, [searchStatus, currentMatch?.id])
+
+  // Опрос (fallback) в лобби: обновляем данные матча (счёт, score_submitted_by), если соперник ввёл счёт, а Realtime не сработал
+  useEffect(() => {
+    if (searchStatus !== 'in_lobby' || !playerId || !currentMatch?.id) return
+    const interval = setInterval(async () => {
+      const { data: rows, error } = await supabase.rpc('get_my_pending_match', { p_player_id: playerId })
+      const data = Array.isArray(rows) ? rows[0] : rows
+      if (!error && data && data.id === currentMatch.id) {
+        setCurrentMatch((prev) =>
+          prev
+            ? {
+                ...prev,
+                score_a: (data as { score_a?: number | null }).score_a ?? undefined,
+                score_b: (data as { score_b?: number | null }).score_b ?? undefined,
+                score_submitted_by: (data as { score_submitted_by?: string | null }).score_submitted_by ?? undefined,
+              }
+            : prev,
+        )
+      }
+    }, 2000)
+    return () => clearInterval(interval)
+  }, [searchStatus, playerId, currentMatch?.id])
 
   // Опрос (fallback): когда в поиске — раз в 1 сек проверяем матч (если Realtime не сработал)
   useEffect(() => {
@@ -1767,7 +1786,7 @@ function App() {
                   </a>
                 </>
               )}
-      </div>
+            </div>
 
             <p className="panel-hint">
               {t.profileHint}
@@ -1794,7 +1813,7 @@ function App() {
               <>
                 <button type="button" className="primary-button" onClick={startSearch}>
                   {t.ladderSearchButton}
-        </button>
+                </button>
                 <p className="panel-hint">{t.ladderHint}</p>
                 <p className="panel-hint">{t.ladderTwoPlayersHint}</p>
               </>
@@ -1842,7 +1861,7 @@ function App() {
                         value={scoreA}
                         onChange={(e) => setScoreA(e.target.value)}
                       />
-      </div>
+                    </div>
                     <div className="form-row">
                       <label className="form-label">{t.ladderOppScore}</label>
                       <input
