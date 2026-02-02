@@ -46,6 +46,10 @@ const messages: Record<
     ladderLobbyTitle: string
     ladderLobbyVs: string
     ladderLobbyAgree: string
+    ladderChatTitle: string
+    ladderChatPlaceholder: string
+    ladderChatSend: string
+    ladderChatEmpty: string
     ladderManualTitle: string
     ladderMyScore: string
     ladderOppScore: string
@@ -162,6 +166,10 @@ const messages: Record<
     ladderLobbyTitle: 'Lobby',
     ladderLobbyVs: 'You vs {name}',
     ladderLobbyAgree: 'Agree and enter the result below.',
+    ladderChatTitle: 'Chat with opponent',
+    ladderChatPlaceholder: 'Message…',
+    ladderChatSend: 'Send',
+    ladderChatEmpty: 'No messages yet.',
     ladderManualTitle: 'Match result',
     ladderMyScore: 'My score',
     ladderOppScore: 'Opponent score',
@@ -279,6 +287,10 @@ const messages: Record<
     ladderLobbyTitle: 'Lobby',
     ladderLobbyVs: 'Tu vs {name}',
     ladderLobbyAgree: 'Introdu rezultatul mai jos.',
+    ladderChatTitle: 'Chat cu adversarul',
+    ladderChatPlaceholder: 'Mesaj…',
+    ladderChatSend: 'Trimite',
+    ladderChatEmpty: 'Niciun mesaj încă.',
     ladderManualTitle: 'Rezultat meci',
     ladderMyScore: 'Scorul meu',
     ladderOppScore: 'Scorul adversarului',
@@ -396,6 +408,10 @@ const messages: Record<
     ladderLobbyTitle: 'Лобби',
     ladderLobbyVs: 'Вы vs {name}',
     ladderLobbyAgree: 'Договоритесь и введите результат ниже.',
+    ladderChatTitle: 'Чат с соперником',
+    ladderChatPlaceholder: 'Сообщение…',
+    ladderChatSend: 'Отправить',
+    ladderChatEmpty: 'Пока нет сообщений.',
     ladderManualTitle: 'Результат матча',
     ladderMyScore: 'Мои голы',
     ladderOppScore: 'Голы соперника',
@@ -586,6 +602,10 @@ function App() {
   const [scoreB, setScoreB] = useState<string>('')
   const [savingMatch, setSavingMatch] = useState(false)
   const [matchMessage, setMatchMessage] = useState<string | null>(null)
+  type ChatMessageRow = { id: number; match_id: number; sender_id: string; body: string; created_at: string }
+  const [chatMessages, setChatMessages] = useState<ChatMessageRow[]>([])
+  const [chatInput, setChatInput] = useState('')
+  const [chatSending, setChatSending] = useState(false)
   const [allMatches, setAllMatches] = useState<Array<{ match_id: number; player_a_name: string; player_b_name: string; score_a: number; score_b: number; result: string; played_at: string | null }>>([])
   const [allMatchesLoading, setAllMatchesLoading] = useState(false)
   type LeaderboardRow = {
@@ -954,6 +974,38 @@ function App() {
     return () => clearInterval(interval)
   }, [searchStatus, playerId, currentMatch?.id])
 
+  // Чат матча: загрузка сообщений и подписка на новые (уникальный чат только для двух соперников)
+  useEffect(() => {
+    if (searchStatus !== 'in_lobby' || !currentMatch?.id) {
+      setChatMessages([])
+      return
+    }
+    const matchId = currentMatch.id
+    const loadChat = async () => {
+      const { data, error } = await supabase
+        .from('chat_messages')
+        .select('id, match_id, sender_id, body, created_at')
+        .eq('match_id', matchId)
+        .order('created_at', { ascending: true })
+      if (!error && data) setChatMessages(data as ChatMessageRow[])
+    }
+    void loadChat()
+    const channel = supabase
+      .channel(`chat-${matchId}`)
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'chat_messages', filter: `match_id=eq.${matchId}` },
+        (payload) => {
+          const row = payload.new as ChatMessageRow
+          setChatMessages((prev) => [...prev, row])
+        },
+      )
+      .subscribe()
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [searchStatus, currentMatch?.id])
+
   // Опрос (fallback): когда в поиске — раз в 1 сек проверяем матч (если Realtime не сработал)
   useEffect(() => {
     if (searchStatus !== 'searching' || !playerId) return
@@ -1144,6 +1196,19 @@ function App() {
     setCurrentMatch(null)
     setSearchStatus('idle')
     refetchMatchesCount()
+  }
+
+  const sendChatMessage = async () => {
+    const text = chatInput.trim()
+    if (!text || !currentMatch?.id || !playerId || chatSending) return
+    setChatSending(true)
+    const { error } = await supabase.from('chat_messages').insert({
+      match_id: currentMatch.id,
+      sender_id: playerId,
+      body: text,
+    })
+    setChatSending(false)
+    if (!error) setChatInput('')
   }
 
   const [isWideScreen, setIsWideScreen] = useState(
@@ -1840,6 +1905,44 @@ function App() {
                 <p className="panel-text lobby-vs">
                   {t.ladderLobbyVs.replace('{name}', opponentName)}
                 </p>
+
+                <div className="lobby-chat">
+                  <h4 className="panel-subtitle lobby-chat-title">{t.ladderChatTitle}</h4>
+                  <div className="lobby-chat-messages" role="log" aria-live="polite">
+                    {chatMessages.length === 0 && (
+                      <p className="panel-text small lobby-chat-empty">{t.ladderChatEmpty}</p>
+                    )}
+                    {chatMessages.map((msg) => (
+                      <div
+                        key={msg.id}
+                        className={`lobby-chat-msg ${msg.sender_id === playerId ? 'lobby-chat-msg--mine' : 'lobby-chat-msg--theirs'}`}
+                      >
+                        <span className="lobby-chat-msg-body">{msg.body}</span>
+                        <span className="lobby-chat-msg-time">
+                          {new Date(msg.created_at).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="lobby-chat-form">
+                    <input
+                      type="text"
+                      className="form-input lobby-chat-input"
+                      placeholder={t.ladderChatPlaceholder}
+                      value={chatInput}
+                      onChange={(e) => setChatInput(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && sendChatMessage()}
+                    />
+                    <button
+                      type="button"
+                      className="primary-button lobby-chat-send"
+                      disabled={chatSending || !chatInput.trim()}
+                      onClick={sendChatMessage}
+                    >
+                      {chatSending ? '…' : t.ladderChatSend}
+                    </button>
+                  </div>
+                </div>
 
                 {currentMatch.score_submitted_by == null && (
                   <>
