@@ -1888,8 +1888,14 @@ function App() {
                         type="button"
                         className="link-button"
                         onClick={() => {
-                          if (openLink) openLink(linkUrl)
-                          else window.open(linkUrl, '_blank', 'noopener,noreferrer')
+                          if (openLink) {
+                            openLink(linkUrl)
+                            // Закрываем мини-приложение, чтобы пользователь увидел чат/ответ бота в Telegram
+                            const closeMiniApp = (tg as { close?: () => void })?.close
+                            if (closeMiniApp) setTimeout(closeMiniApp, 400)
+                          } else {
+                            window.open(linkUrl, '_blank', 'noopener,noreferrer')
+                          }
                         }}
                       >
                         {t.ladderMessageOpponent}
