@@ -696,14 +696,9 @@ function App() {
       setPlayerId((upserted as { id: string })?.id ?? null)
       setElo((upserted as { elo?: number })?.elo ?? null)
 
-      // считаем только подтверждённые матчи (не PENDING) — два запроса без .or() из-за 400 на UUID
-      const [rA, rB] = await Promise.all([
-        supabase.from('matches').select('id', { count: 'exact', head: true }).neq('result', 'PENDING').eq('player_a_id', upserted.id),
-        supabase.from('matches').select('id', { count: 'exact', head: true }).neq('result', 'PENDING').eq('player_b_id', upserted.id),
-      ])
-      if (!rA.error && !rB.error) {
-        setMatchesCount((rA.count ?? 0) + (rB.count ?? 0))
-      }
+      // считаем подтверждённые матчи через RPC (UUID в теле — без 400)
+      const { data: count, error: countErr } = await supabase.rpc('get_my_matches_count', { p_player_id: upserted.id })
+      if (!countErr && count != null) setMatchesCount(Number(count))
 
       setLoadingProfile(false)
     }
@@ -719,11 +714,8 @@ function App() {
 
   const refetchMatchesCount = async () => {
     if (!playerId) return
-    const [rA, rB] = await Promise.all([
-      supabase.from('matches').select('id', { count: 'exact', head: true }).neq('result', 'PENDING').eq('player_a_id', playerId),
-      supabase.from('matches').select('id', { count: 'exact', head: true }).neq('result', 'PENDING').eq('player_b_id', playerId),
-    ])
-    if (!rA.error && !rB.error) setMatchesCount((rA.count ?? 0) + (rB.count ?? 0))
+    const { data: count, error } = await supabase.rpc('get_my_matches_count', { p_player_id: playerId })
+    if (!error && count != null) setMatchesCount(Number(count))
   }
 
   // При входе на экран «Игра» проверяем: в очереди или уже есть лобби
@@ -739,12 +731,9 @@ function App() {
         setSearchStatus('searching')
         return
       }
-      const [mA, mB] = await Promise.all([
-        supabase.from('matches').select('id, player_a_id, player_b_id, score_a, score_b, score_submitted_by').eq('result', 'PENDING').eq('player_a_id', playerId).order('created_at', { ascending: false }).limit(1).maybeSingle(),
-        supabase.from('matches').select('id, player_a_id, player_b_id, score_a, score_b, score_submitted_by').eq('result', 'PENDING').eq('player_b_id', playerId).order('created_at', { ascending: false }).limit(1).maybeSingle(),
-      ])
-      const pending = mA.data ?? mB.data
-      if (pending) {
+      const { data: pendingRows, error: pendingErr } = await supabase.rpc('get_my_pending_match', { p_player_id: playerId })
+      const pending = Array.isArray(pendingRows) ? pendingRows[0] : pendingRows
+      if (!pendingErr && pending) {
         setCurrentMatch({
           id: pending.id,
           player_a_id: pending.player_a_id,
@@ -782,12 +771,9 @@ function App() {
 
   const fetchPendingMatch = async (): Promise<boolean> => {
     if (!playerId) return false
-    const [mA, mB] = await Promise.all([
-      supabase.from('matches').select('id, player_a_id, player_b_id, score_a, score_b, score_submitted_by').eq('result', 'PENDING').eq('player_a_id', playerId).order('created_at', { ascending: false }).limit(1).maybeSingle(),
-      supabase.from('matches').select('id, player_a_id, player_b_id, score_a, score_b, score_submitted_by').eq('result', 'PENDING').eq('player_b_id', playerId).order('created_at', { ascending: false }).limit(1).maybeSingle(),
-    ])
-    const data = mA.data ?? mB.data
-    if (data) {
+    const { data: rows, error } = await supabase.rpc('get_my_pending_match', { p_player_id: playerId })
+    const data = Array.isArray(rows) ? rows[0] : rows
+    if (!error && data) {
       await applyPendingMatch(data)
       return true
     }
