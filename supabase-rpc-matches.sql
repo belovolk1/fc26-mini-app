@@ -30,22 +30,33 @@ as $$
 $$;
 
 -- Отправить счёт матча (игрок ввёл счёт, ждём подтверждения соперника).
--- p_match_id: text — подходит и для bigint id (например "7"), и для uuid.
+-- Возвращает null при успехе, иначе текст ошибки.
+-- DROP нужен, если меняем тип возврата (было void, стало text).
+drop function if exists public.submit_match_score(text, uuid, integer, integer);
 create or replace function public.submit_match_score(
   p_match_id text,
   p_player_id uuid,
   p_score_a int,
   p_score_b int
 )
-returns void
+returns text
 language plpgsql
 security definer
 as $$
+declare
+  v_updated int;
 begin
   update public.matches
   set score_a = p_score_a, score_b = p_score_b, score_submitted_by = p_player_id
   where id::text = p_match_id and result = 'PENDING'
     and (player_a_id = p_player_id or player_b_id = p_player_id);
+  get diagnostics v_updated = row_count;
+  if v_updated = 0 then
+    return 'Match not found or you are not a player';
+  end if;
+  return null;
+exception when others then
+  return SQLERRM;
 end;
 $$;
 
@@ -77,5 +88,5 @@ $$;
 -- Разрешить anon вызывать RPC
 grant execute on function public.get_my_pending_match(uuid) to anon;
 grant execute on function public.get_my_matches_count(uuid) to anon;
-grant execute on function public.submit_match_score(text, uuid, int, int) to anon;
+grant execute on function public.submit_match_score(text, uuid, int, int) to anon, authenticated;
 grant execute on function public.confirm_match_result(text, uuid) to anon;

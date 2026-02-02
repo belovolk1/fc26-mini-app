@@ -862,7 +862,7 @@ function App() {
 
     setSavingMatch(true)
     setMatchMessage(null)
-    const { error } = await supabase.rpc('submit_match_score', {
+    const { data: rpcError, error } = await supabase.rpc('submit_match_score', {
       p_match_id: String(currentMatch.id),
       p_player_id: playerId,
       p_score_a: scoreAVal,
@@ -871,7 +871,13 @@ function App() {
 
     setSavingMatch(false)
     if (error) {
-      setMatchMessage(t.ladderError)
+      console.error('[FC Area] submit_match_score error:', error)
+      setMatchMessage(t.ladderError + (error.message ? ` ${error.message}` : ''))
+      return
+    }
+    if (rpcError && typeof rpcError === 'string') {
+      console.error('[FC Area] submit_match_score RPC returned:', rpcError)
+      setMatchMessage(t.ladderError + ` ${rpcError}`)
       return
     }
     setMatchMessage(t.ladderSaved)
