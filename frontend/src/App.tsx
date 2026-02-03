@@ -125,6 +125,9 @@ const messages: Record<
     profileResultDraw: string
     profileRecentMatchesEmpty: string
     profileAvatarBucketHint: string
+    profileTabOverview: string
+    profileTabEdit: string
+    profileTabSettings: string
     guestName: string
   }
 > = {
@@ -260,6 +263,9 @@ const messages: Record<
     profileResultDraw: 'Draw',
     profileRecentMatchesEmpty: 'No matches yet.',
     profileAvatarBucketHint: 'Create the "avatars" bucket in Supabase Dashboard → Storage (public), then try again.',
+    profileTabOverview: 'Overview',
+    profileTabEdit: 'Edit Profile',
+    profileTabSettings: 'Settings',
     guestName: 'Guest',
   },
   ro: {
@@ -394,6 +400,9 @@ const messages: Record<
     profileResultDraw: 'Remiză',
     profileRecentMatchesEmpty: 'Niciun meci încă.',
     profileAvatarBucketHint: 'Creează buclea "avatars" în Supabase Dashboard → Storage (public), apoi încearcă din nou.',
+    profileTabOverview: 'Prezentare',
+    profileTabEdit: 'Editează Profilul',
+    profileTabSettings: 'Setări',
     guestName: 'Vizitator',
   },
   ru: {
@@ -528,6 +537,9 @@ const messages: Record<
     profileResultDraw: 'Ничья',
     profileRecentMatchesEmpty: 'Матчей пока нет.',
     profileAvatarBucketHint: 'Создайте бакет "avatars" в Supabase Dashboard → Storage (public), затем попробуйте снова.',
+    profileTabOverview: 'Обзор',
+    profileTabEdit: 'Редактировать',
+    profileTabSettings: 'Настройки',
     guestName: 'Гость',
   },
 }
@@ -696,6 +708,7 @@ function App() {
   const [searchStatus, setSearchStatus] = useState<SearchStatus>('idle')
   const [searchStartedAt, setSearchStartedAt] = useState<number | null>(null)
   const [searchElapsed, setSearchElapsed] = useState(0)
+  const [profileActiveTab, setProfileActiveTab] = useState<'overview' | 'edit' | 'settings'>('overview')
   const [currentMatch, setCurrentMatch] = useState<{
     id: number
     player_a_id: string
@@ -1668,88 +1681,101 @@ function App() {
 
         {activeView === 'home' && (
           <>
-            <section className="hero">
-              <h2 className="hero-title">{t.appTitle}</h2>
-              <p className="hero-subtitle">{t.appSubtitle}</p>
-            </section>
-            <section className="home-layout">
-              <div className="home-column home-how">
-                <h3 className="home-section-title">{t.homeHowTitle}</h3>
-                <ol className="home-how-steps">
-                  <li>{t.homeHowStep1}</li>
-                  <li>{t.homeHowStep2}</li>
-                  <li>{t.homeHowStep3}</li>
-                </ol>
-              </div>
-              <div className="home-column home-status">
-                <h3 className="home-section-title">{t.homeStatusTitle}</h3>
-                <p className="home-status-line">
-                  <span className="home-status-label">{t.ratingElo}:</span>{' '}
-                  <span className="home-status-value">{elo ?? '—'}</span>
-                </p>
-                <p className="home-status-line">
-                  <span className="home-status-label">{t.ratingMatches}:</span>{' '}
-                  <span className="home-status-value">{matchesCount ?? 0}</span>
-                </p>
-                {matchesCount != null && matchesCount <= 10 && (
-                  <p className="home-status-hint">{t.profileCalibrationLabel}</p>
+            <section className="hero-modern">
+              <div className="hero-modern-content">
+                <h1 className="hero-modern-title">{t.appTitle}</h1>
+                <p className="hero-modern-subtitle">{t.appSubtitle}</p>
+                {user && playerId && (
+                  <div className="hero-modern-stats">
+                    <div className="hero-stat">
+                      <span className="hero-stat-label">{t.ratingElo}</span>
+                      <span className="hero-stat-value">{elo ?? '—'}</span>
+                    </div>
+                    <div className="hero-stat">
+                      <span className="hero-stat-label">{t.ratingMatches}</span>
+                      <span className="hero-stat-value">{matchesCount ?? 0}</span>
+                    </div>
+                    {matchesCount != null && matchesCount <= 10 && (
+                      <div className="hero-stat hero-stat-calibration">
+                        <span className="hero-stat-label">{t.profileCalibrationLabel}</span>
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
+            </section>
+
+            <section className="home-features">
+              <button
+                type="button"
+                className="feature-card feature-card-primary"
+                onClick={() => setActiveView('ladder')}
+              >
+                <div className="feature-card-icon">⚡</div>
+                <div className="feature-card-content">
+                  <h3 className="feature-card-title">{t.quickPlayTitle}</h3>
+                  <p className="feature-card-text">{t.quickPlayText}</p>
+                </div>
+                <div className="feature-card-arrow">→</div>
+              </button>
+
+              <button
+                type="button"
+                className="feature-card"
+                onClick={() => setActiveView('tournaments')}
+              >
+                <div className="feature-card-icon">🏆</div>
+                <div className="feature-card-content">
+                  <h3 className="feature-card-title">{t.tournamentsTitle}</h3>
+                  <p className="feature-card-text">{t.tournamentsText}</p>
+                </div>
+                <div className="feature-card-arrow">→</div>
+              </button>
+
+              <button
+                type="button"
+                className="feature-card"
+                onClick={() => setActiveView('profile')}
+              >
+                <div className="feature-card-icon">👤</div>
+                <div className="feature-card-content">
+                  <h3 className="feature-card-title">{t.profileTileTitle}</h3>
+                  <p className="feature-card-text">{t.profileTileText}</p>
+                </div>
+                <div className="feature-card-arrow">→</div>
+              </button>
+
+              <button
+                type="button"
+                className="feature-card"
+                onClick={() => setActiveView('rating')}
+              >
+                <div className="feature-card-icon">📊</div>
+                <div className="feature-card-content">
+                  <h3 className="feature-card-title">{t.ratingHeader}</h3>
+                  <p className="feature-card-text">{t.ratingIntro}</p>
+                </div>
+                <div className="feature-card-arrow">→</div>
+              </button>
+
+              <button
+                type="button"
+                className="feature-card"
+                onClick={() => setActiveView('matches')}
+              >
+                <div className="feature-card-icon">📋</div>
+                <div className="feature-card-content">
+                  <h3 className="feature-card-title">{t.matchesHeader}</h3>
+                  <p className="feature-card-text">{t.matchesIntro}</p>
+                </div>
+                <div className="feature-card-arrow">→</div>
+              </button>
             </section>
           </>
         )}
 
         {activeView !== 'home' && (
           <h2 className="view-title">{t.viewTitle[activeView]}</h2>
-        )}
-
-        {activeView === 'home' && (
-          <section className="grid">
-            <button
-              type="button"
-              className="tile primary"
-              onClick={() => setActiveView('ladder')}
-            >
-              <span className="tile-title">{t.quickPlayTitle}</span>
-              <span className="tile-text">{t.quickPlayText}</span>
-            </button>
-
-            <button
-              type="button"
-              className="tile"
-              onClick={() => setActiveView('tournaments')}
-            >
-              <span className="tile-title">{t.tournamentsTitle}</span>
-              <span className="tile-text">{t.tournamentsText}</span>
-            </button>
-
-            <button
-              type="button"
-              className="tile"
-              onClick={() => setActiveView('matches')}
-            >
-              <span className="tile-title">{t.matchesHeader}</span>
-              <span className="tile-text">{t.matchesIntro}</span>
-            </button>
-
-            <button
-              type="button"
-              className="tile"
-              onClick={() => setActiveView('rating')}
-            >
-              <span className="tile-title">{t.ratingHeader}</span>
-              <span className="tile-text">{t.ratingIntro}</span>
-            </button>
-
-            <button
-              type="button"
-              className="tile"
-              onClick={() => setActiveView('profile')}
-            >
-              <span className="tile-title">{t.profileTileTitle}</span>
-              <span className="tile-text">{t.profileTileText}</span>
-            </button>
-          </section>
         )}
 
         {activeView === 'matches' && (
@@ -2073,181 +2099,221 @@ function App() {
                         </div>
                       </aside>
                       <div className="profile-main">
-                        <div className="profile-rank-card">
-                          <span className="profile-rank-badge">
-                            #{myProfileStats?.rank ?? '—'}
-                          </span>
-                          <span className="profile-elo-big">{myProfileStats?.elo ?? elo ?? '—'}</span>
-                          {(myProfileStats?.matches_count ?? matchesCount ?? 0) <= 10 ? (
-                            <span className="profile-calibration-label">{t.profileCalibrationLabel}</span>
-                          ) : (() => {
-                            const rank = getRankFromElo(myProfileStats?.elo ?? elo ?? null)
-                            return rank ? (
-                              <span className="profile-rank-level">
-                                {rank.isElite ? `${t.profileRankElite} 🔥` : t.profileRankLevel.replace('{n}', String(rank.level))}
-                              </span>
-                            ) : null
-                          })()}
-                          <p className="profile-matches-summary">
-                            {myProfileStats?.matches_count ?? matchesCount ?? 0} {t.profileMatchesWins.replace('{pct}', myProfileStats?.win_rate != null ? String(myProfileStats.win_rate) : '0')}
-                          </p>
+                        {/* Табы профиля */}
+                        <div className="profile-tabs">
+                          <button
+                            type="button"
+                            className={`profile-tab ${profileActiveTab === 'overview' ? 'profile-tab--active' : ''}`}
+                            onClick={() => setProfileActiveTab('overview')}
+                          >
+                            {t.profileTabOverview}
+                          </button>
+                          <button
+                            type="button"
+                            className={`profile-tab ${profileActiveTab === 'edit' ? 'profile-tab--active' : ''}`}
+                            onClick={() => setProfileActiveTab('edit')}
+                          >
+                            {t.profileTabEdit}
+                          </button>
+                          <button
+                            type="button"
+                            className={`profile-tab ${profileActiveTab === 'settings' ? 'profile-tab--active' : ''}`}
+                            onClick={() => setProfileActiveTab('settings')}
+                          >
+                            {t.profileTabSettings}
+                          </button>
                         </div>
-                        {myProfileStats && (
-                          <>
-                            <h4 className="profile-stats-heading">{t.profileStatsSummary}</h4>
-                            <div className="profile-stats-grid">
-                              <div className="profile-stat-card">
-                                <span className="profile-stat-value">{myProfileStats.matches_count}</span>
-                                <span className="profile-stat-label">{t.ratingMatches}</span>
-                              </div>
-                              <div className="profile-stat-card">
-                                <span className="profile-stat-value">{myProfileStats.wins}</span>
-                                <span className="profile-stat-label">{t.ratingWins}</span>
-                              </div>
-                              <div className="profile-stat-card">
-                                <span className="profile-stat-value">{myProfileStats.draws}</span>
-                                <span className="profile-stat-label">{t.ratingDraws}</span>
-                              </div>
-                              <div className="profile-stat-card">
-                                <span className="profile-stat-value">{myProfileStats.losses}</span>
-                                <span className="profile-stat-label">{t.ratingLosses}</span>
-                              </div>
-                              <div className="profile-stat-card">
-                                <span className="profile-stat-value">{myProfileStats.goals_for}</span>
-                                <span className="profile-stat-label">{t.ratingGoalsFor}</span>
-                              </div>
-                              <div className="profile-stat-card">
-                                <span className="profile-stat-value">{myProfileStats.goals_against}</span>
-                                <span className="profile-stat-label">{t.ratingGoalsAgainst}</span>
-                              </div>
-                              <div className="profile-stat-card profile-stat-card-accent">
-                                <span className="profile-stat-value">
-                                  {myProfileStats.win_rate != null ? `${myProfileStats.win_rate}%` : '—'}
+
+                        {/* Контент табов */}
+                        <div className="profile-tab-content">
+                          {profileActiveTab === 'overview' && (
+                            <div className="profile-tab-panel">
+                              <div className="profile-rank-card">
+                                <span className="profile-rank-badge">
+                                  #{myProfileStats?.rank ?? '—'}
                                 </span>
-                                <span className="profile-stat-label">{t.ratingWinRate}</span>
+                                <span className="profile-elo-big">{myProfileStats?.elo ?? elo ?? '—'}</span>
+                                {(myProfileStats?.matches_count ?? matchesCount ?? 0) <= 10 ? (
+                                  <span className="profile-calibration-label">{t.profileCalibrationLabel}</span>
+                                ) : (() => {
+                                  const rank = getRankFromElo(myProfileStats?.elo ?? elo ?? null)
+                                  return rank ? (
+                                    <span className="profile-rank-level">
+                                      {rank.isElite ? `${t.profileRankElite} 🔥` : t.profileRankLevel.replace('{n}', String(rank.level))}
+                                    </span>
+                                  ) : null
+                                })()}
+                                <p className="profile-matches-summary">
+                                  {myProfileStats?.matches_count ?? matchesCount ?? 0} {t.profileMatchesWins.replace('{pct}', myProfileStats?.win_rate != null ? String(myProfileStats.win_rate) : '0')}
+                                </p>
+                              </div>
+                              {myProfileStats && (
+                                <>
+                                  <h4 className="profile-stats-heading">{t.profileStatsSummary}</h4>
+                                  <div className="profile-stats-grid">
+                                    <div className="profile-stat-card">
+                                      <span className="profile-stat-value">{myProfileStats.matches_count}</span>
+                                      <span className="profile-stat-label">{t.ratingMatches}</span>
+                                    </div>
+                                    <div className="profile-stat-card">
+                                      <span className="profile-stat-value">{myProfileStats.wins}</span>
+                                      <span className="profile-stat-label">{t.ratingWins}</span>
+                                    </div>
+                                    <div className="profile-stat-card">
+                                      <span className="profile-stat-value">{myProfileStats.draws}</span>
+                                      <span className="profile-stat-label">{t.ratingDraws}</span>
+                                    </div>
+                                    <div className="profile-stat-card">
+                                      <span className="profile-stat-value">{myProfileStats.losses}</span>
+                                      <span className="profile-stat-label">{t.ratingLosses}</span>
+                                    </div>
+                                    <div className="profile-stat-card">
+                                      <span className="profile-stat-value">{myProfileStats.goals_for}</span>
+                                      <span className="profile-stat-label">{t.ratingGoalsFor}</span>
+                                    </div>
+                                    <div className="profile-stat-card">
+                                      <span className="profile-stat-value">{myProfileStats.goals_against}</span>
+                                      <span className="profile-stat-label">{t.ratingGoalsAgainst}</span>
+                                    </div>
+                                    <div className="profile-stat-card profile-stat-card-accent">
+                                      <span className="profile-stat-value">
+                                        {myProfileStats.win_rate != null ? `${myProfileStats.win_rate}%` : '—'}
+                                      </span>
+                                      <span className="profile-stat-label">{t.ratingWinRate}</span>
+                                    </div>
+                                  </div>
+                                  <h4 className="profile-stats-heading">{t.profileLast10Matches}</h4>
+                                  {myRecentMatches.length === 0 ? (
+                                    <p className="panel-text small">{t.profileRecentMatchesEmpty}</p>
+                                  ) : (
+                                    <ul className="profile-recent-matches">
+                                      {myRecentMatches.map((match) => (
+                                        <li key={match.match_id} className={`profile-recent-match profile-recent-match--${match.result}`}>
+                                          <span className="profile-recent-opponent">{match.opponent_name ?? '—'}</span>
+                                          <span className="profile-recent-score">
+                                            {match.my_score} : {match.opp_score}
+                                          </span>
+                                          <span className="profile-recent-result">
+                                            {match.result === 'win' ? t.profileResultWin : match.result === 'loss' ? t.profileResultLoss : t.profileResultDraw}
+                                          </span>
+                                          {typeof match.elo_delta === 'number' && match.elo_delta !== 0 && (
+                                            <span className="profile-recent-elo-delta">
+                                              {match.elo_delta > 0 ? `+${match.elo_delta} ELO` : `${match.elo_delta} ELO`}
+                                            </span>
+                                          )}
+                                          {match.played_at && (
+                                            <span className="profile-recent-date">
+                                              {new Date(match.played_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                                            </span>
+                                          )}
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  )}
+                                </>
+                              )}
+                            </div>
+                          )}
+
+                          {profileActiveTab === 'edit' && (
+                            <div className="profile-tab-panel">
+                              <div className="profile-edit-section">
+                                <h4 className="panel-subtitle">{t.profileDisplayName}</h4>
+                                <div className="form-row">
+                                  <label className="form-label">{t.profileDisplayName}</label>
+                                  <input
+                                    type="text"
+                                    className="form-input"
+                                    value={myDisplayName}
+                                    onChange={(e) => setMyDisplayName(e.target.value)}
+                                    placeholder={user.username ? `@${user.username}` : [user.first_name, user.last_name].filter(Boolean).join(' ')}
+                                  />
+                                </div>
+                                <h4 className="panel-subtitle">{t.profileAvatar}</h4>
+                                <div className="form-row">
+                                  <label className="form-label">{t.profileUploadAvatar}</label>
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    className="form-input"
+                                    disabled={avatarUploading}
+                                    onChange={(e) => {
+                                      const f = e.target.files?.[0]
+                                      if (f) uploadAvatar(f)
+                                      e.target.value = ''
+                                    }}
+                                  />
+                                  {avatarUploading && <p className="panel-text small">…</p>}
+                                  {avatarUploadError && (
+                                    <p className="panel-text panel-error profile-avatar-hint">{avatarUploadError}</p>
+                                  )}
+                                </div>
+                                <div className="form-row">
+                                  <label className="form-label">{t.profileAvatarUrlPlaceholder}</label>
+                                  <input
+                                    type="url"
+                                    className="form-input"
+                                    value={myAvatarUrl}
+                                    onChange={(e) => setMyAvatarUrl(e.target.value)}
+                                    placeholder="https://..."
+                                  />
+                                </div>
+                                <h4 className="panel-subtitle">{t.profileCountry}</h4>
+                                <select
+                                  className="form-input profile-country-select"
+                                  value={myCountryCode}
+                                  onChange={(e) => setMyCountryCode(e.target.value)}
+                                >
+                                  <option value="">—</option>
+                                  {COUNTRIES.map((c) => (
+                                    <option key={c.code} value={c.code}>
+                                      {c.flag} {c.name}
+                                    </option>
+                                  ))}
+                                </select>
+                                <button
+                                  type="button"
+                                  className="primary-button"
+                                  disabled={profileSaveLoading}
+                                  onClick={saveProfileAvatarCountry}
+                                >
+                                  {profileSaveLoading ? '…' : t.profileSave}
+                                </button>
                               </div>
                             </div>
-                            <h4 className="profile-stats-heading">{t.profileLast10Matches}</h4>
-                            {myRecentMatches.length === 0 ? (
-                              <p className="panel-text small">{t.profileRecentMatchesEmpty}</p>
-                            ) : (
-                              <ul className="profile-recent-matches">
-                                {myRecentMatches.map((match) => (
-                                  <li key={match.match_id} className={`profile-recent-match profile-recent-match--${match.result}`}>
-                                    <span className="profile-recent-opponent">{match.opponent_name ?? '—'}</span>
-                                    <span className="profile-recent-score">
-                                      {match.my_score} : {match.opp_score}
-                                    </span>
-                                    <span className="profile-recent-result">
-                                      {match.result === 'win' ? t.profileResultWin : match.result === 'loss' ? t.profileResultLoss : t.profileResultDraw}
-                                    </span>
-                                    {typeof match.elo_delta === 'number' && match.elo_delta !== 0 && (
-                                      <span className="profile-recent-elo-delta">
-                                        {match.elo_delta > 0 ? `+${match.elo_delta} ELO` : `${match.elo_delta} ELO`}
-                                      </span>
-                                    )}
-                                    {match.played_at && (
-                                      <span className="profile-recent-date">
-                                        {new Date(match.played_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                                      </span>
-                                    )}
-                                  </li>
-                                ))}
-                              </ul>
-                            )}
-                          </>
-                        )}
-                      </div>
-                    </div>
+                          )}
 
-                    <div className="profile-edit-section">
-                      <h4 className="panel-subtitle">{t.profileDisplayName}</h4>
-                      <div className="form-row">
-                        <label className="form-label">{t.profileDisplayName}</label>
-                        <input
-                          type="text"
-                          className="form-input"
-                          value={myDisplayName}
-                          onChange={(e) => setMyDisplayName(e.target.value)}
-                          placeholder={user.username ? `@${user.username}` : [user.first_name, user.last_name].filter(Boolean).join(' ')}
-                        />
+                          {profileActiveTab === 'settings' && (
+                            <div className="profile-tab-panel">
+                              <div className="profile-telegram">
+                                <h4 className="panel-subtitle">{t.profileTelegramTitle}</h4>
+                                <p className="profile-telegram-status">{t.profileTelegramConnected}</p>
+                                <div className="panel-row">
+                                  <span className="label">{t.profileTelegramUsername}</span>
+                                  <span className="value">
+                                    {user.username ? `@${user.username}` : '—'}
+                                  </span>
+                                </div>
+                                <div className="panel-row">
+                                  <span className="label">{t.profileTelegramId}</span>
+                                  <span className="value profile-telegram-id">{user.id}</span>
+                                </div>
+                                <p className="panel-hint small">{t.profileTelegramDataHint}</p>
+                                <button
+                                  type="button"
+                                  className="profile-logout-btn"
+                                  onClick={() => {
+                                    setStoredWidgetUser(null)
+                                    setWidgetUser(null)
+                                  }}
+                                >
+                                  {t.profileLogout}
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                      <h4 className="panel-subtitle">{t.profileAvatar}</h4>
-                      <div className="form-row">
-                        <label className="form-label">{t.profileUploadAvatar}</label>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="form-input"
-                          disabled={avatarUploading}
-                          onChange={(e) => {
-                            const f = e.target.files?.[0]
-                            if (f) uploadAvatar(f)
-                            e.target.value = ''
-                          }}
-                        />
-                        {avatarUploading && <p className="panel-text small">…</p>}
-                        {avatarUploadError && (
-                          <p className="panel-text panel-error profile-avatar-hint">{avatarUploadError}</p>
-                        )}
-                      </div>
-                      <div className="form-row">
-                        <label className="form-label">{t.profileAvatarUrlPlaceholder}</label>
-                        <input
-                          type="url"
-                          className="form-input"
-                          value={myAvatarUrl}
-                          onChange={(e) => setMyAvatarUrl(e.target.value)}
-                          placeholder="https://..."
-                        />
-                      </div>
-                      <h4 className="panel-subtitle">{t.profileCountry}</h4>
-                      <select
-                        className="form-input profile-country-select"
-                        value={myCountryCode}
-                        onChange={(e) => setMyCountryCode(e.target.value)}
-                      >
-                        <option value="">—</option>
-                        {COUNTRIES.map((c) => (
-                          <option key={c.code} value={c.code}>
-                            {c.flag} {c.name}
-                          </option>
-                        ))}
-                      </select>
-                      <button
-                        type="button"
-                        className="primary-button"
-                        disabled={profileSaveLoading}
-                        onClick={saveProfileAvatarCountry}
-                      >
-                        {profileSaveLoading ? '…' : t.profileSave}
-                      </button>
-                    </div>
-
-                    <div className="profile-telegram">
-                      <h4 className="panel-subtitle">{t.profileTelegramTitle}</h4>
-                      <p className="profile-telegram-status">{t.profileTelegramConnected}</p>
-                      <div className="panel-row">
-                        <span className="label">{t.profileTelegramUsername}</span>
-                        <span className="value">
-                          {user.username ? `@${user.username}` : '—'}
-                        </span>
-                      </div>
-                      <div className="panel-row">
-                        <span className="label">{t.profileTelegramId}</span>
-                        <span className="value profile-telegram-id">{user.id}</span>
-                      </div>
-                      <p className="panel-hint small">{t.profileTelegramDataHint}</p>
-                      <button
-                        type="button"
-                        className="profile-logout-btn"
-                        onClick={() => {
-                          setStoredWidgetUser(null)
-                          setWidgetUser(null)
-                        }}
-                      >
-                        {t.profileLogout}
-                      </button>
                     </div>
                   </>
                 )}
