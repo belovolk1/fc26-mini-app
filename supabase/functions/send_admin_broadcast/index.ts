@@ -22,6 +22,7 @@ type BroadcastPayload = {
   message: string
   minElo?: number
   targetUsername?: string
+  targetTelegramId?: string
 }
 
 serve(async (req) => {
@@ -95,7 +96,11 @@ serve(async (req) => {
     .select('telegram_id, username, elo')
     .not('telegram_id', 'is', null)
 
-  if (body.mode === 'single' && body.targetUsername) {
+  if (body.mode === 'single' && body.targetTelegramId) {
+    // Точный таргет по telegram_id (chat_id)
+    playersQuery = playersQuery.eq('telegram_id', body.targetTelegramId)
+  } else if (body.mode === 'single' && body.targetUsername) {
+    // Фолбэк по username, если нет ID
     playersQuery = playersQuery.eq('username', body.targetUsername.replace(/^@/, ''))
   } else if (body.minElo != null) {
     playersQuery = playersQuery.gte('elo', body.minElo)
@@ -117,8 +122,11 @@ serve(async (req) => {
 
   let sent = 0
   let failed = 0
+  const sentTo: string[] = []
+  const failedTo: string[] = []
 
   for (const p of players as { telegram_id: string; username: string | null }[]) {
+    const recipientName = p.username || `telegram_id:${p.telegram_id}`
     try {
       const resp = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
         method: 'POST',
@@ -132,20 +140,35 @@ serve(async (req) => {
 
       if (!resp.ok) {
         failed++
-        console.error('Failed to send to', p.username, await resp.text())
+        const errorText = await resp.text()
+        let errorMsg = 'Ошибка отправки'
+        try {
+          const errorJson = JSON.parse(errorText)
+          if (errorJson.error_code === 404) {
+            errorMsg = 'Пользователь не найден (заблокировал бота или неверный telegram_id)'
+          } else if (errorJson.error_code === 403) {
+            errorMsg = 'Пользователь заблокировал бота'
+          } else {
+            errorMsg = errorJson.description || errorText
+          }
+        } catch {}
+        failedTo.push(`${recipientName} (${errorMsg})`)
+        console.error('Failed to send to', p.username, errorText)
       } else {
         sent++
+        sentTo.push(recipientName)
       }
 
       // Небольшая пауза, чтобы не уткнуться в лимиты Telegram
       await new Promise((r) => setTimeout(r, 60))
     } catch (e) {
       failed++
+      failedTo.push(recipientName)
       console.error('Error sending to', p.username, e)
     }
   }
 
-  return new Response(JSON.stringify({ sent, failed }), {
+  return new Response(JSON.stringify({ sent, failed, sentTo, failedTo }), {
     status: 200,
     headers: { 'Content-Type': 'application/json', ...corsHeaders },
   })

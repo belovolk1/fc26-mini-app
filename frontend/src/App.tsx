@@ -1187,7 +1187,18 @@ function App() {
         message: text,
       }
       if (adminMinElo.trim()) payload.minElo = Number(adminMinElo)
-      if (adminTargetUsername.trim()) payload.targetUsername = adminTargetUsername.trim()
+
+      const rawTarget = adminTargetUsername.trim()
+      if (rawTarget) {
+        // Если введены только цифры — считаем, что это telegram_id (chat_id)
+        const digitsOnly = /^[0-9]+$/.test(rawTarget)
+        if (digitsOnly) {
+          payload.targetTelegramId = rawTarget
+        } else {
+          // Иначе используем username как раньше
+          payload.targetUsername = rawTarget
+        }
+      }
 
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
@@ -1198,20 +1209,36 @@ function App() {
         headers['Authorization'] = `Bearer ${anonKey}`
       }
 
+      console.log('Sending request to:', endpoint, { headers: { ...headers, 'X-Admin-Token': headers['X-Admin-Token'] ? '***' : 'missing' } })
       const resp = await fetch(endpoint, {
         method: 'POST',
         headers,
         body: JSON.stringify(payload),
+      }).catch((fetchError) => {
+        console.error('Fetch error:', fetchError)
+        throw fetchError
       })
       if (!resp.ok) {
         const txt = await resp.text()
         setAdminResult(`Ошибка отправки: ${resp.status} ${resp.statusText} - ${txt}`)
       } else {
-        const data = await resp.json().catch(() => ({}))
+        const data = await resp.json().catch(() => ({})) as { sent?: number; failed?: number; sentTo?: string[]; failedTo?: string[] }
         if (payload.mode === 'single') {
-          setAdminResult('Сообщение одному пользователю отправлено (проверь логи бота при ошибках).')
+          const recipient = data.sentTo?.[0] || payload.targetUsername || 'пользователю'
+          setAdminResult(`Сообщение отправлено пользователю: ${recipient}`)
         } else {
-          setAdminResult(`Рассылка завершена: отправлено ${data.sent ?? '?'} , ошибок ${data.failed ?? '?'}.`)
+          let result = `Рассылка завершена:\n`
+          result += `✓ Отправлено: ${data.sent ?? 0}`
+          if (data.sentTo && data.sentTo.length > 0) {
+            result += ` (${data.sentTo.join(', ')})`
+          }
+          if (data.failed && data.failed > 0) {
+            result += `\n✗ Ошибок: ${data.failed}`
+            if (data.failedTo && data.failedTo.length > 0) {
+              result += `\n\nДетали ошибок:\n${data.failedTo.join('\n')}`
+            }
+          }
+          setAdminResult(result)
         }
         setAdminMessage('')
       }
@@ -1795,13 +1822,13 @@ function App() {
               />
             </div>
             <div className="form-row">
-              <label className="form-label">Отправить только одному пользователю (username, опционально)</label>
+              <label className="form-label">Отправить одному пользователю (Telegram ID или username, опционально)</label>
               <input
                 type="text"
                 className="form-input"
                 value={adminTargetUsername}
                 onChange={(e) => setAdminTargetUsername(e.target.value)}
-                placeholder="@username или пусто для рассылки всем"
+                placeholder="например 460758450 или @username; пусто — всем"
               />
             </div>
             {adminResult && <p className="panel-text small">{adminResult}</p>}
