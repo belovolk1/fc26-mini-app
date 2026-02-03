@@ -9,6 +9,12 @@ alter table public.matches
 alter table public.matches
   add column if not exists played_at timestamptz;
 
+-- Колонки для изменения ELO по матчу (дельта для каждого игрока)
+alter table public.matches
+  add column if not exists elo_delta_a int;
+alter table public.matches
+  add column if not exists elo_delta_b int;
+
 -- Профиль игрока: аватар (URL), страна (код), никнейм (редактируемый; данные Telegram хранятся для админа)
 alter table public.players
   add column if not exists avatar_url text;
@@ -19,6 +25,11 @@ alter table public.players
 -- ELO рейтинг (классическая формула с переменным K)
 alter table public.players
   add column if not exists elo int default 1200;
+
+-- Всем существующим игрокам без рейтинга выставляем стартовый ELO = 1200
+update public.players
+set elo = 1200
+where elo is null;
 
 -- Один PENDING-матч игрока (для лобби и опроса при поиске). UUID передаётся в теле запроса — нет 400.
 create or replace function public.get_my_pending_match(p_player_id uuid)
@@ -110,6 +121,8 @@ declare
   v_new_elo_a int;
   v_new_elo_b int;
   v_default_elo int := 1200;
+  v_delta_a int;
+  v_delta_b int;
 begin
   select id, player_a_id, player_b_id, score_a, score_b into v_match
   from public.matches
@@ -123,14 +136,6 @@ begin
   if v_score_a > v_score_b then v_result := 'A_WIN';
   elsif v_score_b > v_score_a then v_result := 'B_WIN';
   else v_result := 'DRAW'; end if;
-
-  update public.matches
-  set result = v_result, played_at = coalesce(played_at, now())
-  where id::text = p_match_id and result = 'PENDING';
-  get diagnostics v_updated = row_count;
-  if v_updated = 0 then
-    return 'Could not update match';
-  end if;
 
   -- ELO: текущий рейтинг (или 1200 для новичков)
   select coalesce(elo, v_default_elo) into v_elo_a from public.players where id = v_match.player_a_id;
@@ -168,6 +173,23 @@ begin
   v_new_elo_a := greatest(v_new_elo_a, 0);
   v_new_elo_b := greatest(v_new_elo_b, 0);
 
+  -- Дельта рейтинга по матчу
+  v_delta_a := v_new_elo_a - v_elo_a;
+  v_delta_b := v_new_elo_b - v_elo_b;
+
+  -- Обновляем матч: итоговый результат, время и изменение ELO
+  update public.matches
+  set
+    result = v_result,
+    played_at = coalesce(played_at, now()),
+    elo_delta_a = v_delta_a,
+    elo_delta_b = v_delta_b
+  where id::text = p_match_id and result = 'PENDING';
+  get diagnostics v_updated = row_count;
+  if v_updated = 0 then
+    return 'Could not update match';
+  end if;
+
   update public.players set elo = v_new_elo_a where id = v_match.player_a_id;
   update public.players set elo = v_new_elo_b where id = v_match.player_b_id;
 
@@ -178,6 +200,7 @@ end;
 $$;
 
 -- Все сыгранные матчи (с именами игроков) для страницы «Все матчи»
+drop function if exists public.get_all_played_matches();
 create or replace function public.get_all_played_matches()
 returns table (
   match_id bigint,
@@ -186,7 +209,9 @@ returns table (
   score_a int,
   score_b int,
   result text,
-  played_at timestamptz
+  played_at timestamptz,
+  elo_delta_a int,
+  elo_delta_b int
 )
 language sql
 security definer
@@ -207,7 +232,9 @@ as $$
     m.score_a,
     m.score_b,
     m.result,
-    m.played_at
+    m.played_at,
+    m.elo_delta_a,
+    m.elo_delta_b
   from public.matches m
   join public.players pa on pa.id = m.player_a_id
   join public.players pb on pb.id = m.player_b_id
@@ -361,6 +388,7 @@ as $$
 $$;
 
 -- Последние 10 матчей игрока (для страницы профиля)
+drop function if exists public.get_player_recent_matches(uuid);
 create or replace function public.get_player_recent_matches(p_player_id uuid)
 returns table (
   match_id bigint,
@@ -368,7 +396,8 @@ returns table (
   my_score int,
   opp_score int,
   result text,
-  played_at timestamptz
+  played_at timestamptz,
+  elo_delta int
 )
 language sql
 security definer
@@ -392,7 +421,8 @@ as $$
        when (m.result = 'A_WIN' and m.player_a_id = p_player_id) or (m.result = 'B_WIN' and m.player_b_id = p_player_id) then 'win'
        else 'loss'
      end)::text,
-    m.played_at
+    m.played_at,
+    (case when m.player_a_id = p_player_id then m.elo_delta_a else m.elo_delta_b end)::int
   from public.matches m
   join public.players pa on pa.id = m.player_a_id
   join public.players pb on pb.id = m.player_b_id

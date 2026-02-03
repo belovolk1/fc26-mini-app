@@ -21,6 +21,7 @@ const messages: Record<
     profilePlayerLabel: string
     profileEloLabel: string
     profileMatchesLabel: string
+    profileCalibrationLabel: string
     profileLoading: string
     profileTelegramTitle: string
     profileTelegramConnected: string
@@ -102,6 +103,11 @@ const messages: Record<
     ratingGoalsAgainst: string
     ratingWinRate: string
     ratingBack: string
+    homeHowTitle: string
+    homeHowStep1: string
+    homeHowStep2: string
+    homeHowStep3: string
+    homeStatusTitle: string
     playerProfileTitle: string
     profileRankLevel: string
     profileRankElite: string
@@ -143,6 +149,7 @@ const messages: Record<
     profilePlayerLabel: 'Player',
     profileEloLabel: 'Global ELO rating',
     profileMatchesLabel: 'Matches played',
+    profileCalibrationLabel: 'Calibration: first 10 matches',
     profileLoading: 'Loading profile…',
     profileTelegramTitle: 'Telegram',
     profileTelegramConnected: 'Account linked to Telegram',
@@ -229,6 +236,11 @@ const messages: Record<
     ratingGoalsAgainst: 'GA',
     ratingWinRate: 'W%',
     ratingBack: 'Back to rating',
+    homeHowTitle: 'How it works',
+    homeHowStep1: 'Log in with Telegram and open Quick play.',
+    homeHowStep2: 'Press Search, get a lobby and agree on the score with your opponent.',
+    homeHowStep3: 'Confirm the result — your ELO and rank are updated instantly.',
+    homeStatusTitle: 'Your current status',
     playerProfileTitle: 'Player profile',
     profileRankLevel: 'Level {n}',
     profileRankElite: 'Elite',
@@ -269,6 +281,7 @@ const messages: Record<
     profilePlayerLabel: 'Jucător',
     profileEloLabel: 'Rating ELO global',
     profileMatchesLabel: 'Meciuri jucate',
+    profileCalibrationLabel: 'Calibrare: primele 10 meciuri',
     profileLoading: 'Se încarcă profilul…',
     profileTelegramTitle: 'Telegram',
     profileTelegramConnected: 'Cont legat de Telegram',
@@ -355,6 +368,11 @@ const messages: Record<
     ratingGoalsAgainst: 'GP',
     ratingWinRate: 'V%',
     ratingBack: 'Înapoi la clasament',
+    homeHowTitle: 'Cum funcționează',
+    homeHowStep1: 'Autentifică-te cu Telegram și deschide Joc rapid.',
+    homeHowStep2: 'Apasă Caută, intră în lobby și pune de acord scorul cu adversarul.',
+    homeHowStep3: 'Confirmă rezultatul — ELO și nivelul tău se actualizează instant.',
+    homeStatusTitle: 'Statusul tău curent',
     playerProfileTitle: 'Profil jucător',
     profileRankLevel: 'Nivel {n}',
     profileRankElite: 'Elită',
@@ -395,6 +413,7 @@ const messages: Record<
     profilePlayerLabel: 'Игрок',
     profileEloLabel: 'Общий рейтинг ELO',
     profileMatchesLabel: 'Матчей сыграно',
+    profileCalibrationLabel: 'Калибровка рейтинга: первые 10 матчей',
     profileLoading: 'Загружаем профиль…',
     profileTelegramTitle: 'Telegram',
     profileTelegramConnected: 'Аккаунт привязан к Telegram',
@@ -481,6 +500,11 @@ const messages: Record<
     ratingGoalsAgainst: 'ГП',
     ratingWinRate: 'Винрейт %',
     ratingBack: 'Назад к рейтингу',
+    homeHowTitle: 'Как это работает',
+    homeHowStep1: 'Войдите через Telegram и откройте раздел «Быстрая игра».',
+    homeHowStep2: 'Нажмите «Искать соперника», попадите в лобби и договоритесь о счёте.',
+    homeHowStep3: 'Подтвердите результат — ваш ELO и ранг обновятся сразу.',
+    homeStatusTitle: 'Ваш текущий статус',
     playerProfileTitle: 'Профиль игрока',
     profileRankLevel: 'Уровень {n}',
     profileRankElite: 'Элита',
@@ -663,6 +687,8 @@ function App() {
   const [loadingProfile, setLoadingProfile] = useState(false)
   type SearchStatus = 'idle' | 'searching' | 'in_lobby'
   const [searchStatus, setSearchStatus] = useState<SearchStatus>('idle')
+  const [searchStartedAt, setSearchStartedAt] = useState<number | null>(null)
+  const [searchElapsed, setSearchElapsed] = useState(0)
   const [currentMatch, setCurrentMatch] = useState<{
     id: number
     player_a_id: string
@@ -681,7 +707,7 @@ function App() {
   const [chatInput, setChatInput] = useState('')
   const [chatSending, setChatSending] = useState(false)
   const [chatLoadError, setChatLoadError] = useState<string | null>(null)
-  const [allMatches, setAllMatches] = useState<Array<{ match_id: number; player_a_name: string; player_b_name: string; score_a: number; score_b: number; result: string; played_at: string | null }>>([])
+  const [allMatches, setAllMatches] = useState<Array<{ match_id: number; player_a_name: string; player_b_name: string; score_a: number; score_b: number; result: string; played_at: string | null; elo_delta_a: number | null; elo_delta_b: number | null }>>([])
   const [allMatchesLoading, setAllMatchesLoading] = useState(false)
   type LeaderboardRow = {
     rank: number
@@ -708,7 +734,7 @@ function App() {
   const [profileSaveLoading, setProfileSaveLoading] = useState(false)
   const [avatarUploading, setAvatarUploading] = useState(false)
   const [avatarUploadError, setAvatarUploadError] = useState<string | null>(null)
-  type RecentMatchRow = { match_id: number; opponent_name: string | null; my_score: number; opp_score: number; result: string; played_at: string | null }
+  type RecentMatchRow = { match_id: number; opponent_name: string | null; my_score: number; opp_score: number; result: string; played_at: string | null; elo_delta?: number | null }
   const [recentMatches, setRecentMatches] = useState<RecentMatchRow[]>([])
   const [recentMatchesLoading, setRecentMatchesLoading] = useState(false)
   const [myProfileStats, setMyProfileStats] = useState<LeaderboardRow | null>(null)
@@ -895,6 +921,10 @@ function App() {
         .maybeSingle()
       if (inQueue) {
         setSearchStatus('searching')
+        if (!searchStartedAt) {
+          setSearchStartedAt(Date.now())
+          setSearchElapsed(0)
+        }
         return
       }
       const { data: pendingRows, error: pendingErr } = await supabase.rpc('get_my_pending_match', { p_player_id: playerId })
@@ -916,6 +946,8 @@ function App() {
           : t.guestName
         setOpponentName(name)
         setSearchStatus('in_lobby')
+        setSearchStartedAt(null)
+        setSearchElapsed(0)
       }
     }
     void check()
@@ -940,6 +972,8 @@ function App() {
       : t.guestName
     setOpponentName(name)
     setSearchStatus('in_lobby')
+    setSearchStartedAt(null)
+    setSearchElapsed(0)
   }
 
   const fetchPendingMatch = async (): Promise<boolean> => {
@@ -998,6 +1032,8 @@ function App() {
             setCurrentMatch(null)
             setOpponentName('')
             setSearchStatus('idle')
+            setSearchStartedAt(null)
+            setSearchElapsed(0)
             refetchMatchesCount()
             return
           }
@@ -1033,6 +1069,8 @@ function App() {
         setCurrentMatch(null)
         setOpponentName('')
         setSearchStatus('idle')
+        setSearchStartedAt(null)
+        setSearchElapsed(0)
         refetchMatchesCount()
         return
       }
@@ -1104,6 +1142,20 @@ function App() {
     })
   }, [searchStatus, chatMessages.length, chatMessages])
 
+  // Таймер поиска: сколько длится поиск соперника
+  useEffect(() => {
+    if (searchStatus !== 'searching' || !searchStartedAt) {
+      setSearchElapsed(0)
+      return
+    }
+    const update = () => {
+      setSearchElapsed(Math.max(0, Math.floor((Date.now() - searchStartedAt) / 1000)))
+    }
+    update()
+    const id = setInterval(update, 1000)
+    return () => clearInterval(id)
+  }, [searchStatus, searchStartedAt])
+
   // Звук и браузерное уведомление при переходе в лобби (включая, когда вкладка неактивна)
   useEffect(() => {
     if (searchStatus !== 'in_lobby' || !currentMatch) return
@@ -1141,6 +1193,8 @@ function App() {
       setMatchMessage(t.ladderError + ' ' + (error.message || ''))
       return
     }
+    setSearchStartedAt(Date.now())
+    setSearchElapsed(0)
     setSearchStatus('searching')
   }
 
@@ -1148,6 +1202,8 @@ function App() {
     if (!playerId) return
     await supabase.from('matchmaking_queue').delete().eq('player_id', playerId)
     setSearchStatus('idle')
+    setSearchStartedAt(null)
+    setSearchElapsed(0)
   }
 
   // Загрузка всех матчей при открытии страницы «Матчи»
@@ -1306,6 +1362,8 @@ function App() {
     setScoreB('')
     setCurrentMatch(null)
     setSearchStatus('idle')
+    setSearchStartedAt(null)
+    setSearchElapsed(0)
     refetchMatchesCount()
   }
 
@@ -1468,6 +1526,22 @@ function App() {
       </div>
 
       <main className="app-main">
+        {user && searchStatus === 'searching' && activeView !== 'ladder' && (
+          <button
+            type="button"
+            className="active-search-banner"
+            onClick={() => setActiveView('ladder')}
+          >
+            <span className="active-search-banner-icon" aria-hidden="true">⏱</span>
+            {t.ladderSearching}
+            {searchElapsed > 0 && (
+              <span className="active-search-banner-time">
+                {' '}
+                ({Math.floor(searchElapsed / 60)}:{String(searchElapsed % 60).padStart(2, '0')})
+              </span>
+            )}
+          </button>
+        )}
         {user && searchStatus === 'in_lobby' && currentMatch && activeView !== 'ladder' && (
           <button
             type="button"
@@ -1480,10 +1554,36 @@ function App() {
         )}
 
         {activeView === 'home' && (
-          <section className="hero">
-            <h2 className="hero-title">{t.appTitle}</h2>
-            <p className="hero-subtitle">{t.appSubtitle}</p>
-          </section>
+          <>
+            <section className="hero">
+              <h2 className="hero-title">{t.appTitle}</h2>
+              <p className="hero-subtitle">{t.appSubtitle}</p>
+            </section>
+            <section className="home-layout">
+              <div className="home-column home-how">
+                <h3 className="home-section-title">{t.homeHowTitle}</h3>
+                <ol className="home-how-steps">
+                  <li>{t.homeHowStep1}</li>
+                  <li>{t.homeHowStep2}</li>
+                  <li>{t.homeHowStep3}</li>
+                </ol>
+              </div>
+              <div className="home-column home-status">
+                <h3 className="home-section-title">{t.homeStatusTitle}</h3>
+                <p className="home-status-line">
+                  <span className="home-status-label">{t.ratingElo}:</span>{' '}
+                  <span className="home-status-value">{elo ?? '—'}</span>
+                </p>
+                <p className="home-status-line">
+                  <span className="home-status-label">{t.ratingMatches}:</span>{' '}
+                  <span className="home-status-value">{matchesCount ?? 0}</span>
+                </p>
+                {matchesCount != null && matchesCount <= 10 && (
+                  <p className="home-status-hint">{t.profileCalibrationLabel}</p>
+                )}
+              </div>
+            </section>
+          </>
         )}
 
         {activeView !== 'home' && (
@@ -1561,6 +1661,12 @@ function App() {
                       <span className={`match-card-result match-card-result--${m.result === 'A_WIN' ? 'win' : m.result === 'B_WIN' ? 'loss' : 'draw'}`}>
                         {m.result === 'A_WIN' ? t.matchResultAWin : m.result === 'B_WIN' ? t.matchResultBWin : t.matchResultDraw}
                       </span>
+                      {(m.elo_delta_a != null || m.elo_delta_b != null) && (
+                        <span className="match-card-elo-delta">
+                          {m.elo_delta_a != null ? (m.elo_delta_a > 0 ? `+${m.elo_delta_a}` : m.elo_delta_a) : '0'} /{' '}
+                          {m.elo_delta_b != null ? (m.elo_delta_b > 0 ? `+${m.elo_delta_b}` : m.elo_delta_b) : '0'} ELO
+                        </span>
+                      )}
                       {m.played_at && (
                         <span className="match-card-date">
                           {new Date(m.played_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
@@ -1619,7 +1725,9 @@ function App() {
                     <div className="profile-rank-card">
                       <span className="profile-rank-badge">#{selectedPlayerRow.rank}</span>
                       <span className="profile-elo-big">{selectedPlayerRow.elo ?? '—'}</span>
-                      {(() => {
+                      {selectedPlayerRow.matches_count <= 10 ? (
+                        <span className="profile-calibration-label">{t.profileCalibrationLabel}</span>
+                      ) : (() => {
                         const rank = getRankFromElo(selectedPlayerRow.elo ?? null)
                         return rank ? (
                           <span className="profile-rank-level">
@@ -1808,7 +1916,9 @@ function App() {
                             #{myProfileStats?.rank ?? '—'}
                           </span>
                           <span className="profile-elo-big">{myProfileStats?.elo ?? elo ?? '—'}</span>
-                          {(() => {
+                          {(myProfileStats?.matches_count ?? matchesCount ?? 0) <= 10 ? (
+                            <span className="profile-calibration-label">{t.profileCalibrationLabel}</span>
+                          ) : (() => {
                             const rank = getRankFromElo(myProfileStats?.elo ?? elo ?? null)
                             return rank ? (
                               <span className="profile-rank-level">
@@ -1869,6 +1979,11 @@ function App() {
                                     <span className="profile-recent-result">
                                       {match.result === 'win' ? t.profileResultWin : match.result === 'loss' ? t.profileResultLoss : t.profileResultDraw}
                                     </span>
+                                    {typeof match.elo_delta === 'number' && match.elo_delta !== 0 && (
+                                      <span className="profile-recent-elo-delta">
+                                        {match.elo_delta > 0 ? `+${match.elo_delta} ELO` : `${match.elo_delta} ELO`}
+                                      </span>
+                                    )}
                                     {match.played_at && (
                                       <span className="profile-recent-date">
                                         {new Date(match.played_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
@@ -2033,7 +2148,15 @@ function App() {
 
             {user && searchStatus === 'searching' && (
               <>
-                <p className="panel-text">{t.ladderSearching}</p>
+                <p className="panel-text">
+                  {t.ladderSearching}
+                  {searchElapsed > 0 && (
+                    <>
+                      {' '}
+                      ({Math.floor(searchElapsed / 60)}:{String(searchElapsed % 60).padStart(2, '0')})
+                    </>
+                  )}
+                </p>
                 <button type="button" className="primary-button secondary" onClick={cancelSearch}>
                   {t.ladderCancelSearch}
                 </button>
