@@ -925,6 +925,47 @@
   padding: 14px 20px;
 }
 
+@media (max-width: 600px) {
+  .lobby-chat {
+    height: 360px;
+    max-height: 60vh;
+  }
+
+  .lobby-chat-title {
+    padding: 12px 14px;
+    font-size: 16px;
+  }
+
+  .lobby-chat-messages {
+    padding: 10px 12px;
+    gap: 8px;
+  }
+
+  .lobby-chat-msg {
+    padding: 10px 12px;
+    font-size: 15px;
+    max-width: 100%;
+  }
+
+  .lobby-chat-form {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 12px 14px;
+  }
+
+  .lobby-chat-input {
+    padding: 12px 14px;
+    font-size: 16px;
+  }
+
+  .lobby-chat-send {
+    width: 100%;
+    min-width: 0;
+    padding: 12px 14px;
+  }
+}
+
 /* Карточка ввода счёта */
 .lobby-score-card {
   padding: 24px 20px;

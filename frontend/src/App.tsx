@@ -599,6 +599,45 @@ function setStoredWidgetUser(user: TelegramUser | null) {
   else localStorage.removeItem(WIDGET_USER_KEY)
 }
 
+/** Короткий звуковой сигнал при нахождении лобби (Web Audio, без внешних файлов). */
+function playLobbyFoundSound() {
+  try {
+    const AudioCtx = (window as any).AudioContext || (window as any).webkitAudioContext
+    if (!AudioCtx) return
+    const ctx = new AudioCtx()
+    const osc = ctx.createOscillator()
+    const gain = ctx.createGain()
+    osc.type = 'sine'
+    osc.frequency.setValueAtTime(880, ctx.currentTime)
+    gain.gain.setValueAtTime(0.001, ctx.currentTime)
+    gain.gain.exponentialRampToValueAtTime(0.2, ctx.currentTime + 0.02)
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.45)
+    osc.connect(gain).connect(ctx.destination)
+    osc.start()
+    osc.stop(ctx.currentTime + 0.5)
+  } catch {
+    // тихо игнорируем, если браузер блокирует звук
+  }
+}
+
+/** Показывает нативное уведомление браузера, если вкладка не активна. */
+function showLobbyNotification(title: string, body: string) {
+  if (typeof window === 'undefined' || typeof document === 'undefined') return
+  if (!('Notification' in window)) return
+  // Запрашиваем разрешение только при необходимости
+  if (Notification.permission === 'default') {
+    Notification.requestPermission().then((perm) => {
+      if (perm === 'granted' && document.hidden) {
+        new Notification(title, { body })
+      }
+    })
+    return
+  }
+  if (Notification.permission === 'granted' && document.hidden) {
+    new Notification(title, { body })
+  }
+}
+
 /** Ранг по ELO: Level 1 (1–800) … Level 9 (1851–2000), Level 10 = Elite (2001+). */
 function getRankFromElo(elo: number | null): { level: number; isElite: boolean } | null {
   if (elo == null || elo < 1) return null
@@ -675,6 +714,7 @@ function App() {
   const [myProfileStats, setMyProfileStats] = useState<LeaderboardRow | null>(null)
   const [myRecentMatches, setMyRecentMatches] = useState<RecentMatchRow[]>([])
   const [myProfileStatsLoading, setMyProfileStatsLoading] = useState(false)
+  const lastLobbyMatchIdRef = useRef<number | null>(null)
   const widgetContainerRef = useRef<HTMLDivElement>(null)
   const chatMessagesScrollRef = useRef<HTMLDivElement>(null)
   const chatMessagesEndRef = useRef<HTMLDivElement>(null)
@@ -1056,8 +1096,26 @@ function App() {
   // Автоскролл чата к последнему сообщению
   useLayoutEffect(() => {
     if (searchStatus !== 'in_lobby' || !chatMessages.length) return
-    chatMessagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
+    const container = chatMessagesScrollRef.current
+    if (!container) return
+    container.scrollTo({
+      top: container.scrollHeight,
+      behavior: 'smooth',
+    })
   }, [searchStatus, chatMessages.length, chatMessages])
+
+  // Звук и браузерное уведомление при переходе в лобби (включая, когда вкладка неактивна)
+  useEffect(() => {
+    if (searchStatus !== 'in_lobby' || !currentMatch) return
+    if (lastLobbyMatchIdRef.current === currentMatch.id) return
+    lastLobbyMatchIdRef.current = currentMatch.id
+    // звук всегда, после того как пользователь уже нажимал «Поиск»
+    playLobbyFoundSound()
+    // нативное уведомление, если пользователь в другой вкладке/приложении
+    const title = messages[lang].ladderLobbyTitle
+    const body = messages[lang].ladderLobbyVs.replace('{name}', opponentName || messages[lang].guestName)
+    showLobbyNotification(title, body)
+  }, [searchStatus, currentMatch?.id, lang, opponentName])
 
   // Опрос (fallback): когда в поиске — раз в 1 сек проверяем матч (если Realtime не сработал)
   useEffect(() => {
