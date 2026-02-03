@@ -1629,7 +1629,7 @@ function App() {
   ]
 
   return (
-    <div className={`app ${useMobileLayout ? 'app--mobile' : 'app--desktop'} ${activeView === 'home' ? 'strike-theme' : ''}`}>
+    <div className={`app ${useMobileLayout ? 'app--mobile' : 'app--desktop'} ${activeView === 'home' || activeView === 'profile' ? 'strike-theme' : ''}`}>
       <div className="site-header strike-header">
         <header className="app-header">
           <div className="app-header-main">
@@ -1908,63 +1908,63 @@ function App() {
               </aside>
             </section>
 
-            {/* Top Players */}
-            <section className="strike-section">
-              <h3 className="strike-section-title">{t.homeTopPlayers}</h3>
-              <ul className="strike-top-list">
-                {leaderboardLoading && <li className="strike-top-placeholder">{t.ratingLoading}</li>}
-                {!leaderboardLoading && leaderboard.length === 0 && (
-                  <li className="strike-top-placeholder">{t.ratingEmpty}</li>
-                )}
-                {!leaderboardLoading && leaderboard.slice(0, 5).map((r, i) => (
-                  <li
-                    key={r.player_id}
-                    className={`strike-top-item ${i === 0 ? 'strike-top-item--first' : ''}`}
-                    onClick={() => {
-                      setSelectedPlayerRow(r)
-                      setActiveView('rating')
-                    }}
-                  >
-                    <span className="strike-top-rank">{r.rank}</span>
-                    <span className="strike-top-avatar">
-                      {r.avatar_url ? (
-                        <img src={r.avatar_url} alt="" width={36} height={36} />
-                      ) : (
-                        <span>{(r.display_name || '?').charAt(0).toUpperCase()}</span>
-                      )}
-                    </span>
-                    <span className="strike-top-name">{r.display_name || '—'}</span>
-                    <span className="strike-top-elo">ELO {r.elo ?? '—'}</span>
-                    {i === 0 && <span className="strike-top-crown">👑</span>}
-                  </li>
-                ))}
-              </ul>
-            </section>
-
-            {/* Latest News (placeholder cards) */}
-            <section className="strike-section">
-              <h3 className="strike-section-title">{t.homeLatestNews}</h3>
-              <div className="strike-news-grid">
-                <article className="strike-news-card">
-                  <div className="strike-news-thumb" />
-                  <h4 className="strike-news-card-title">{t.homeNewsTitle1}</h4>
-                  <p className="strike-news-card-desc">{t.homeNewsDesc1}</p>
-                  <span className="strike-news-date">7 days ago</span>
-                </article>
-                <article className="strike-news-card">
-                  <div className="strike-news-thumb" />
-                  <h4 className="strike-news-card-title">{t.homeNewsTitle2}</h4>
-                  <p className="strike-news-card-desc">{t.homeNewsDesc2}</p>
-                  <span className="strike-news-date">7 days ago</span>
-                </article>
-                <article className="strike-news-card">
-                  <div className="strike-news-thumb" />
-                  <h4 className="strike-news-card-title">{t.homeNewsTitle3}</h4>
-                  <p className="strike-news-card-desc">{t.homeNewsDesc3}</p>
-                  <span className="strike-news-date">7 days ago</span>
-                </article>
-              </div>
-            </section>
+            {/* Нижний ряд: слева Top Players, справа Latest News — как на фото */}
+            <div className="strike-bottom">
+              <section className="strike-section strike-section--top-players">
+                <h3 className="strike-section-title">{t.homeTopPlayers}</h3>
+                <ul className="strike-top-list">
+                  {leaderboardLoading && <li className="strike-top-placeholder">{t.ratingLoading}</li>}
+                  {!leaderboardLoading && leaderboard.length === 0 && (
+                    <li className="strike-top-placeholder">{t.ratingEmpty}</li>
+                  )}
+                  {!leaderboardLoading && leaderboard.slice(0, 5).map((r, i) => (
+                    <li
+                      key={r.player_id}
+                      className={`strike-top-item ${i === 0 ? 'strike-top-item--first' : ''}`}
+                      onClick={() => {
+                        setSelectedPlayerRow(r)
+                        setActiveView('rating')
+                      }}
+                    >
+                      <span className="strike-top-rank">{r.rank}</span>
+                      <span className="strike-top-avatar">
+                        {r.avatar_url ? (
+                          <img src={r.avatar_url} alt="" width={36} height={36} />
+                        ) : (
+                          <span>{(r.display_name || '?').charAt(0).toUpperCase()}</span>
+                        )}
+                      </span>
+                      <span className="strike-top-name">{r.display_name || '—'}</span>
+                      <span className="strike-top-elo">ELO {r.elo ?? '—'}</span>
+                      {i === 0 && <span className="strike-top-crown">👑</span>}
+                    </li>
+                  ))}
+                </ul>
+              </section>
+              <section className="strike-section strike-section--news">
+                <h3 className="strike-section-title">{t.homeLatestNews}</h3>
+                <div className="strike-news-grid">
+                  <article className="strike-news-card">
+                    <div className="strike-news-thumb" />
+                    <h4 className="strike-news-card-title">{t.homeNewsTitle1}</h4>
+                    <p className="strike-news-card-desc">{t.homeNewsDesc1}</p>
+                    <span className="strike-news-date">7 days ago</span>
+                  </article>
+                  <article className="strike-news-card">
+                    <div className="strike-news-thumb" />
+                    <h4 className="strike-news-card-title">{t.homeNewsTitle2}</h4>
+                    <p className="strike-news-card-desc">{t.homeNewsDesc2}</p>
+                    <span className="strike-news-date">7 days ago</span>
+                  </article>
+                  <article className="strike-news-card">
+                    <div className="strike-news-thumb" />
+                    <h4 className="strike-news-card-title">{t.homeNewsTitle3}</h4>
+                    <p className="strike-news-card-desc">{t.homeNewsDesc3}</p>
+                    <span className="strike-news-date">7 days ago</span>
+                  </article>
+                </div>
+              </section>
+            </div>
 
             {/* Footer */}
             <footer className="strike-footer">
@@ -2269,8 +2269,8 @@ function App() {
         )}
 
         {activeView === 'profile' && (
-          <section className="panel">
-            <h3 className="panel-title">{t.profileHeader}</h3>
+          <section className="panel profile-panel">
+            <h3 className="panel-title profile-panel-title">{t.profileHeader}</h3>
             {loadingProfile && (
               <p className="panel-text">{t.profileLoading}</p>
             )}

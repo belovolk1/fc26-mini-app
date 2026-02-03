@@ -1943,6 +1943,305 @@
   margin-bottom: 12px;
 }
 
+/* ========== Strike theme — страница профиля (как на референсе) ========== */
+.app.strike-theme .profile-panel {
+  background: transparent;
+  border: none;
+  padding: 24px 20px 40px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+@media (min-width: 1024px) {
+  .app.strike-theme .profile-panel {
+    padding: 32px 48px 48px;
+  }
+}
+.app.strike-theme .profile-panel-title {
+  font-family: var(--strike-font);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--strike-muted);
+  text-transform: uppercase;
+  margin-bottom: var(--strike-space-xl);
+}
+.app.strike-theme .profile-page {
+  position: relative;
+}
+.app.strike-theme .profile-page-layout {
+  gap: var(--strike-space-xl);
+}
+@media (min-width: 1024px) {
+  .app.strike-theme .profile-page-layout {
+    gap: 28px;
+    align-items: stretch;
+  }
+}
+/* Левая колонка — карточка с аватаром и инфо */
+.app.strike-theme .profile-sidebar {
+  background: var(--strike-card);
+  border: var(--strike-border-w) solid var(--strike-border);
+  border-radius: var(--strike-radius);
+  box-shadow: var(--strike-shadow-sm);
+  padding: var(--strike-space-xl) var(--strike-space-lg);
+  position: relative;
+  overflow: hidden;
+}
+.app.strike-theme .profile-sidebar::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background-image: var(--strike-cloud-url);
+  background-size: cover;
+  mix-blend-mode: overlay;
+  opacity: 0.5;
+}
+.app.strike-theme .profile-sidebar > * {
+  position: relative;
+  z-index: 1;
+}
+.app.strike-theme .profile-avatar-wrap {
+  background: var(--strike-elevated);
+  border: 2px solid var(--strike-border);
+  box-shadow: 0 0 20px var(--strike-orange-glow);
+}
+.app.strike-theme .profile-avatar-placeholder {
+  background: var(--strike-elevated);
+  color: var(--strike-orange);
+  font-family: var(--strike-font);
+}
+.app.strike-theme .profile-display-name {
+  font-family: var(--strike-font);
+  font-weight: 800;
+  color: var(--strike-text);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.app.strike-theme .profile-country-badge {
+  color: var(--strike-muted);
+  font-family: var(--strike-font-body);
+}
+/* Правая колонка — табы и контент */
+.app.strike-theme .profile-main {
+  background: var(--strike-card);
+  border: var(--strike-border-w) solid var(--strike-border);
+  border-radius: var(--strike-radius);
+  box-shadow: var(--strike-shadow-sm);
+  padding: 0;
+  position: relative;
+  overflow: hidden;
+}
+.app.strike-theme .profile-main::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background-image: var(--strike-cloud-url);
+  background-size: cover;
+  mix-blend-mode: overlay;
+  opacity: 0.5;
+}
+.app.strike-theme .profile-main > * {
+  position: relative;
+  z-index: 1;
+}
+.app.strike-theme .profile-tabs {
+  border-bottom: var(--strike-border-w) solid var(--strike-border);
+  padding: 0 var(--strike-space-lg);
+  margin-bottom: 0;
+  background: var(--strike-elevated);
+  border-radius: var(--strike-radius) var(--strike-radius) 0 0;
+}
+.app.strike-theme .profile-tab {
+  font-family: var(--strike-font);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--strike-muted);
+  padding: 16px 20px;
+  border-bottom: 3px solid transparent;
+  bottom: -1px;
+}
+.app.strike-theme .profile-tab:hover {
+  color: var(--strike-text);
+  background: transparent;
+}
+.app.strike-theme .profile-tab--active {
+  color: var(--strike-orange);
+  border-bottom-color: var(--strike-orange);
+}
+.app.strike-theme .profile-tab-content {
+  padding: var(--strike-space-xl) var(--strike-space-lg);
+}
+.app.strike-theme .profile-rank-card {
+  background: var(--strike-elevated);
+  border: var(--strike-border-w) solid var(--strike-border);
+  border-radius: var(--strike-radius);
+  box-shadow: none;
+  padding: var(--strike-space-xl);
+  margin-bottom: var(--strike-space-xl);
+}
+.app.strike-theme .profile-rank-badge {
+  background: var(--strike-orange);
+  color: #fff;
+  font-family: var(--strike-font);
+}
+.app.strike-theme .profile-elo-big {
+  color: var(--strike-orange);
+  font-family: var(--strike-font);
+}
+.app.strike-theme .profile-rank-level,
+.app.strike-theme .profile-calibration-label {
+  color: var(--strike-orange);
+  font-family: var(--strike-font);
+}
+.app.strike-theme .profile-matches-summary {
+  color: var(--strike-muted);
+  font-family: var(--strike-font-body);
+}
+.app.strike-theme .profile-stats-heading {
+  color: var(--strike-text);
+  font-family: var(--strike-font);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: var(--strike-space);
+}
+.app.strike-theme .profile-stats-grid {
+  gap: var(--strike-space-md);
+  margin-bottom: var(--strike-space-xl);
+}
+.app.strike-theme .profile-stat-card {
+  background: var(--strike-elevated);
+  border: var(--strike-border-w) solid var(--strike-border);
+  border-radius: var(--strike-radius-sm);
+  padding: var(--strike-space-md);
+}
+.app.strike-theme .profile-stat-card:hover {
+  border-color: var(--strike-border);
+}
+.app.strike-theme .profile-stat-card-accent {
+  border-color: rgba(255, 107, 0, 0.4);
+  background: linear-gradient(180deg, var(--strike-orange-soft) 0%, transparent 100%);
+  box-shadow: 0 0 0 1px rgba(255, 107, 0, 0.2);
+}
+.app.strike-theme .profile-stat-value {
+  color: var(--strike-text);
+  font-family: var(--strike-font);
+}
+.app.strike-theme .profile-stat-card-accent .profile-stat-value {
+  color: var(--strike-orange);
+}
+.app.strike-theme .profile-stat-label {
+  color: var(--strike-muted);
+  font-family: var(--strike-font-body);
+  font-size: 12px;
+}
+.app.strike-theme .profile-recent-match {
+  background: var(--strike-elevated);
+  border: var(--strike-border-w) solid var(--strike-border);
+  border-radius: var(--strike-radius-sm);
+  font-family: var(--strike-font-body);
+}
+.app.strike-theme .profile-recent-match--win {
+  border-left: 4px solid var(--success);
+}
+.app.strike-theme .profile-recent-match--loss {
+  border-left: 4px solid var(--error);
+}
+.app.strike-theme .profile-recent-match--draw {
+  border-left: 4px solid var(--strike-muted);
+}
+.app.strike-theme .profile-recent-opponent,
+.app.strike-theme .profile-recent-score {
+  color: var(--strike-text);
+}
+.app.strike-theme .profile-recent-elo-delta {
+  color: var(--strike-orange);
+  font-family: var(--strike-font);
+}
+.app.strike-theme .profile-recent-match--win .profile-recent-result {
+  color: var(--success);
+}
+.app.strike-theme .profile-recent-match--loss .profile-recent-result {
+  color: var(--error);
+}
+.app.strike-theme .profile-recent-match--draw .profile-recent-result {
+  color: var(--strike-muted);
+}
+.app.strike-theme .profile-recent-date {
+  color: var(--strike-muted);
+}
+.app.strike-theme .profile-edit-section .panel-subtitle {
+  color: var(--strike-text);
+  font-family: var(--strike-font);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.app.strike-theme .profile-edit-section .form-label {
+  color: var(--strike-muted);
+  font-family: var(--strike-font-body);
+}
+.app.strike-theme .profile-edit-section .form-input {
+  background: var(--strike-elevated);
+  border: var(--strike-border-w) solid var(--strike-border);
+  color: var(--strike-text);
+  border-radius: var(--strike-radius-sm);
+}
+.app.strike-theme .profile-edit-section .form-input:focus {
+  border-color: var(--strike-orange);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(255, 107, 0, 0.2);
+}
+.app.strike-theme .profile-edit-section .primary-button,
+.app.strike-theme .profile-panel .primary-button {
+  background: linear-gradient(180deg, var(--strike-orange-bright) 0%, var(--strike-orange) 100%) !important;
+  border: none !important;
+  color: #fff !important;
+  font-family: var(--strike-font);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border-radius: var(--strike-radius);
+  box-shadow: var(--strike-btn-glow);
+}
+.app.strike-theme .profile-telegram {
+  border-top-color: var(--strike-border);
+  padding-top: var(--strike-space-lg);
+  margin-top: var(--strike-space-lg);
+}
+.app.strike-theme .profile-telegram-status {
+  color: var(--success);
+}
+.app.strike-theme .profile-telegram .panel-subtitle {
+  color: var(--strike-text);
+  font-family: var(--strike-font);
+}
+.app.strike-theme .profile-logout-btn {
+  border-color: var(--strike-border);
+  color: var(--strike-muted);
+  font-family: var(--strike-font-body);
+}
+.app.strike-theme .profile-logout-btn:hover {
+  border-color: var(--strike-orange);
+  color: var(--strike-orange);
+}
+.app.strike-theme .profile-panel .panel-text,
+.app.strike-theme .profile-panel .panel-hint {
+  color: var(--strike-muted);
+}
+.app.strike-theme .profile-panel .profile-error,
+.app.strike-theme .profile-panel .profile-error-rls {
+  color: var(--error);
+}
+
 .rating-back-btn {
   margin-bottom: 20px;
   font-size: 16px;
@@ -2238,11 +2537,48 @@
   --strike-shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.25);
   --strike-inset: inset 0 1px 0 rgba(255, 255, 255, 0.1);
   --strike-btn-glow: 0 6px 20px var(--strike-orange-glow);
+  /* Облачный шум (data URL как в примере) */
+  --strike-cloud-url: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.11' numOctaves='5' seed='2'/%3E%3CfeGaussianBlur stdDeviation='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)' opacity='0.35'/%3E%3C/svg%3E");
+  position: relative;
+  min-height: 100vh;
   background: var(--strike-bg) !important;
+}
+/* Задний фон — шум поверх цвета, mix-blend-mode: overlay */
+.app.strike-theme::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: var(--strike-cloud-url);
+  background-size: cover;
+  mix-blend-mode: overlay;
+}
+.app.strike-theme > * {
+  position: relative;
+  z-index: 1;
 }
 .app.strike-theme .site-header {
   background: var(--strike-card) !important;
   border-bottom: var(--strike-border-w) solid var(--strike-border) !important;
+}
+@media (min-width: 1024px) {
+  .app.strike-theme .strike-header {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .app.strike-theme .strike-header .app-header {
+    justify-self: start;
+  }
+  .app.strike-theme .strike-header .app-nav {
+    justify-self: center;
+  }
+  .app.strike-theme .strike-header .header-right {
+    justify-self: end;
+    margin-left: 0;
+  }
 }
 .app.strike-theme .nav-btn.active {
   color: var(--strike-orange);
@@ -2569,6 +2905,23 @@
   border-radius: var(--strike-radius);
   box-shadow: var(--strike-shadow-sm);
   margin-bottom: var(--strike-space-xl);
+  position: relative;
+  overflow: hidden;
+}
+/* Табы — тот же шум поверх фона */
+.app.strike-theme .strike-live-strip::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background-image: var(--strike-cloud-url);
+  background-size: cover;
+  mix-blend-mode: overlay;
+}
+.app.strike-theme .strike-live-strip > * {
+  position: relative;
+  z-index: 1;
 }
 .strike-live-arrow {
   background: none;
@@ -2941,8 +3294,28 @@
   font-family: var(--strike-font);
   color: var(--strike-orange);
 }
+/* Нижний ряд: слева Top Players, справа Latest News (как на фото) */
+.strike-bottom {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 28px;
+  margin-bottom: 40px;
+}
+@media (min-width: 1024px) {
+  .strike-bottom {
+    grid-template-columns: 1fr 1.5fr;
+    gap: var(--strike-space-xl);
+    align-items: start;
+  }
+}
 .strike-section {
   margin-bottom: 40px;
+}
+.strike-bottom .strike-section {
+  margin-bottom: 0;
+}
+.strike-bottom .strike-section:last-child {
+  margin-bottom: 0;
 }
 .strike-section-title {
   margin: 0 0 20px;
