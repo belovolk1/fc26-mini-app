@@ -1629,7 +1629,7 @@ function App() {
   ]
 
   return (
-    <div className={`app ${useMobileLayout ? 'app--mobile' : 'app--desktop'}`}>
+    <div className={`app ${useMobileLayout ? 'app--mobile' : 'app--desktop'} ${activeView === 'home' ? 'strike-theme' : ''}`}>
       <div className="site-header strike-header">
         <header className="app-header">
           <div className="app-header-main">
