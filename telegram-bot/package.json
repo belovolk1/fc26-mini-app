@@ -1,0 +1,15 @@
+{
+  "name": "fc-area-telegram-bot",
+  "version": "1.0.0",
+  "description": "Telegram bot for FC Area - handles /start command and saves telegram_id",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node index.js"
+  },
+  "dependencies": {
+    "node-telegram-bot-api": "^0.66.0",
+    "@supabase/supabase-js": "^2.78.0",
+    "dotenv": "^16.4.5"
+  }
+}

@@ -25,6 +25,13 @@ type BroadcastPayload = {
 }
 
 serve(async (req) => {
+  // Логирование в самом начале
+  console.log('=== Function called ===', {
+    method: req.method,
+    url: req.url,
+    headers: Object.fromEntries(req.headers.entries())
+  })
+
   // CORS headers
   const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
@@ -34,17 +41,30 @@ serve(async (req) => {
 
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
+    console.log('OPTIONS request, returning CORS headers')
     return new Response('ok', { headers: corsHeaders })
   }
 
   if (req.method !== 'POST') {
+    console.log('Method not allowed:', req.method)
     return new Response('Method not allowed', { status: 405, headers: corsHeaders })
   }
 
   const adminSecret = Deno.env.get('ADMIN_BROADCAST_SECRET')
-  const headerSecret = req.headers.get('x-admin-token')
+  const headerSecret = req.headers.get('x-admin-token') || req.headers.get('X-Admin-Token')
+
+  // Отладка (убрать в продакшне)
+  console.log('Auth check:', {
+    hasSecret: !!adminSecret,
+    secretLength: adminSecret?.length || 0,
+    headerValue: headerSecret ? `${headerSecret.substring(0, 10)}...` : 'missing',
+    headerLength: headerSecret?.length || 0,
+    match: adminSecret === headerSecret,
+    allHeaders: Object.fromEntries(req.headers.entries())
+  })
 
   if (!adminSecret || headerSecret !== adminSecret) {
+    console.error('Auth failed:', { adminSecret: !!adminSecret, headerSecret: !!headerSecret })
     return new Response('Forbidden', { status: 403, headers: corsHeaders })
   }
 

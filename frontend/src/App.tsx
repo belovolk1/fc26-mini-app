@@ -1174,6 +1174,7 @@ function App() {
     if (!isAdminUser || !text) return
     const endpoint = import.meta.env.VITE_ADMIN_BROADCAST_URL as string | undefined
     const token = import.meta.env.VITE_ADMIN_BROADCAST_TOKEN as string | undefined
+    const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined
     if (!endpoint || !token) {
       setAdminResult(`Не настроен VITE_ADMIN_BROADCAST_URL или VITE_ADMIN_BROADCAST_TOKEN. URL: ${endpoint ? '✓' : '✗'}, Token: ${token ? '✓' : '✗'}`)
       return
@@ -1188,12 +1189,18 @@ function App() {
       if (adminMinElo.trim()) payload.minElo = Number(adminMinElo)
       if (adminTargetUsername.trim()) payload.targetUsername = adminTargetUsername.trim()
 
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        'X-Admin-Token': token,
+      }
+      // Добавляем Authorization заголовок для Supabase Edge Functions
+      if (anonKey) {
+        headers['Authorization'] = `Bearer ${anonKey}`
+      }
+
       const resp = await fetch(endpoint, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Admin-Token': token,
-        },
+        headers,
         body: JSON.stringify(payload),
       })
       if (!resp.ok) {
