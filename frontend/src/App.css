@@ -1672,6 +1672,124 @@
   color: var(--text-muted);
 }
 
+/* Карточка ранга — layout как на референсе: слева бейдж + LEVEL, справа ELO */
+.profile-rank-card--ref {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 24px;
+  align-items: center;
+}
+@media (max-width: 639px) {
+  .profile-rank-card--ref {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+}
+.profile-rank-card-left {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.profile-rank-badge-wrap {
+  width: 72px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.profile-rank-badge-svg {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 0 12px rgba(255, 107, 0, 0.5));
+}
+.profile-rank-level--label {
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.profile-rank-card-right {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.profile-rank-meta {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* Иконки в стат-карточках */
+.profile-stat-icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+  color: var(--accent);
+}
+.profile-stat-icon {
+  width: 24px;
+  height: 24px;
+}
+
+/* Таблица последних матчей + пилюли W/L/D */
+.profile-recent-table-wrap {
+  overflow-x: auto;
+  margin-top: 12px;
+}
+.profile-recent-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.profile-recent-table th,
+.profile-recent-table td {
+  padding: 12px 14px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+.profile-recent-table th {
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+}
+.profile-recent-table tbody tr:hover {
+  background: var(--bg-elevated);
+}
+.profile-result-pill {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.profile-result-pill--win {
+  background: rgba(63, 185, 80, 0.25);
+  color: var(--success);
+}
+.profile-result-pill--loss {
+  background: rgba(248, 81, 73, 0.25);
+  color: var(--error);
+}
+.profile-result-pill--draw {
+  background: rgba(141, 148, 158, 0.25);
+  color: var(--text-muted);
+}
+.profile-recent-elo-cell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.profile-elo-arrow {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
 .profile-stats-heading {
   margin: 0 0 16px;
   font-size: 13px;
@@ -2085,6 +2203,17 @@
   padding: var(--strike-space-xl);
   margin-bottom: var(--strike-space-xl);
 }
+.app.strike-theme .profile-rank-badge-svg {
+  filter: drop-shadow(0 0 16px var(--strike-orange-glow));
+}
+.app.strike-theme .profile-rank-level--label {
+  color: var(--strike-orange);
+  font-family: var(--strike-font);
+}
+.app.strike-theme .profile-rank-meta {
+  color: var(--strike-muted);
+  font-family: var(--strike-font-body);
+}
 .app.strike-theme .profile-rank-badge {
   background: var(--strike-orange);
   color: #fff;
@@ -2102,6 +2231,42 @@
 .app.strike-theme .profile-matches-summary {
   color: var(--strike-muted);
   font-family: var(--strike-font-body);
+}
+.app.strike-theme .profile-stat-icon-wrap {
+  color: var(--strike-orange);
+}
+.app.strike-theme .profile-stat-icon {
+  width: 22px;
+  height: 22px;
+}
+.app.strike-theme .profile-recent-table th,
+.app.strike-theme .profile-recent-table td {
+  border-bottom-color: var(--strike-border);
+}
+.app.strike-theme .profile-recent-table th {
+  color: var(--strike-muted);
+  font-family: var(--strike-font);
+}
+.app.strike-theme .profile-recent-table tbody tr:hover {
+  background: var(--strike-elevated);
+}
+.app.strike-theme .profile-result-pill--win {
+  background: rgba(63, 185, 80, 0.2);
+  color: var(--success);
+}
+.app.strike-theme .profile-result-pill--loss {
+  background: rgba(248, 81, 73, 0.2);
+  color: var(--error);
+}
+.app.strike-theme .profile-result-pill--draw {
+  background: rgba(255, 107, 0, 0.15);
+  color: var(--strike-muted);
+}
+.app.strike-theme .profile-recent-elo-delta {
+  color: var(--strike-orange);
+}
+.app.strike-theme .profile-elo-arrow {
+  color: var(--strike-orange);
 }
 .app.strike-theme .profile-stats-heading {
   color: var(--strike-text);

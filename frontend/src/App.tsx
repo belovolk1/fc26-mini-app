@@ -784,6 +784,71 @@ function getRankFromElo(elo: number | null): { level: number; isElite: boolean }
   return { level: 9, isElite: false }
 }
 
+/** Текст ранга для UI: LEVEL 1 … LEVEL 10 - ELITE (заглушки как на референсе) */
+function getRankDisplayLabel(rank: { level: number; isElite: boolean } | null): string {
+  if (!rank) return '—'
+  if (rank.isElite) return 'LEVEL 10 - ELITE'
+  return `LEVEL ${rank.level}`
+}
+
+/* === SVG иконки для профиля (тематика: ранги, статы, матчи) === */
+const ProfileRankBadgeSvg = () => (
+  <svg className="profile-rank-badge-svg" viewBox="0 0 64 72" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+    <defs>
+      <linearGradient id="rankShieldGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stopColor="#ff9f43" />
+        <stop offset="100%" stopColor="#cc5500" />
+      </linearGradient>
+      <filter id="rankGlow">
+        <feGaussianBlur stdDeviation="2" result="blur" />
+        <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+      </filter>
+    </defs>
+    <path d="M32 4L8 14v20c0 14 10 26 24 34 14-8 24-20 24-34V14L32 4z" fill="url(#rankShieldGrad)" stroke="rgba(255,140,0,0.8)" strokeWidth="2" filter="url(#rankGlow)" />
+    <path d="M20 28l24 24M44 28L20 52" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" fill="none" opacity="0.9" />
+  </svg>
+)
+const IconMatchesSvg = () => (
+  <svg className="profile-stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
+    <path d="M14.5 17.5L3 6V3h3l11.5 11.5M13 6l6-3 3 3-3 6-3-3" />
+    <path d="M9.5 17.5L21 9v3l-8.5 8.5-3-3z" />
+  </svg>
+)
+const IconWinsSvg = () => (
+  <svg className="profile-stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+    <path d="M12 2L15 9l7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1 3-7z" />
+  </svg>
+)
+const IconDrawsSvg = () => (
+  <svg className="profile-stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
+    <path d="M9 12h6M8 16h8M12 8v8M4 14h2M18 14h2M14 4v2M10 20v-2" />
+  </svg>
+)
+const IconLossesSvg = () => (
+  <svg className="profile-stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+  </svg>
+)
+const IconGoalsSvg = () => (
+  <svg className="profile-stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+    <path d="M12 19V5M5 12l7-7 7 7" />
+    <path d="M5 12h14" />
+  </svg>
+)
+const IconWinRateSvg = () => (
+  <svg className="profile-stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+    <circle cx="12" cy="12" r="10" />
+    <path d="M12 2a10 10 0 0 1 0 20" />
+    <path d="M12 2v10l5 5" />
+  </svg>
+)
+const IconEloUpSvg = () => (
+  <svg className="profile-elo-arrow" viewBox="0 0 16 16" fill="currentColor" aria-hidden><path d="M8 4l4 6H4l4-6z" /></svg>
+)
+const IconEloDownSvg = () => (
+  <svg className="profile-elo-arrow" viewBox="0 0 16 16" fill="currentColor" aria-hidden><path d="M8 12l4-6H4l4 6z" /></svg>
+)
+
 function App() {
   const [activeView, setActiveView] = useState<View>('home')
   const [lang, setLang] = useState<Lang>('en')
@@ -2338,54 +2403,56 @@ function App() {
                         <div className="profile-tab-content">
                           {profileActiveTab === 'overview' && (
                             <div className="profile-tab-panel">
-                              <div className="profile-rank-card">
-                                <span className="profile-rank-badge">
-                                  #{myProfileStats?.rank ?? '—'}
-                                </span>
-                                <span className="profile-elo-big">{myProfileStats?.elo ?? elo ?? '—'}</span>
-                                {(myProfileStats?.matches_count ?? matchesCount ?? 0) <= 10 ? (
-                                  <span className="profile-calibration-label">{t.profileCalibrationLabel}</span>
-                                ) : (() => {
-                                  const rank = getRankFromElo(myProfileStats?.elo ?? elo ?? null)
-                                  return rank ? (
-                                    <span className="profile-rank-level">
-                                      {rank.isElite ? `${t.profileRankElite} 🔥` : t.profileRankLevel.replace('{n}', String(rank.level))}
-                                    </span>
-                                  ) : null
-                                })()}
-                                <p className="profile-matches-summary">
-                                  {myProfileStats?.matches_count ?? matchesCount ?? 0} {t.profileMatchesWins.replace('{pct}', myProfileStats?.win_rate != null ? String(myProfileStats.win_rate) : '0')}
-                                </p>
+                              <div className="profile-rank-card profile-rank-card--ref">
+                                <div className="profile-rank-card-left">
+                                  <div className="profile-rank-badge-wrap">
+                                    <ProfileRankBadgeSvg />
+                                  </div>
+                                  <span className="profile-rank-level profile-rank-level--label">
+                                    {(myProfileStats?.matches_count ?? matchesCount ?? 0) <= 10
+                                      ? t.profileCalibrationLabel
+                                      : getRankDisplayLabel(getRankFromElo(myProfileStats?.elo ?? elo ?? null))}
+                                  </span>
+                                </div>
+                                <div className="profile-rank-card-right">
+                                  <span className="profile-elo-big">{myProfileStats?.elo ?? elo ?? '—'} ELO</span>
+                                  <p className="profile-rank-meta">{t.profileEloLabel}</p>
+                                  <p className="profile-matches-summary">
+                                    {t.profileMatchesLabel}: {(myProfileStats?.matches_count ?? matchesCount ?? 0).toLocaleString()}
+                                  </p>
+                                </div>
                               </div>
                               {myProfileStats && (
                                 <>
                                   <h4 className="profile-stats-heading">{t.profileStatsSummary}</h4>
                                   <div className="profile-stats-grid">
                                     <div className="profile-stat-card">
+                                      <span className="profile-stat-icon-wrap"><IconMatchesSvg /></span>
                                       <span className="profile-stat-value">{myProfileStats.matches_count}</span>
                                       <span className="profile-stat-label">{t.ratingMatches}</span>
                                     </div>
                                     <div className="profile-stat-card">
+                                      <span className="profile-stat-icon-wrap"><IconWinsSvg /></span>
                                       <span className="profile-stat-value">{myProfileStats.wins}</span>
                                       <span className="profile-stat-label">{t.ratingWins}</span>
                                     </div>
                                     <div className="profile-stat-card">
+                                      <span className="profile-stat-icon-wrap"><IconDrawsSvg /></span>
                                       <span className="profile-stat-value">{myProfileStats.draws}</span>
                                       <span className="profile-stat-label">{t.ratingDraws}</span>
                                     </div>
                                     <div className="profile-stat-card">
+                                      <span className="profile-stat-icon-wrap"><IconLossesSvg /></span>
                                       <span className="profile-stat-value">{myProfileStats.losses}</span>
                                       <span className="profile-stat-label">{t.ratingLosses}</span>
                                     </div>
                                     <div className="profile-stat-card">
-                                      <span className="profile-stat-value">{myProfileStats.goals_for}</span>
-                                      <span className="profile-stat-label">{t.ratingGoalsFor}</span>
-                                    </div>
-                                    <div className="profile-stat-card">
-                                      <span className="profile-stat-value">{myProfileStats.goals_against}</span>
-                                      <span className="profile-stat-label">{t.ratingGoalsAgainst}</span>
+                                      <span className="profile-stat-icon-wrap"><IconGoalsSvg /></span>
+                                      <span className="profile-stat-value">{myProfileStats.goals_for} / {myProfileStats.goals_against}</span>
+                                      <span className="profile-stat-label">{t.ratingGoalsFor} / {t.ratingGoalsAgainst}</span>
                                     </div>
                                     <div className="profile-stat-card profile-stat-card-accent">
+                                      <span className="profile-stat-icon-wrap"><IconWinRateSvg /></span>
                                       <span className="profile-stat-value">
                                         {myProfileStats.win_rate != null ? `${myProfileStats.win_rate}%` : '—'}
                                       </span>
@@ -2396,29 +2463,49 @@ function App() {
                                   {myRecentMatches.length === 0 ? (
                                     <p className="panel-text small">{t.profileRecentMatchesEmpty}</p>
                                   ) : (
-                                    <ul className="profile-recent-matches">
-                                      {myRecentMatches.map((match) => (
-                                        <li key={match.match_id} className={`profile-recent-match profile-recent-match--${match.result}`}>
-                                          <span className="profile-recent-opponent">{match.opponent_name ?? '—'}</span>
-                                          <span className="profile-recent-score">
-                                            {match.my_score} : {match.opp_score}
-                                          </span>
-                                          <span className="profile-recent-result">
-                                            {match.result === 'win' ? t.profileResultWin : match.result === 'loss' ? t.profileResultLoss : t.profileResultDraw}
-                                          </span>
-                                          {typeof match.elo_delta === 'number' && match.elo_delta !== 0 && (
-                                            <span className="profile-recent-elo-delta">
-                                              {match.elo_delta > 0 ? `+${match.elo_delta} ELO` : `${match.elo_delta} ELO`}
-                                            </span>
-                                          )}
-                                          {match.played_at && (
-                                            <span className="profile-recent-date">
-                                              {new Date(match.played_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                                            </span>
-                                          )}
-                                        </li>
-                                      ))}
-                                    </ul>
+                                    <div className="profile-recent-table-wrap">
+                                      <table className="profile-recent-table">
+                                        <thead>
+                                          <tr>
+                                            <th>{t.profilePlayerLabel}</th>
+                                            <th>Score</th>
+                                            <th>Result</th>
+                                            <th>ELO</th>
+                                            <th>Date</th>
+                                          </tr>
+                                        </thead>
+                                        <tbody>
+                                          {myRecentMatches.map((match) => (
+                                            <tr key={match.match_id} className={`profile-recent-match profile-recent-match--${match.result}`}>
+                                              <td className="profile-recent-opponent">{match.opponent_name ?? '—'}</td>
+                                              <td className="profile-recent-score">{match.my_score}:{match.opp_score}</td>
+                                              <td>
+                                                <span className={`profile-result-pill profile-result-pill--${match.result}`}>
+                                                  {match.result === 'win' ? 'W' : match.result === 'loss' ? 'L' : 'D'}
+                                                </span>
+                                              </td>
+                                              <td className="profile-recent-elo-cell">
+                                                {typeof match.elo_delta === 'number' && match.elo_delta !== 0 ? (
+                                                  <>
+                                                    {match.elo_delta > 0 ? <IconEloUpSvg /> : <IconEloDownSvg />}
+                                                    <span className="profile-recent-elo-delta">
+                                                      {match.elo_delta > 0 ? `+${match.elo_delta}` : match.elo_delta}
+                                                    </span>
+                                                  </>
+                                                ) : (
+                                                  '—'
+                                                )}
+                                              </td>
+                                              <td className="profile-recent-date">
+                                                {match.played_at
+                                                  ? new Date(match.played_at).toLocaleDateString(undefined, { day: '2-digit', month: '2-digit', year: 'numeric' })
+                                                  : '—'}
+                                              </td>
+                                            </tr>
+                                          ))}
+                                        </tbody>
+                                      </table>
+                                    </div>
                                   )}
                                 </>
                               )}
