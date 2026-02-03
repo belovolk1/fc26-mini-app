@@ -129,6 +129,28 @@ const messages: Record<
     profileTabEdit: string
     profileTabSettings: string
     guestName: string
+    homeHeroHeadline: string
+    homeHeroDesc: string
+    homeJoinNow: string
+    homeLearnMore: string
+    homePlayNow: string
+    homeViewEvents: string
+    homeViewStats: string
+    homeViewLadder: string
+    homeYourStats: string
+    homeTopPlayers: string
+    homeLatestNews: string
+    homeLiveCountdown: string
+    homeNewsTitle1: string
+    homeNewsDesc1: string
+    homeNewsTitle2: string
+    homeNewsDesc2: string
+    homeNewsTitle3: string
+    homeNewsDesc3: string
+    footerAbout: string
+    footerTerms: string
+    footerPrivacy: string
+    footerContact: string
   }
 > = {
   en: {
@@ -267,6 +289,28 @@ const messages: Record<
     profileTabEdit: 'Edit Profile',
     profileTabSettings: 'Settings',
     guestName: 'Guest',
+    homeHeroHeadline: 'COMPETE. CLIMB. DOMINATE.',
+    homeHeroDesc: 'Join the ultimate soccer esports ladder. Prove your skills, earn rank, and win prizes.',
+    homeJoinNow: 'JOIN NOW',
+    homeLearnMore: 'LEARN MORE',
+    homePlayNow: 'PLAY NOW',
+    homeViewEvents: 'VIEW EVENTS',
+    homeViewStats: 'VIEW STATS',
+    homeViewLadder: 'VIEW LADDER',
+    homeYourStats: 'YOUR STATS',
+    homeTopPlayers: 'TOP PLAYERS',
+    homeLatestNews: 'LATEST NEWS',
+    homeLiveCountdown: 'LIVE COUNTDOWN',
+    homeNewsTitle1: 'New season update: map changes & balance',
+    homeNewsDesc1: 'Jump into a ranked match instantly. Solo or Duo.',
+    homeNewsTitle2: 'Esports finals: watch live!',
+    homeNewsDesc2: 'Weekly and monthly cups. Big prizes.',
+    homeNewsTitle3: 'Community spotlight: top 10 goals',
+    homeNewsDesc3: 'Track your ELO, stats and achievements.',
+    footerAbout: 'About Us',
+    footerTerms: 'Terms of Service',
+    footerPrivacy: 'Privacy Policy',
+    footerContact: 'Contact',
   },
   ro: {
     appTitle: 'FC Area',
@@ -404,6 +448,28 @@ const messages: Record<
     profileTabEdit: 'Editează Profilul',
     profileTabSettings: 'Setări',
     guestName: 'Vizitator',
+    homeHeroHeadline: 'CONCURĂ. URCA. DOMINĂ.',
+    homeHeroDesc: 'Alătură-te ladder-ului esports de fotbal. Demonstrează-ți skill-urile, câștigă rang și premii.',
+    homeJoinNow: 'ÎNSCRIE-TE',
+    homeLearnMore: 'AFLĂ MAI MULT',
+    homePlayNow: 'JOACĂ ACUM',
+    homeViewEvents: 'VEZI EVENIMENTE',
+    homeViewStats: 'VEZI STATISTICI',
+    homeViewLadder: 'VEZI CLASAMENT',
+    homeYourStats: 'STATISTICILE TALE',
+    homeTopPlayers: 'TOP JUCĂTORI',
+    homeLatestNews: 'ȘTIRI RECENTE',
+    homeLiveCountdown: 'COUNTDOWN LIVE',
+    homeNewsTitle1: 'Actualizare sezon: hărți și balans',
+    homeNewsDesc1: 'Intră într-un meci ranked instant. Solo sau Duo.',
+    homeNewsTitle2: 'Finale esports: urmărește live!',
+    homeNewsDesc2: 'Cupe săptămânale și lunare. Premii mari.',
+    homeNewsTitle3: 'Community spotlight: top 10 goluri',
+    homeNewsDesc3: 'Urmărește ELO, statistici și realizări.',
+    footerAbout: 'Despre noi',
+    footerTerms: 'Termeni și condiții',
+    footerPrivacy: 'Confidențialitate',
+    footerContact: 'Contact',
   },
   ru: {
     appTitle: 'FC Area',
@@ -541,6 +607,28 @@ const messages: Record<
     profileTabEdit: 'Редактировать',
     profileTabSettings: 'Настройки',
     guestName: 'Гость',
+    homeHeroHeadline: 'СРАЖАЙСЯ. РАСТИ. ДОМИНИРУЙ.',
+    homeHeroDesc: 'Присоединяйся к футбольному esports-рейтингу. Докажи навыки, получай ранг и призы.',
+    homeJoinNow: 'ПРИСОЕДИНИТЬСЯ',
+    homeLearnMore: 'ПОДРОБНЕЕ',
+    homePlayNow: 'ИГРАТЬ',
+    homeViewEvents: 'СОБЫТИЯ',
+    homeViewStats: 'СТАТИСТИКА',
+    homeViewLadder: 'РЕЙТИНГ',
+    homeYourStats: 'ТВОЯ СТАТИСТИКА',
+    homeTopPlayers: 'ТОП ИГРОКИ',
+    homeLatestNews: 'ПОСЛЕДНИЕ НОВОСТИ',
+    homeLiveCountdown: 'ДО СТАРТА',
+    homeNewsTitle1: 'Новый сезон: карты и баланс',
+    homeNewsDesc1: 'Начни рейтинговый матч мгновенно. Соло или дуо.',
+    homeNewsTitle2: 'Финалы esports: смотри вживую!',
+    homeNewsDesc2: 'Еженедельные и месячные кубки. Крупные призы.',
+    homeNewsTitle3: 'Лучшие голы сообщества',
+    homeNewsDesc3: 'Отслеживай ELO, статистику и достижения.',
+    footerAbout: 'О нас',
+    footerTerms: 'Условия использования',
+    footerPrivacy: 'Конфиденциальность',
+    footerContact: 'Контакты',
   },
 }
 
@@ -897,9 +985,10 @@ function App() {
     void loadProfile()
   }, [user])
 
-  // Полная статистика своего профиля для единого макета (как у чужого)
+  // Полная статистика своего профиля (профиль и главная — блок Your Stats)
   useEffect(() => {
-    if (activeView !== 'profile' || !playerId) {
+    if (!playerId) return
+    if (activeView !== 'profile' && activeView !== 'home') {
       setMyProfileStats(null)
       setMyRecentMatches([])
       return
@@ -1371,10 +1460,10 @@ function App() {
     })
   }, [selectedPlayerRow?.player_id])
 
-  // Загрузка рейтинга при открытии страницы «Рейтинг»
+  // Загрузка рейтинга при открытии страницы «Рейтинг» или главной (для блока Top Players)
   useEffect(() => {
-    if (activeView !== 'rating') return
-    if (!window.location.hash.includes('player=')) setSelectedPlayerRow(null)
+    if (activeView !== 'rating' && activeView !== 'home') return
+    if (activeView === 'rating' && !window.location.hash.includes('player=')) setSelectedPlayerRow(null)
     setLeaderboardLoading(true)
     supabase.rpc('get_leaderboard').then(({ data, error }) => {
       setLeaderboardLoading(false)
@@ -1541,9 +1630,10 @@ function App() {
 
   return (
     <div className={`app ${useMobileLayout ? 'app--mobile' : 'app--desktop'}`}>
-      <div className="site-header">
+      <div className="site-header strike-header">
         <header className="app-header">
           <div className="app-header-main">
+            <span className="strike-logo-icon" aria-hidden="true">⚽</span>
             <h1 className="app-title">{t.appTitle}</h1>
             <p className="app-subtitle">{t.appSubtitle}</p>
           </div>
@@ -1619,6 +1709,32 @@ function App() {
           </nav>
         )}
         <div className={`header-right ${showHamburger ? 'header-right--desktop-only' : ''}`}>
+          <div className="strike-header-user">
+            <div className="strike-header-avatar">
+              {myAvatarUrl ? (
+                <img src={myAvatarUrl} alt="" width={36} height={36} />
+              ) : (
+                <span>{(displayName || '?').charAt(0).toUpperCase()}</span>
+              )}
+            </div>
+            <div className="strike-header-user-info">
+              <span className="app-user-name">{displayName}</span>
+              <div className="strike-header-elo-wrap">
+                <div className="strike-header-elo-bar">
+                  <div
+                    className="strike-header-elo-bar-fill"
+                    style={{
+                      width: `${Math.min(100, Math.max(0, ((elo ?? 1200) - 800) / 12))}%`,
+                    }}
+                  />
+                </div>
+                <span className="strike-header-elo-value">{elo ?? '—'} ELO</span>
+              </div>
+            </div>
+            <button type="button" className="strike-header-cta strike-btn strike-btn-primary" onClick={() => setActiveView('ladder')}>
+              {t.homePlayNow}
+            </button>
+          </div>
           <div className="lang-switch">
             <button
               type="button"
@@ -1641,12 +1757,6 @@ function App() {
             >
               RU
             </button>
-          </div>
-          <div className="app-user">
-            <span className="app-user-name">{displayName}</span>
-            <span className="app-user-rating">
-              ELO: {elo ?? '—'}
-            </span>
           </div>
         </div>
       </div>
@@ -1681,96 +1791,196 @@ function App() {
 
         {activeView === 'home' && (
           <>
-            <section className="hero-modern">
-              <div className="hero-modern-content">
-                <h1 className="hero-modern-title">{t.appTitle}</h1>
-                <p className="hero-modern-subtitle">{t.appSubtitle}</p>
-                {user && playerId && (
-                  <div className="hero-modern-stats">
-                    <div className="hero-stat">
-                      <span className="hero-stat-label">{t.ratingElo}</span>
-                      <span className="hero-stat-value">{elo ?? '—'}</span>
-                    </div>
-                    <div className="hero-stat">
-                      <span className="hero-stat-label">{t.ratingMatches}</span>
-                      <span className="hero-stat-value">{matchesCount ?? 0}</span>
-                    </div>
-                    {matchesCount != null && matchesCount <= 10 && (
-                      <div className="hero-stat hero-stat-calibration">
-                        <span className="hero-stat-label">{t.profileCalibrationLabel}</span>
-                      </div>
-                    )}
-                  </div>
-                )}
+            {/* Hero: headline left, CTA buttons, soccer field right */}
+            <section className="strike-hero">
+              <div className="strike-hero-content">
+                <h1 className="strike-hero-title">{t.homeHeroHeadline}</h1>
+                <p className="strike-hero-desc">{t.homeHeroDesc}</p>
+                <div className="strike-hero-buttons">
+                  <button type="button" className="strike-btn strike-btn-primary" onClick={() => setActiveView('ladder')}>
+                    {t.homeJoinNow}
+                  </button>
+                  <button type="button" className="strike-btn strike-btn-secondary" onClick={() => setActiveView('tournaments')}>
+                    {t.homeLearnMore}
+                  </button>
+                </div>
+              </div>
+              <div className="strike-hero-graphic" aria-hidden="true">
+                <svg viewBox="0 0 200 120" fill="none" xmlns="http://www.w3.org/2000/svg" className="strike-field-svg">
+                  <rect x="10" y="10" width="180" height="100" stroke="currentColor" strokeWidth="2" rx="4" opacity="0.4" />
+                  <circle cx="100" cy="60" r="20" stroke="currentColor" strokeWidth="2" opacity="0.5" />
+                  <line x1="100" y1="10" x2="100" y2="110" stroke="currentColor" strokeWidth="2" opacity="0.4" />
+                  <rect x="10" y="35" width="30" height="50" stroke="currentColor" strokeWidth="2" rx="2" opacity="0.4" />
+                  <rect x="160" y="35" width="30" height="50" stroke="currentColor" strokeWidth="2" rx="2" opacity="0.4" />
+                </svg>
               </div>
             </section>
 
-            <section className="home-features">
-              <button
-                type="button"
-                className="feature-card feature-card-primary"
-                onClick={() => setActiveView('ladder')}
-              >
-                <div className="feature-card-icon">⚡</div>
-                <div className="feature-card-content">
-                  <h3 className="feature-card-title">{t.quickPlayTitle}</h3>
-                  <p className="feature-card-text">{t.quickPlayText}</p>
-                </div>
-                <div className="feature-card-arrow">→</div>
-              </button>
-
-              <button
-                type="button"
-                className="feature-card"
-                onClick={() => setActiveView('tournaments')}
-              >
-                <div className="feature-card-icon">🏆</div>
-                <div className="feature-card-content">
-                  <h3 className="feature-card-title">{t.tournamentsTitle}</h3>
-                  <p className="feature-card-text">{t.tournamentsText}</p>
-                </div>
-                <div className="feature-card-arrow">→</div>
-              </button>
-
-              <button
-                type="button"
-                className="feature-card"
-                onClick={() => setActiveView('profile')}
-              >
-                <div className="feature-card-icon">👤</div>
-                <div className="feature-card-content">
-                  <h3 className="feature-card-title">{t.profileTileTitle}</h3>
-                  <p className="feature-card-text">{t.profileTileText}</p>
-                </div>
-                <div className="feature-card-arrow">→</div>
-              </button>
-
-              <button
-                type="button"
-                className="feature-card"
-                onClick={() => setActiveView('rating')}
-              >
-                <div className="feature-card-icon">📊</div>
-                <div className="feature-card-content">
-                  <h3 className="feature-card-title">{t.ratingHeader}</h3>
-                  <p className="feature-card-text">{t.ratingIntro}</p>
-                </div>
-                <div className="feature-card-arrow">→</div>
-              </button>
-
-              <button
-                type="button"
-                className="feature-card"
-                onClick={() => setActiveView('matches')}
-              >
-                <div className="feature-card-icon">📋</div>
-                <div className="feature-card-content">
-                  <h3 className="feature-card-title">{t.matchesHeader}</h3>
-                  <p className="feature-card-text">{t.matchesIntro}</p>
-                </div>
-                <div className="feature-card-arrow">→</div>
-              </button>
+            {/* Live strip */}
+            <section className="strike-live-strip">
+              <button type="button" className="strike-live-arrow" aria-label="Scroll left">‹</button>
+              <div className="strike-live-scroll">
+                <span className="strike-live-item">{t.matchesHeader}</span>
+                <span className="strike-live-item">{t.tournamentsTitle}</span>
+              </div>
+              <span className="strike-live-countdown">{t.homeLiveCountdown}: 8H ›</span>
+              <button type="button" className="strike-live-arrow" aria-label="Scroll right">›</button>
             </section>
+
+            {/* Main: 4 cards left + Your Stats right */}
+            <section className="strike-main">
+              <div className="strike-cards">
+                <button type="button" className="strike-card strike-card-primary" onClick={() => setActiveView('ladder')}>
+                  <div className="strike-card-icon">⚡</div>
+                  <h3 className="strike-card-title">{t.quickPlayTitle}</h3>
+                  <p className="strike-card-text">{t.quickPlayText}</p>
+                  <span className="strike-card-btn strike-btn strike-btn-primary">{t.homePlayNow}</span>
+                </button>
+                <button type="button" className="strike-card" onClick={() => setActiveView('tournaments')}>
+                  <div className="strike-card-icon">🏆</div>
+                  <h3 className="strike-card-title">{t.tournamentsTitle}</h3>
+                  <p className="strike-card-text">{t.tournamentsText}</p>
+                  <span className="strike-card-btn strike-btn strike-btn-outline">{t.homeViewEvents}</span>
+                </button>
+                <button type="button" className="strike-card" onClick={() => setActiveView('profile')}>
+                  <div className="strike-card-icon">👤</div>
+                  <h3 className="strike-card-title">{t.profileTileTitle}</h3>
+                  <p className="strike-card-text">{t.profileTileText}</p>
+                  <span className="strike-card-btn strike-btn strike-btn-outline">{t.homeViewStats}</span>
+                </button>
+                <button type="button" className="strike-card" onClick={() => setActiveView('rating')}>
+                  <div className="strike-card-icon">📊</div>
+                  <h3 className="strike-card-title">{t.ratingHeader}</h3>
+                  <p className="strike-card-text">{t.ratingIntro}</p>
+                  <span className="strike-card-btn strike-btn strike-btn-outline">{t.homeViewLadder}</span>
+                </button>
+              </div>
+              <aside className="strike-stats">
+                <h3 className="strike-stats-title">{t.homeYourStats}</h3>
+                <div className="strike-elo-block">
+                  <span className="strike-elo-label">{t.ratingElo}</span>
+                  <span className="strike-elo-value">{myProfileStats?.elo ?? elo ?? '—'}</span>
+                  <div className="strike-elo-bar">
+                    <div
+                      className="strike-elo-bar-fill"
+                      style={{
+                        width: `${Math.min(100, Math.max(0, ((myProfileStats?.elo ?? elo ?? 1200) - 800) / 12))}%`,
+                      }}
+                    />
+                  </div>
+                </div>
+                <div className="strike-stats-row">
+                  <div className="strike-stat-pill">
+                    <span className="strike-stat-label">{t.ratingMatches}</span>
+                    <span className="strike-stat-value">{myProfileStats?.matches_count ?? matchesCount ?? 0}</span>
+                  </div>
+                  <div className="strike-stat-pill">
+                    <span className="strike-stat-label">{t.ratingWinRate}</span>
+                    <span className="strike-stat-value strike-stat-value--success">
+                      ✓ {myProfileStats?.win_rate != null ? `${myProfileStats.win_rate}%` : '0%'}
+                    </span>
+                  </div>
+                  <div className="strike-stat-pill">
+                    <span className="strike-stat-label">GF/GA</span>
+                    <span className="strike-stat-value">
+                      {myProfileStats ? `${myProfileStats.goals_for}/${myProfileStats.goals_against}` : '—'}
+                    </span>
+                  </div>
+                </div>
+                <h4 className="strike-recent-title">{t.profileLast10Matches}</h4>
+                <ul className="strike-recent-list">
+                  {myRecentMatches.length === 0 && (
+                    <li className="strike-recent-empty">{t.profileRecentMatchesEmpty}</li>
+                  )}
+                  {myRecentMatches.slice(0, 6).map((m) => (
+                    <li key={m.match_id} className={`strike-recent-item strike-recent-item--${m.result}`}>
+                      <span className="strike-recent-result">{m.result === 'win' ? '✓' : m.result === 'loss' ? '✗' : '−'}</span>
+                      <span className="strike-recent-opponent">{m.opponent_name ?? '—'}</span>
+                      <span className="strike-recent-score">
+                        {m.my_score}–{m.opp_score}
+                      </span>
+                      {m.elo_delta != null && m.elo_delta !== 0 && (
+                        <span className="strike-recent-elo">{m.elo_delta > 0 ? `+${m.elo_delta}` : m.elo_delta}</span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </aside>
+            </section>
+
+            {/* Top Players */}
+            <section className="strike-section">
+              <h3 className="strike-section-title">{t.homeTopPlayers}</h3>
+              <ul className="strike-top-list">
+                {leaderboardLoading && <li className="strike-top-placeholder">{t.ratingLoading}</li>}
+                {!leaderboardLoading && leaderboard.length === 0 && (
+                  <li className="strike-top-placeholder">{t.ratingEmpty}</li>
+                )}
+                {!leaderboardLoading && leaderboard.slice(0, 5).map((r, i) => (
+                  <li
+                    key={r.player_id}
+                    className={`strike-top-item ${i === 0 ? 'strike-top-item--first' : ''}`}
+                    onClick={() => {
+                      setSelectedPlayerRow(r)
+                      setActiveView('rating')
+                    }}
+                  >
+                    <span className="strike-top-rank">{r.rank}</span>
+                    <span className="strike-top-avatar">
+                      {r.avatar_url ? (
+                        <img src={r.avatar_url} alt="" width={36} height={36} />
+                      ) : (
+                        <span>{(r.display_name || '?').charAt(0).toUpperCase()}</span>
+                      )}
+                    </span>
+                    <span className="strike-top-name">{r.display_name || '—'}</span>
+                    <span className="strike-top-elo">ELO {r.elo ?? '—'}</span>
+                    {i === 0 && <span className="strike-top-crown">👑</span>}
+                  </li>
+                ))}
+              </ul>
+            </section>
+
+            {/* Latest News (placeholder cards) */}
+            <section className="strike-section">
+              <h3 className="strike-section-title">{t.homeLatestNews}</h3>
+              <div className="strike-news-grid">
+                <article className="strike-news-card">
+                  <div className="strike-news-thumb" />
+                  <h4 className="strike-news-card-title">{t.homeNewsTitle1}</h4>
+                  <p className="strike-news-card-desc">{t.homeNewsDesc1}</p>
+                  <span className="strike-news-date">7 days ago</span>
+                </article>
+                <article className="strike-news-card">
+                  <div className="strike-news-thumb" />
+                  <h4 className="strike-news-card-title">{t.homeNewsTitle2}</h4>
+                  <p className="strike-news-card-desc">{t.homeNewsDesc2}</p>
+                  <span className="strike-news-date">7 days ago</span>
+                </article>
+                <article className="strike-news-card">
+                  <div className="strike-news-thumb" />
+                  <h4 className="strike-news-card-title">{t.homeNewsTitle3}</h4>
+                  <p className="strike-news-card-desc">{t.homeNewsDesc3}</p>
+                  <span className="strike-news-date">7 days ago</span>
+                </article>
+              </div>
+            </section>
+
+            {/* Footer */}
+            <footer className="strike-footer">
+              <div className="strike-footer-links">
+                <a href="#about" className="strike-footer-link">{t.footerAbout}</a>
+                <a href="#terms" className="strike-footer-link">{t.footerTerms}</a>
+                <a href="#privacy" className="strike-footer-link">{t.footerPrivacy}</a>
+                <a href="#contact" className="strike-footer-link">{t.footerContact}</a>
+              </div>
+              <div className="strike-footer-social">
+                <span className="strike-social-icon" aria-label="Twitter">𝕏</span>
+                <span className="strike-social-icon" aria-label="Facebook">f</span>
+                <span className="strike-social-icon" aria-label="Instagram">📷</span>
+                <span className="strike-social-icon" aria-label="YouTube">▶</span>
+              </div>
+            </footer>
           </>
         )}
 
