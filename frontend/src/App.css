@@ -2208,35 +2208,36 @@
   }
 }
 
-/* ========== Strike Ladder — отдельный дизайн-язык (как на фото) ========== */
-/* Токены: тонкие границы, средние скругления, мягкие тени, плотная сетка */
+/* ========== Strike Ladder — полная переделка под референс ========== */
 .app.strike-theme {
-  /* Цвета */
-  --strike-bg: #0b0d10;
-  --strike-card: #12151a;
-  --strike-elevated: #181c22;
-  --strike-border: #252a33;
-  --strike-border-subtle: #1e2229;
-  --strike-text: #f2f4f7;
-  --strike-muted: #7a8294;
+  /* Цвета точно как на фото */
+  --strike-bg: #0a0c0f;
+  --strike-card: #111419;
+  --strike-elevated: #171a1f;
+  --strike-border: #23272e;
+  --strike-border-subtle: #1a1d23;
+  --strike-text: #f5f7fa;
+  --strike-muted: #7d8590;
   --strike-orange: #ff6b00;
   --strike-orange-bright: #ff8533;
-  --strike-orange-glow: rgba(255, 107, 0, 0.35);
-  --strike-orange-soft: rgba(255, 107, 0, 0.12);
+  --strike-orange-glow: rgba(255, 107, 0, 0.4);
+  --strike-orange-soft: rgba(255, 107, 0, 0.15);
   /* Типографика */
   --strike-font: 'Orbitron', sans-serif;
   --strike-font-body: 'Rajdhani', system-ui, sans-serif;
-  /* Дизайн-язык: тонкие границы, средние радиусы */
-  --strike-radius: 8px;
-  --strike-radius-sm: 6px;
+  /* Дизайн-язык: точные значения как на фото */
+  --strike-radius: 10px;
+  --strike-radius-sm: 8px;
   --strike-border-w: 1px;
+  --strike-space-xs: 4px;
   --strike-space: 8px;
   --strike-space-md: 16px;
   --strike-space-lg: 24px;
-  --strike-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
-  --strike-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.2);
-  --strike-inset: inset 0 1px 0 rgba(255, 255, 255, 0.08);
-  --strike-btn-glow: 0 4px 16px var(--strike-orange-glow);
+  --strike-space-xl: 32px;
+  --strike-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  --strike-shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.25);
+  --strike-inset: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  --strike-btn-glow: 0 6px 20px var(--strike-orange-glow);
   background: var(--strike-bg) !important;
 }
 .app.strike-theme .site-header {
@@ -2397,7 +2398,8 @@
   position: relative;
 }
 .app.strike-theme .strike-hero {
-  padding: 56px 0 64px;
+  padding: 64px 0 72px;
+  margin-bottom: var(--strike-space-xl);
 }
 .strike-hero-content {
   flex: 1;
@@ -2412,14 +2414,14 @@
   line-height: 1.15;
 }
 .app.strike-theme .strike-hero-title {
-  margin: 0 0 var(--strike-space-md);
+  margin: 0 0 20px;
   font-family: var(--strike-font);
-  font-size: 32px;
+  font-size: 38px;
   font-weight: 900;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
   color: var(--strike-text);
   text-transform: uppercase;
-  line-height: 1.15;
+  line-height: 1.2;
 }
 .strike-hero-desc {
   margin: 0 0 28px;
@@ -2538,15 +2540,16 @@
     font-size: 48px;
   }
   .app.strike-theme .strike-hero-title {
-    font-size: 42px;
+    font-size: 48px;
+    letter-spacing: 0.06em;
   }
   .strike-hero-graphic {
     width: 280px;
     height: 160px;
   }
   .app.strike-theme .strike-hero-graphic {
-    width: 300px;
-    height: 170px;
+    width: 320px;
+    height: 180px;
   }
 }
 .strike-live-strip {
@@ -2560,11 +2563,12 @@
   margin-bottom: 32px;
 }
 .app.strike-theme .strike-live-strip {
-  padding: var(--strike-space-md) var(--strike-space-lg);
+  padding: 18px var(--strike-space-lg);
   background: var(--strike-card);
   border: var(--strike-border-w) solid var(--strike-border);
   border-radius: var(--strike-radius);
   box-shadow: var(--strike-shadow-sm);
+  margin-bottom: var(--strike-space-xl);
 }
 .strike-live-arrow {
   background: none;
@@ -2618,11 +2622,18 @@
     grid-template-columns: 2fr 1fr;
     align-items: start;
   }
+  .app.strike-theme .strike-main {
+    grid-template-columns: 1.8fr 1fr;
+    gap: var(--strike-space-xl);
+  }
 }
 .strike-cards {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 20px;
+}
+.app.strike-theme .strike-cards {
+  gap: var(--strike-space-md);
 }
 @media (max-width: 767px) {
   .strike-cards {
@@ -2642,11 +2653,12 @@
   transition: all 0.25s ease;
 }
 .app.strike-theme .strike-card {
-  padding: var(--strike-space-lg) var(--strike-space-lg);
+  padding: 28px 24px;
   background: var(--strike-card);
   border: var(--strike-border-w) solid var(--strike-border);
   border-radius: var(--strike-radius);
   box-shadow: var(--strike-shadow-sm);
+  position: relative;
 }
 .strike-card:hover {
   border-color: var(--accent);
@@ -2656,6 +2668,7 @@
 .app.strike-theme .strike-card:hover {
   border-color: var(--strike-orange);
   box-shadow: var(--strike-shadow), 0 0 0 1px var(--strike-orange-soft);
+  transform: translateY(-2px);
 }
 .strike-card-primary {
   background: linear-gradient(145deg, rgba(244, 117, 33, 0.15), rgba(244, 117, 33, 0.06));
@@ -2718,11 +2731,12 @@
   border-radius: var(--radius);
 }
 .app.strike-theme .strike-stats {
-  padding: var(--strike-space-lg);
+  padding: 28px 24px;
   background: var(--strike-card);
   border: var(--strike-border-w) solid var(--strike-border);
   border-radius: var(--strike-radius);
   box-shadow: var(--strike-shadow-sm);
+  height: fit-content;
 }
 .strike-stats-title {
   margin: 0 0 20px;
@@ -2772,11 +2786,13 @@
 }
 .app.strike-theme .strike-elo-value {
   font-family: var(--strike-font);
-  font-size: 40px;
+  font-size: 48px;
   font-weight: 900;
   color: var(--strike-orange);
-  text-shadow: 0 0 24px var(--strike-orange-glow);
-  letter-spacing: -0.02em;
+  text-shadow: 0 0 32px var(--strike-orange-glow);
+  letter-spacing: -0.03em;
+  line-height: 1;
+  margin-bottom: 4px;
 }
 .strike-elo-bar {
   height: 10px;
