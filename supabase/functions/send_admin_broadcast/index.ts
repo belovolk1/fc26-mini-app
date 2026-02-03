@@ -25,15 +25,27 @@ type BroadcastPayload = {
 }
 
 serve(async (req) => {
+  // CORS headers
+  const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-admin-token',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  }
+
+  // Handle CORS preflight
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders })
+  }
+
   if (req.method !== 'POST') {
-    return new Response('Method not allowed', { status: 405 })
+    return new Response('Method not allowed', { status: 405, headers: corsHeaders })
   }
 
   const adminSecret = Deno.env.get('ADMIN_BROADCAST_SECRET')
   const headerSecret = req.headers.get('x-admin-token')
 
   if (!adminSecret || headerSecret !== adminSecret) {
-    return new Response('Forbidden', { status: 403 })
+    return new Response('Forbidden', { status: 403, headers: corsHeaders })
   }
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')
@@ -41,18 +53,18 @@ serve(async (req) => {
   const botToken = Deno.env.get('TELEGRAM_BOT_TOKEN')
 
   if (!supabaseUrl || !serviceKey || !botToken) {
-    return new Response('Missing server configuration', { status: 500 })
+    return new Response('Missing server configuration', { status: 500, headers: corsHeaders })
   }
 
   let body: BroadcastPayload
   try {
     body = (await req.json()) as BroadcastPayload
   } catch {
-    return new Response('Invalid JSON', { status: 400 })
+    return new Response('Invalid JSON', { status: 400, headers: corsHeaders })
   }
 
   if (!body.message?.trim()) {
-    return new Response('Empty message', { status: 400 })
+    return new Response('Empty message', { status: 400, headers: corsHeaders })
   }
 
   const supabase = createClient(supabaseUrl, serviceKey)
@@ -73,13 +85,13 @@ serve(async (req) => {
 
   if (error) {
     console.error('Failed to load players for broadcast', error)
-    return new Response('DB error', { status: 500 })
+    return new Response('DB error', { status: 500, headers: corsHeaders })
   }
 
   if (!players || players.length === 0) {
     return new Response(JSON.stringify({ sent: 0, failed: 0 }), {
       status: 200,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...corsHeaders },
     })
   }
 
@@ -115,7 +127,7 @@ serve(async (req) => {
 
   return new Response(JSON.stringify({ sent, failed }), {
     status: 200,
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...corsHeaders },
   })
 })
 

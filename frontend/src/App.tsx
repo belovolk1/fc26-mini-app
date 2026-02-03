@@ -1198,7 +1198,7 @@ function App() {
       })
       if (!resp.ok) {
         const txt = await resp.text()
-        setAdminResult(`Ошибка отправки: ${resp.status} ${txt}`)
+        setAdminResult(`Ошибка отправки: ${resp.status} ${resp.statusText} - ${txt}`)
       } else {
         const data = await resp.json().catch(() => ({}))
         if (payload.mode === 'single') {
@@ -1209,7 +1209,10 @@ function App() {
         setAdminMessage('')
       }
     } catch (e: any) {
-      setAdminResult(`Ошибка сети: ${String(e?.message || e)}`)
+      const errorMsg = e?.message || String(e)
+      const errorName = e?.name || 'Unknown'
+      console.error('Admin broadcast error:', { error: e, endpoint, errorMsg, errorName })
+      setAdminResult(`Ошибка сети: ${errorName} - ${errorMsg}. Проверь URL функции: ${endpoint}`)
     } finally {
       setAdminSending(false)
     }
