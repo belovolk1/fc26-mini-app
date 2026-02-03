@@ -2208,23 +2208,40 @@
   }
 }
 
-/* ========== Strike Ladder theme (визуально как на фото) ========== */
+/* ========== Strike Ladder — отдельный дизайн-язык (как на фото) ========== */
+/* Токены: тонкие границы, средние скругления, мягкие тени, плотная сетка */
 .app.strike-theme {
-  --strike-bg: #0c0e12;
-  --strike-card: #14171c;
-  --strike-elevated: #1a1e26;
-  --strike-border: #2a2f3a;
-  --strike-text: #f0f2f5;
-  --strike-muted: #8a919e;
+  /* Цвета */
+  --strike-bg: #0b0d10;
+  --strike-card: #12151a;
+  --strike-elevated: #181c22;
+  --strike-border: #252a33;
+  --strike-border-subtle: #1e2229;
+  --strike-text: #f2f4f7;
+  --strike-muted: #7a8294;
   --strike-orange: #ff6b00;
-  --strike-orange-glow: rgba(255, 107, 0, 0.45);
+  --strike-orange-bright: #ff8533;
+  --strike-orange-glow: rgba(255, 107, 0, 0.35);
+  --strike-orange-soft: rgba(255, 107, 0, 0.12);
+  /* Типографика */
   --strike-font: 'Orbitron', sans-serif;
   --strike-font-body: 'Rajdhani', system-ui, sans-serif;
+  /* Дизайн-язык: тонкие границы, средние радиусы */
+  --strike-radius: 8px;
+  --strike-radius-sm: 6px;
+  --strike-border-w: 1px;
+  --strike-space: 8px;
+  --strike-space-md: 16px;
+  --strike-space-lg: 24px;
+  --strike-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  --strike-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.2);
+  --strike-inset: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  --strike-btn-glow: 0 4px 16px var(--strike-orange-glow);
   background: var(--strike-bg) !important;
 }
 .app.strike-theme .site-header {
   background: var(--strike-card) !important;
-  border-bottom-color: var(--strike-border) !important;
+  border-bottom: var(--strike-border-w) solid var(--strike-border) !important;
 }
 .app.strike-theme .nav-btn.active {
   color: var(--strike-orange);
@@ -2329,9 +2346,14 @@
   border-radius: var(--radius-pill);
   transition: width 0.3s ease;
 }
+.app.strike-theme .strike-header-elo-bar {
+  border-radius: 999px;
+  background: var(--strike-border-subtle);
+}
 .app.strike-theme .strike-header-elo-bar-fill {
-  background: linear-gradient(90deg, var(--strike-orange), #ff8c42);
-  box-shadow: 0 0 10px var(--strike-orange-glow);
+  background: linear-gradient(90deg, var(--strike-orange), var(--strike-orange-bright));
+  border-radius: 999px;
+  box-shadow: 0 0 8px var(--strike-orange-glow);
 }
 .strike-header-elo-value {
   font-size: 13px;
@@ -2350,18 +2372,19 @@
   white-space: nowrap;
 }
 .app.strike-theme .strike-header-cta {
-  padding: 10px 20px;
+  padding: 10px 18px;
   font-family: var(--strike-font);
-  font-size: 12px;
-  letter-spacing: 0.08em;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  background: var(--strike-orange) !important;
+  background: linear-gradient(180deg, var(--strike-orange-bright) 0%, var(--strike-orange) 100%) !important;
   border: none !important;
-  border-radius: 8px;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.2), 0 4px 16px var(--strike-orange-glow);
+  border-radius: var(--strike-radius);
+  box-shadow: var(--strike-inset), var(--strike-btn-glow);
 }
 .app.strike-theme .strike-header-cta:hover {
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.25), 0 6px 24px var(--strike-orange-glow);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.15), 0 6px 20px var(--strike-orange-glow);
 }
 .strike-hero {
   display: flex;
@@ -2389,12 +2412,14 @@
   line-height: 1.15;
 }
 .app.strike-theme .strike-hero-title {
-  margin: 0 0 20px;
+  margin: 0 0 var(--strike-space-md);
   font-family: var(--strike-font);
-  font-size: 38px;
-  letter-spacing: 0.02em;
+  font-size: 32px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
   color: var(--strike-text);
   text-transform: uppercase;
+  line-height: 1.15;
 }
 .strike-hero-desc {
   margin: 0 0 28px;
@@ -2404,8 +2429,9 @@
   max-width: 520px;
 }
 .app.strike-theme .strike-hero-desc {
-  margin: 0 0 32px;
+  margin: 0 0 var(--strike-space-lg);
   font-family: var(--strike-font-body);
+  font-size: 16px;
   font-weight: 500;
   color: var(--strike-muted);
 }
@@ -2460,13 +2486,13 @@
 .app.strike-theme .strike-btn-secondary {
   background: var(--strike-card);
   color: var(--strike-text);
-  border: 2px solid var(--strike-orange);
+  border: var(--strike-border-w) solid var(--strike-orange);
 }
 .strike-btn-secondary:hover {
   background: rgba(244, 117, 33, 0.1);
 }
 .app.strike-theme .strike-btn-secondary:hover {
-  background: rgba(255, 107, 0, 0.08);
+  background: var(--strike-orange-soft);
 }
 .strike-btn-outline {
   display: inline-block;
@@ -2480,13 +2506,15 @@
   pointer-events: none;
 }
 .app.strike-theme .strike-btn-outline {
+  padding: 8px 16px;
   font-family: var(--strike-font);
-  font-size: 13px;
-  letter-spacing: 0.06em;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--strike-text);
-  border-color: var(--strike-orange);
-  border-radius: 8px;
+  border: var(--strike-border-w) solid var(--strike-orange);
+  border-radius: var(--strike-radius);
 }
 .strike-hero-graphic {
   flex-shrink: 0;
@@ -2510,7 +2538,7 @@
     font-size: 48px;
   }
   .app.strike-theme .strike-hero-title {
-    font-size: 52px;
+    font-size: 42px;
   }
   .strike-hero-graphic {
     width: 280px;
@@ -2532,10 +2560,11 @@
   margin-bottom: 32px;
 }
 .app.strike-theme .strike-live-strip {
-  padding: 12px 20px;
+  padding: var(--strike-space-md) var(--strike-space-lg);
   background: var(--strike-card);
-  border: 1px solid var(--strike-border);
-  border-radius: 10px;
+  border: var(--strike-border-w) solid var(--strike-border);
+  border-radius: var(--strike-radius);
+  box-shadow: var(--strike-shadow-sm);
 }
 .strike-live-arrow {
   background: none;
@@ -2613,10 +2642,11 @@
   transition: all 0.25s ease;
 }
 .app.strike-theme .strike-card {
-  padding: 26px 24px;
+  padding: var(--strike-space-lg) var(--strike-space-lg);
   background: var(--strike-card);
-  border-color: var(--strike-border);
-  border-radius: 14px;
+  border: var(--strike-border-w) solid var(--strike-border);
+  border-radius: var(--strike-radius);
+  box-shadow: var(--strike-shadow-sm);
 }
 .strike-card:hover {
   border-color: var(--accent);
@@ -2625,21 +2655,21 @@
 }
 .app.strike-theme .strike-card:hover {
   border-color: var(--strike-orange);
-  box-shadow: 0 12px 32px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,107,0,0.2);
+  box-shadow: var(--strike-shadow), 0 0 0 1px var(--strike-orange-soft);
 }
 .strike-card-primary {
   background: linear-gradient(145deg, rgba(244, 117, 33, 0.15), rgba(244, 117, 33, 0.06));
   border-color: rgba(244, 117, 33, 0.4);
 }
 .app.strike-theme .strike-card-primary {
-  background: linear-gradient(160deg, rgba(255,107,0,0.12) 0%, rgba(255,107,0,0.04) 100%);
-  border-color: rgba(255,107,0,0.5);
+  background: linear-gradient(180deg, var(--strike-orange-soft) 0%, transparent 100%);
+  border-color: rgba(255,107,0,0.4);
 }
 .strike-card-primary:hover {
   box-shadow: 0 12px 32px rgba(244, 117, 33, 0.2);
 }
 .app.strike-theme .strike-card-primary:hover {
-  box-shadow: 0 12px 32px rgba(0,0,0,0.35), 0 0 24px var(--strike-orange-glow);
+  box-shadow: var(--strike-shadow), 0 0 16px var(--strike-orange-glow);
 }
 .strike-card-icon {
   font-size: 40px;
@@ -2647,9 +2677,9 @@
   line-height: 1;
 }
 .app.strike-theme .strike-card-icon {
-  font-size: 44px;
-  margin-bottom: 14px;
-  filter: drop-shadow(0 2px 8px var(--strike-orange-glow));
+  font-size: 40px;
+  margin-bottom: var(--strike-space-md);
+  filter: drop-shadow(0 1px 4px var(--strike-orange-glow));
 }
 .strike-card-title {
   margin: 0 0 8px;
@@ -2661,9 +2691,11 @@
 }
 .app.strike-theme .strike-card-title {
   font-family: var(--strike-font);
-  font-size: 17px;
-  letter-spacing: 0.06em;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
   color: var(--strike-text);
+  text-transform: uppercase;
 }
 .strike-card-text {
   margin: 0 0 16px;
@@ -2674,10 +2706,10 @@
 }
 .app.strike-theme .strike-card-text {
   font-family: var(--strike-font-body);
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 500;
   color: var(--strike-muted);
-  margin-bottom: 18px;
+  margin-bottom: var(--strike-space-md);
 }
 .strike-stats {
   padding: 28px 24px;
@@ -2686,9 +2718,11 @@
   border-radius: var(--radius);
 }
 .app.strike-theme .strike-stats {
+  padding: var(--strike-space-lg);
   background: var(--strike-card);
-  border-color: var(--strike-border);
-  border-radius: 14px;
+  border: var(--strike-border-w) solid var(--strike-border);
+  border-radius: var(--strike-radius);
+  box-shadow: var(--strike-shadow-sm);
 }
 .strike-stats-title {
   margin: 0 0 20px;
@@ -2699,16 +2733,19 @@
   letter-spacing: 0.02em;
 }
 .app.strike-theme .strike-stats-title {
+  margin: 0 0 var(--strike-space-md);
   font-family: var(--strike-font);
-  font-size: 17px;
-  letter-spacing: 0.06em;
-  color: var(--strike-text);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--strike-muted);
+  text-transform: uppercase;
 }
 .strike-elo-block {
   margin-bottom: 20px;
 }
 .app.strike-theme .strike-elo-block {
-  margin-bottom: 22px;
+  margin-bottom: var(--strike-space-lg);
 }
 .strike-elo-label {
   display: block;
@@ -2719,12 +2756,12 @@
 }
 .app.strike-theme .strike-elo-label {
   font-family: var(--strike-font);
-  font-size: 12px;
+  font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.12em;
   color: var(--strike-muted);
   text-transform: uppercase;
-  margin-bottom: 8px;
+  margin-bottom: var(--strike-space);
 }
 .strike-elo-value {
   display: block;
@@ -2735,9 +2772,11 @@
 }
 .app.strike-theme .strike-elo-value {
   font-family: var(--strike-font);
-  font-size: 44px;
+  font-size: 40px;
+  font-weight: 900;
   color: var(--strike-orange);
-  text-shadow: 0 0 20px var(--strike-orange-glow);
+  text-shadow: 0 0 24px var(--strike-orange-glow);
+  letter-spacing: -0.02em;
 }
 .strike-elo-bar {
   height: 10px;
@@ -2747,9 +2786,10 @@
   margin-top: 10px;
 }
 .app.strike-theme .strike-elo-bar {
-  height: 10px;
-  margin-top: 12px;
-  background: var(--strike-border);
+  height: 8px;
+  margin-top: var(--strike-space-md);
+  background: var(--strike-border-subtle);
+  border-radius: 999px;
 }
 .strike-elo-bar-fill {
   height: 100%;
@@ -2758,8 +2798,9 @@
   transition: width 0.3s ease;
 }
 .app.strike-theme .strike-elo-bar-fill {
-  background: linear-gradient(90deg, var(--strike-orange), #ff8c42);
-  box-shadow: 0 0 12px var(--strike-orange-glow);
+  background: linear-gradient(90deg, var(--strike-orange), var(--strike-orange-bright));
+  border-radius: 999px;
+  box-shadow: 0 0 10px var(--strike-orange-glow);
 }
 .strike-stats-row {
   display: flex;
@@ -2896,10 +2937,13 @@
   letter-spacing: 0.02em;
 }
 .app.strike-theme .strike-section-title {
+  margin: 0 0 var(--strike-space-md);
   font-family: var(--strike-font);
-  font-size: 17px;
-  letter-spacing: 0.06em;
-  color: var(--strike-text);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--strike-muted);
+  text-transform: uppercase;
 }
 .strike-top-list {
   list-style: none;
@@ -2931,9 +2975,11 @@
   transition: all 0.2s;
 }
 .app.strike-theme .strike-top-item {
+  padding: var(--strike-space-md) var(--strike-space-lg);
   background: var(--strike-card);
-  border-color: var(--strike-border);
-  border-radius: 10px;
+  border: var(--strike-border-w) solid var(--strike-border);
+  border-radius: var(--strike-radius);
+  box-shadow: var(--strike-shadow-sm);
 }
 .strike-top-item:hover {
   border-color: var(--accent);
@@ -2948,9 +2994,9 @@
   border-color: rgba(244, 117, 33, 0.5);
 }
 .app.strike-theme .strike-top-item--first {
-  background: linear-gradient(160deg, rgba(255,107,0,0.25) 0%, rgba(255,107,0,0.1) 100%);
-  border-color: rgba(255,107,0,0.6);
-  box-shadow: 0 0 20px var(--strike-orange-glow);
+  background: linear-gradient(180deg, var(--strike-orange-soft) 0%, transparent 100%);
+  border-color: rgba(255,107,0,0.5);
+  box-shadow: var(--strike-shadow-sm), 0 0 12px var(--strike-orange-glow);
 }
 .strike-top-rank {
   font-size: 18px;
@@ -3037,8 +3083,9 @@
 }
 .app.strike-theme .strike-news-card {
   background: var(--strike-card);
-  border-color: var(--strike-border);
-  border-radius: 14px;
+  border: var(--strike-border-w) solid var(--strike-border);
+  border-radius: var(--strike-radius);
+  box-shadow: var(--strike-shadow-sm);
 }
 .strike-news-card:hover {
   border-color: var(--border-hover);
@@ -3052,8 +3099,9 @@
   border-bottom: 2px solid var(--border);
 }
 .app.strike-theme .strike-news-thumb {
+  height: 100px;
   background: var(--strike-elevated);
-  border-bottom-color: var(--strike-border);
+  border-bottom: var(--strike-border-w) solid var(--strike-border-subtle);
 }
 .strike-news-card-title {
   margin: 12px 16px 8px;
@@ -3063,11 +3111,14 @@
   line-height: 1.35;
 }
 .app.strike-theme .strike-news-card-title {
+  margin: var(--strike-space-md) var(--strike-space-md) var(--strike-space);
   font-family: var(--strike-font);
-  font-size: 14px;
-  letter-spacing: 0.03em;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
   color: var(--strike-text);
   text-transform: uppercase;
+  line-height: 1.35;
 }
 .strike-news-card-desc {
   margin: 0 16px 8px;
@@ -3101,7 +3152,8 @@
   margin-top: 24px;
 }
 .app.strike-theme .strike-footer {
-  border-top-color: var(--strike-border);
+  border-top: var(--strike-border-w) solid var(--strike-border);
+  padding-top: var(--strike-space-lg);
 }
 .strike-footer-links {
   display: flex;
@@ -3115,6 +3167,7 @@
 }
 .app.strike-theme .strike-footer-link {
   font-family: var(--strike-font-body);
+  font-size: 13px;
   font-weight: 600;
   color: var(--strike-muted);
 }
