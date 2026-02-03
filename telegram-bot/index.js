@@ -16,6 +16,11 @@ const bot = new TelegramBot(token, { polling: true })
 const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
 console.log('🤖 Бот запущен и готов к работе!')
+console.log('📋 Конфигурация:', {
+  tokenLength: token?.length || 0,
+  supabaseUrl: supabaseUrl ? '✓' : '✗',
+  supabaseKeyLength: supabaseServiceKey?.length || 0
+})
 
 // Обработка команды /start
 bot.onText(/\/start/, async (msg) => {
@@ -125,7 +130,27 @@ bot.on('message', async (msg) => {
 
 // Обработка ошибок
 bot.on('polling_error', (error) => {
-  console.error('Ошибка polling:', error)
+  console.error('❌ Ошибка polling:', error.message || error)
+  console.error('Полная ошибка:', JSON.stringify(error, null, 2))
 })
+
+// Логирование успешного подключения
+bot.on('polling_error', () => {
+  // Это событие срабатывает только при ошибках
+})
+
+// Проверка, что бот работает
+setTimeout(async () => {
+  try {
+    const me = await bot.getMe()
+    console.log('✅ Бот подключён к Telegram:', {
+      id: me.id,
+      username: me.username,
+      firstName: me.first_name
+    })
+  } catch (e) {
+    console.error('❌ Не удалось получить информацию о боте:', e.message || e)
+  }
+}, 2000)
 
 console.log('✅ Бот успешно запущен! Ожидаю сообщений...')
