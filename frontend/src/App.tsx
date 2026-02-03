@@ -1174,12 +1174,6 @@ function App() {
     if (!isAdminUser || !text) return
     const endpoint = import.meta.env.VITE_ADMIN_BROADCAST_URL as string | undefined
     const token = import.meta.env.VITE_ADMIN_BROADCAST_TOKEN as string | undefined
-    // Временная отладка
-    console.log('DEBUG env vars:', {
-      endpoint,
-      token: token ? `${token.substring(0, 10)}...` : undefined,
-      allEnv: Object.keys(import.meta.env).filter(k => k.startsWith('VITE_ADMIN'))
-    })
     if (!endpoint || !token) {
       setAdminResult(`Не настроен VITE_ADMIN_BROADCAST_URL или VITE_ADMIN_BROADCAST_TOKEN. URL: ${endpoint ? '✓' : '✗'}, Token: ${token ? '✓' : '✗'}`)
       return
