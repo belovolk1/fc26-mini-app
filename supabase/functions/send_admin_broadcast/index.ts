@@ -113,6 +113,11 @@ serve(async (req) => {
     return new Response('DB error', { status: 500, headers: corsHeaders })
   }
 
+  console.log('Found players for broadcast:', {
+    count: players?.length || 0,
+    players: players?.map(p => ({ username: p.username, telegram_id: p.telegram_id, telegram_id_type: typeof p.telegram_id }))
+  })
+
   if (!players || players.length === 0) {
     return new Response(JSON.stringify({ sent: 0, failed: 0 }), {
       status: 200,
@@ -125,14 +130,17 @@ serve(async (req) => {
   const sentTo: string[] = []
   const failedTo: string[] = []
 
-  for (const p of players as { telegram_id: string; username: string | null }[]) {
+  for (const p of players as { telegram_id: string | number; username: string | null }[]) {
     const recipientName = p.username || `telegram_id:${p.telegram_id}`
+    // Убеждаемся, что telegram_id - строка для Telegram API
+    const chatId = String(p.telegram_id)
+    console.log(`Sending to ${recipientName}: telegram_id=${p.telegram_id} (as string: ${chatId})`)
     try {
       const resp = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          chat_id: p.telegram_id,
+          chat_id: chatId,
           text: body.message,
           parse_mode: 'HTML',
         }),
