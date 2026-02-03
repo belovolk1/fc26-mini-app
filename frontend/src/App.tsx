@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import './App.css'
 import { supabase } from './supabaseClient'
 
-type View = 'home' | 'profile' | 'ladder' | 'tournaments' | 'matches' | 'rating'
+type View = 'home' | 'profile' | 'ladder' | 'tournaments' | 'matches' | 'rating' | 'admin'
 type Lang = 'en' | 'ro' | 'ru'
 
 const messages: Record<
@@ -82,6 +82,7 @@ const messages: Record<
     navProfile: string
     navMatches: string
     navRating: string
+    navAdmin: string
     matchesHeader: string
     matchesIntro: string
     matchesLoading: string
@@ -137,6 +138,7 @@ const messages: Record<
       tournaments: 'Tournaments',
       matches: 'Matches',
       rating: 'Rating',
+      admin: 'Admin',
     },
     quickPlayTitle: 'Quick play',
     quickPlayText:
@@ -215,6 +217,7 @@ const messages: Record<
     navProfile: 'Profile',
     navMatches: 'Matches',
     navRating: 'Rating',
+    navAdmin: 'Admin',
     matchesHeader: 'All matches',
     matchesIntro: 'Recently played matches.',
     matchesLoading: 'Loading matches…',
@@ -269,6 +272,7 @@ const messages: Record<
       tournaments: 'Turnee',
       matches: 'Meciuri',
       rating: 'Clasament',
+      admin: 'Admin',
     },
     quickPlayTitle: 'Joc rapid',
     quickPlayText:
@@ -347,6 +351,7 @@ const messages: Record<
     navProfile: 'Profil',
     navMatches: 'Meciuri',
     navRating: 'Clasament',
+    navAdmin: 'Admin',
     matchesHeader: 'Toate meciurile',
     matchesIntro: 'Meciuri jucate recent.',
     matchesLoading: 'Se încarcă meciurile…',
@@ -401,6 +406,7 @@ const messages: Record<
       tournaments: 'Турниры',
       matches: 'Матчи',
       rating: 'Рейтинг',
+      admin: 'Админка',
     },
     quickPlayTitle: 'Быстрая игра',
     quickPlayText:
@@ -479,6 +485,7 @@ const messages: Record<
     navProfile: 'Профиль',
     navMatches: 'Матчи',
     navRating: 'Рейтинг',
+    navAdmin: 'Админ',
     matchesHeader: 'Все матчи',
     matchesIntro: 'Недавно сыгранные матчи.',
     matchesLoading: 'Загрузка матчей…',
@@ -825,6 +832,12 @@ function App() {
   }, [user])
 
   const t = messages[lang]
+  const isAdminUser = user?.username?.toLowerCase() === 'belovolk1'
+  const [adminMessage, setAdminMessage] = useState('')
+  const [adminMinElo, setAdminMinElo] = useState('')
+  const [adminTargetUsername, setAdminTargetUsername] = useState('')
+  const [adminSending, setAdminSending] = useState(false)
+  const [adminResult, setAdminResult] = useState<string | null>(null)
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -1156,6 +1169,68 @@ function App() {
     return () => clearInterval(id)
   }, [searchStatus, searchStartedAt])
 
+  const handleAdminSend = async () => {
+    const text = adminMessage.trim()
+    if (!isAdminUser || !text) return
+    const endpoint = import.meta.env.VITE_ADMIN_BROADCAST_URL as string | undefined
+    const token = import.meta.env.VITE_ADMIN_BROADCAST_TOKEN as string | undefined
+    if (!endpoint || !token) {
+      setAdminResult('Не настроен VITE_ADMIN_BROADCAST_URL или VITE_ADMIN_BROADCAST_TOKEN')
+      return
+    }
+    setAdminSending(true)
+    setAdminResult(null)
+    try {
+      const payload: any = {
+        mode: adminTargetUsername.trim() ? 'single' : 'broadcast',
+        message: text,
+      }
+      if (adminMinElo.trim()) payload.minElo = Number(adminMinElo)
+      if (adminTargetUsername.trim()) payload.targetUsername = adminTargetUsername.trim()
+
+      const resp = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Admin-Token': token,
+        },
+        body: JSON.stringify(payload),
+      })
+      if (!resp.ok) {
+        const txt = await resp.text()
+        setAdminResult(`Ошибка отправки: ${resp.status} ${txt}`)
+      } else {
+        const data = await resp.json().catch(() => ({}))
+        if (payload.mode === 'single') {
+          setAdminResult('Сообщение одному пользователю отправлено (проверь логи бота при ошибках).')
+        } else {
+          setAdminResult(`Рассылка завершена: отправлено ${data.sent ?? '?'} , ошибок ${data.failed ?? '?'}.`)
+        }
+        setAdminMessage('')
+      }
+    } catch (e: any) {
+      setAdminResult(`Ошибка сети: ${String(e?.message || e)}`)
+    } finally {
+      setAdminSending(false)
+    }
+  }
+
+  // Метка robots noindex для админки
+  useEffect(() => {
+    if (typeof document === 'undefined') return
+    let meta = document.querySelector('meta[name="robots"]') as HTMLMetaElement | null
+    if (!meta) {
+      meta = document.createElement('meta')
+      meta.name = 'robots'
+      document.head.appendChild(meta)
+    }
+    if (activeView === 'admin') {
+      meta.content = 'noindex, nofollow'
+    } else if (meta.content === 'noindex, nofollow') {
+      meta.content = 'index, follow'
+    }
+  }, [activeView])
+
   // Звук и браузерное уведомление при переходе в лобби (включая, когда вкладка неактивна)
   useEffect(() => {
     if (searchStatus !== 'in_lobby' || !currentMatch) return
@@ -1411,6 +1486,7 @@ function App() {
     { view: 'matches', label: t.navMatches },
     { view: 'rating', label: t.navRating },
     { view: 'profile', label: t.navProfile },
+    ...(isAdminUser ? [{ view: 'admin' as View, label: t.navAdmin }] : []),
   ]
 
   return (
@@ -1680,6 +1756,55 @@ function App() {
                 ))}
               </ul>
             )}
+          </section>
+        )}
+
+        {activeView === 'admin' && isAdminUser && (
+          <section className="panel admin-panel">
+            <h3 className="panel-title">Telegram admin broadcast</h3>
+            <p className="panel-text small">
+              Отправка сообщений игрокам в Telegram. Используется Bot API, убедись, что все игроки запускали бота.
+            </p>
+            <div className="form-row">
+              <label className="form-label">Текст сообщения</label>
+              <textarea
+                className="form-input"
+                rows={5}
+                value={adminMessage}
+                onChange={(e) => setAdminMessage(e.target.value)}
+              />
+            </div>
+            <div className="form-row">
+              <label className="form-label">Минимальный ELO (опционально)</label>
+              <input
+                type="number"
+                className="form-input"
+                value={adminMinElo}
+                onChange={(e) => setAdminMinElo(e.target.value)}
+                placeholder="например 1500"
+              />
+            </div>
+            <div className="form-row">
+              <label className="form-label">Отправить только одному пользователю (username, опционально)</label>
+              <input
+                type="text"
+                className="form-input"
+                value={adminTargetUsername}
+                onChange={(e) => setAdminTargetUsername(e.target.value)}
+                placeholder="@username или пусто для рассылки всем"
+              />
+            </div>
+            {adminResult && <p className="panel-text small">{adminResult}</p>}
+            <div className="admin-actions">
+              <button
+                type="button"
+                className="primary-button"
+                disabled={adminSending || !adminMessage.trim()}
+                onClick={handleAdminSend}
+              >
+                {adminSending ? 'Отправляем…' : 'Отправить'}
+              </button>
+            </div>
           </section>
         )}
 
