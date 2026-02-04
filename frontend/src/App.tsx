@@ -1763,7 +1763,11 @@ function App() {
 
   const fetchTournaments = async () => {
     setTournamentsLoading(true)
-    await supabase.rpc('tournament_tick', { p_tournament_id: null }).catch(() => {})
+    try {
+      await supabase.rpc('tournament_tick', { p_tournament_id: null })
+    } catch {
+      /* RPC может отсутствовать (404) */
+    }
     const { data: list, error } = await supabase.rpc('get_tournaments_with_counts')
     if (!error && Array.isArray(list) && list.length > 0) {
       setTournamentsList(list.map((r: any) => ({
