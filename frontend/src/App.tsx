@@ -2007,7 +2007,7 @@ function App() {
     onRefresh: () => void | Promise<void>
     onMatchUpdated?: (updated: TournamentMatchRow) => void
   }) {
-    const { matches, playerId: pid, leaderboard, onRefresh, onMatchUpdated } = props
+    const { matches, playerId: pid, leaderboard, onMatchUpdated } = props
     const [matchMessage, setMatchMessage] = useState<string | null>(null)
     const [savingMatchId, setSavingMatchId] = useState<string | null>(null)
     const [scoreInputs, setScoreInputs] = useState<Record<string, { a: string; b: string }>>({})
