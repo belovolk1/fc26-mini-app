@@ -19,6 +19,7 @@ DO $$
 DECLARE
   r record;
   def text;
+  sql text;
 BEGIN
   FOR r IN
     SELECT column_name, data_type
@@ -34,7 +35,7 @@ BEGIN
         WHEN 'status' THEN def := '''draft''';
         WHEN 'type' THEN def := '''single_elimination''';
         WHEN 'name' THEN def := '''Tournament''';
-        ELSE def := ''''';
+        ELSE def := '''''';
       END CASE;
     ELSIF r.data_type IN ('integer', 'bigint', 'smallint') THEN
       IF r.column_name = 'round_duration_minutes' THEN def := '30'; ELSE def := '0'; END IF;
@@ -46,7 +47,8 @@ BEGIN
       def := NULL;
     END IF;
     IF def IS NOT NULL THEN
-      EXECUTE 'ALTER TABLE public.tournaments ALTER COLUMN ' || quote_ident(r.column_name) || ' SET DEFAULT ' || def;
+      sql := $q$ALTER TABLE public.tournaments ALTER COLUMN $q$ || quote_ident(r.column_name) || $q$ SET DEFAULT $q$ || def;
+      EXECUTE sql;
     END IF;
   END LOOP;
 END $$;
