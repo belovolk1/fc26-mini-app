@@ -14,9 +14,18 @@ BEGIN
   END IF;
 END $$;
 
--- 2) Добавить все колонки по supabase-tournaments.sql (если чего-то нет)
+-- 2) Для колонки type: если есть — задать DEFAULT, иначе при вставке без type будет null и ошибка
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'tournaments' AND column_name = 'type') THEN
+    ALTER TABLE public.tournaments ALTER COLUMN type SET DEFAULT 'single_elimination';
+  END IF;
+END $$;
+
+-- 3) Добавить все колонки по supabase-tournaments.sql (если чего-то нет)
 ALTER TABLE public.tournaments
   ADD COLUMN IF NOT EXISTS name text NOT NULL DEFAULT 'Tournament',
+  ADD COLUMN IF NOT EXISTS type text NOT NULL DEFAULT 'single_elimination',
   ADD COLUMN IF NOT EXISTS status text NOT NULL DEFAULT 'draft',
   ADD COLUMN IF NOT EXISTS registration_start timestamptz NOT NULL DEFAULT now(),
   ADD COLUMN IF NOT EXISTS registration_end timestamptz NOT NULL DEFAULT now(),
