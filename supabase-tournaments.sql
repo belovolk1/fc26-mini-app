@@ -354,7 +354,13 @@ DECLARE
   v_idx int;
 BEGIN
   SELECT * INTO v_t FROM tournaments WHERE id = p_tournament_id FOR UPDATE;
-  IF NOT FOUND OR v_t.status != 'ongoing' THEN
+  IF NOT FOUND THEN
+    RETURN jsonb_build_object('ok', false, 'error', 'Tournament not found');
+  END IF;
+  IF v_t.status = 'finished' THEN
+    RETURN jsonb_build_object('ok', true, 'already_finished', true);
+  END IF;
+  IF v_t.status != 'ongoing' THEN
     RETURN jsonb_build_object('ok', false, 'error', 'Tournament not ongoing');
   END IF;
 
@@ -377,7 +383,9 @@ BEGIN
 END;
 $$;
 
--- Авто-тик по времени: открыть регистрацию, старт сетки, обработать просроченные матчи, завершить турнир
+-- Авто-тик по времени: открыть регистрацию, старт сетки, обработать просроченные матчи, завершить турнир и начислить призовые ELO.
+-- Вызывается с фронта каждые ~60 сек при открытой странице турниров. Для гарантированного начисления призов настрой pg_cron:
+-- SELECT cron.schedule('tournament_tick', '* * * * *', $$SELECT tournament_tick(NULL)$$);
 CREATE OR REPLACE FUNCTION public.tournament_tick(p_tournament_id uuid DEFAULT NULL)
 RETURNS jsonb
 LANGUAGE plpgsql

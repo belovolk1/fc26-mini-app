@@ -2105,9 +2105,17 @@ function App() {
       else if (data && onMatchUpdated) onMatchUpdated(data as TournamentMatchRow)
     }
 
+    const hasEmptySlots = matches.some((m) => m.player_a_id == null && m.player_b_id == null)
+    const noMatchesYet = matches.length === 0
     return (
       <div className="tournament-bracket">
         {matchMessage && <p className="panel-text small">{matchMessage}</p>}
+        {noMatchesYet && (
+          <p className="panel-text small tournament-bracket-hint">Сетка создаётся после окончания регистрации (нужно минимум 2 участника). Если регистрация уже закончилась — запустите «Старт сетки» в админке.</p>
+        )}
+        {hasEmptySlots && !noMatchesYet && (
+          <p className="panel-text small tournament-bracket-hint">Слоты финала и полуфинала заполняются автоматически после подтверждения результатов в предыдущих раундах.</p>
+        )}
         {[1, 2, 3, 4, 5, 6].filter((r) => rounds[r]?.length).map((roundNum) => (
           <div key={roundNum} className="bracket-round">
             <h4 className="bracket-round-title">{roundNames[roundNum] || `Раунд ${roundNum}`}</h4>
@@ -2178,6 +2186,30 @@ function App() {
     return r?.display_name || id.slice(0, 8)
   }
 
+  const getTournamentStandingsFromMatches = (matches: TournamentMatchRow[]): string[] => {
+    const byRound: Record<number, TournamentMatchRow[]> = {}
+    matches.forEach((m) => {
+      if (!byRound[m.round]) byRound[m.round] = []
+      byRound[m.round].push(m)
+    })
+    const maxRound = Math.max(...Object.keys(byRound).map(Number), 0)
+    if (maxRound < 1) return []
+    const out: string[] = []
+    const final = (byRound[1] || []).find((m) => m.match_index === 0)
+    if (final?.winner_id) out.push(final.winner_id)
+    const finalLoser = final && final.winner_id != null ? (final.winner_id === final.player_a_id ? final.player_b_id : final.player_a_id) : null
+    if (finalLoser) out.push(finalLoser)
+    for (let r = 2; r <= maxRound; r++) {
+      (byRound[r] || []).sort((a, b) => a.match_index - b.match_index).forEach((m) => {
+        if (m.winner_id != null) {
+          const loser = m.winner_id === m.player_a_id ? m.player_b_id : m.player_a_id
+          if (loser) out.push(loser)
+        }
+      })
+    }
+    return out
+  }
+
   const renderTournamentCard = (tr: TournamentRow, _isFeatured: boolean) => {
     const isRegistered = tournamentRegistrations.has(tr.id)
     const now = new Date().getTime()
@@ -2192,46 +2224,73 @@ function App() {
           : tr.status === 'finished'
             ? 'Завершён'
             : tr.status
-    const dateStr = (d: string) => new Date(d).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' })
-    const text = `Рег.: до ${dateStr(tr.registration_end)} · Турнир: ${dateStr(tr.tournament_start)} – ${dateStr(tr.tournament_end)} · ${statusLabel} · Участников: ${tr.registrations_count}`
+    const dateTimeStr = (d: string) => new Date(d).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
     const matches = matchesByTournamentId[tr.id] ?? []
     const finalMatch = tr.status === 'finished' ? matches.find((m) => m.round === 1 && m.match_index === 0) : null
-    const winnerName = finalMatch?.winner_id ? getTournamentPlayerName(finalMatch.winner_id) : null
+    const winnerId = finalMatch?.winner_id ?? null
+    const winnerName = winnerId ? getTournamentPlayerName(winnerId) : null
+    const standings = tr.status === 'finished' ? getTournamentStandingsFromMatches(matches) : []
+    const prizePool = Array.isArray(tr.prize_pool) ? tr.prize_pool : []
     return (
-      <div key={tr.id} className="strike-card tournament-card-strike">
-        <div className="strike-card-icon" aria-hidden="true">🏆</div>
-        <h3 className="strike-card-title">{tr.name}</h3>
-        <p className="strike-card-text">{text}</p>
-        {tr.status === 'finished' && winnerName && (
-          <p className="strike-card-text tournament-card-winner panel-text small">Победитель: {winnerName}</p>
-        )}
-        <div className="tournament-card-strike-actions">
-          {canRegister && !isRegistered && (
-            <button type="button" className="strike-btn strike-btn-primary" onClick={() => tournamentRegister(tr.id)}>
-              Регистрация
-            </button>
-          )}
-          {canRegister && isRegistered && (
-            <button type="button" className="strike-btn strike-btn-secondary" onClick={() => tournamentUnregister(tr.id)}>
-              Отменить регистрацию
-            </button>
-          )}
-          {(tr.status === 'ongoing' || tr.status === 'finished') && (
-            <button
-              type="button"
-              className="strike-btn strike-btn-secondary"
-              onClick={() => {
-                if (selectedTournamentId === tr.id) {
-                  setSelectedTournamentId(null)
-                } else {
-                  setSelectedTournamentId(tr.id)
-                }
-              }}
-            >
-              {selectedTournamentId === tr.id ? 'Скрыть сетку' : 'Сетка'}
-            </button>
-          )}
-        </div>
+      <div key={tr.id} className="tournament-card-wrapper">
+        <article className={`tournament-card-v2 strike-card tournament-card-strike tournament-card-status-${tr.status}`}>
+          <div className="tournament-card-v2-bar" aria-hidden="true" />
+          <div className="tournament-card-v2-body">
+            <header className="tournament-card-v2-header">
+              <h3 className="tournament-card-v2-title">{tr.name}</h3>
+              <p className="tournament-card-v2-meta">
+                <span className="tournament-card-v2-status">{statusLabel}</span>
+                <span className="tournament-card-v2-dot">·</span>
+                <span>{tr.registrations_count} участников</span>
+                <span className="tournament-card-v2-dot">·</span>
+                <span>Рег. до <time dateTime={tr.registration_end}>{dateTimeStr(tr.registration_end)}</time></span>
+                <span className="tournament-card-v2-dot">·</span>
+                <span>Старт <time dateTime={tr.tournament_start}>{dateTimeStr(tr.tournament_start)}</time></span>
+              </p>
+            </header>
+            <div className="tournament-card-v2-actions">
+              {canRegister && !isRegistered && (
+                <button type="button" className="strike-btn strike-btn-primary" onClick={() => tournamentRegister(tr.id)}>Регистрация</button>
+              )}
+              {canRegister && isRegistered && (
+                <button type="button" className="strike-btn strike-btn-secondary" onClick={() => tournamentUnregister(tr.id)}>Отменить регистрацию</button>
+              )}
+              {(tr.status === 'ongoing' || tr.status === 'finished') && (
+                <button
+                  type="button"
+                  className="strike-btn strike-btn-secondary"
+                  onClick={() => setSelectedTournamentId(selectedTournamentId === tr.id ? null : tr.id)}
+                >
+                  {selectedTournamentId === tr.id ? 'Скрыть сетку' : 'Сетка'}
+                </button>
+              )}
+            </div>
+            {tr.status === 'finished' && (winnerName || prizePool.length > 0) && (
+              <div className="tournament-card-v2-results">
+                {winnerName && (
+                  <p className="tournament-card-v2-winner">
+                    <span className="tournament-card-v2-winner-label">Победитель:</span>{' '}
+                    <strong className="tournament-card-v2-winner-name">{winnerName}</strong>
+                  </p>
+                )}
+                {prizePool.length > 0 && standings.length > 0 && (
+                  <div className="tournament-card-v2-prizes">
+                    {prizePool.map((prize) => {
+                      const playerId = standings[prize.place - 1]
+                      const name = playerId ? getTournamentPlayerName(playerId) : '—'
+                      const elo = prize.elo_bonus ?? 0
+                      return (
+                        <span key={prize.place} className="tournament-card-v2-prize-item">
+                          {prize.place}. {name} <em>+{elo}</em>
+                        </span>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </article>
         {selectedTournamentId === tr.id && (tr.status === 'ongoing' || tr.status === 'finished') && (
           <TournamentBracketBlock
             tournament={tr}
