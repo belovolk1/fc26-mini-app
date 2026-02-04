@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import './App.css'
 import { supabase } from './supabaseClient'
 
@@ -1025,6 +1026,15 @@ function App() {
   const [adminSending, setAdminSending] = useState(false)
   const [adminResult, setAdminResult] = useState<string | null>(null)
 
+  type NewsRow = { id: string; title: string; body: string; image_url: string | null; created_at: string }
+  const [newsList, setNewsList] = useState<NewsRow[]>([])
+  const [newsLoading, setNewsLoading] = useState(false)
+  const [newsTitle, setNewsTitle] = useState('')
+  const [newsBody, setNewsBody] = useState('')
+  const [newsImageFile, setNewsImageFile] = useState<File | null>(null)
+  const [newsSending, setNewsSending] = useState(false)
+  const [newsResult, setNewsResult] = useState<string | null>(null)
+
   useEffect(() => {
     const loadProfile = async () => {
       if (!user) return
@@ -1592,6 +1602,81 @@ function App() {
     })
   }, [activeView])
 
+  const formatNewsDate = (createdAt: string) => {
+    const d = new Date(createdAt)
+    const now = new Date()
+    const diffMs = now.getTime() - d.getTime()
+    const diffDays = Math.floor(diffMs / (24 * 60 * 60 * 1000))
+    if (diffDays === 0) return 'Today'
+    if (diffDays === 1) return 'Yesterday'
+    if (diffDays < 7) return `${diffDays} days ago`
+    return d.toLocaleDateString(undefined, { day: '2-digit', month: '2-digit', year: 'numeric' })
+  }
+
+  const fetchNews = () => {
+    setNewsLoading(true)
+    supabase
+      .from('news')
+      .select('id, title, body, image_url, created_at')
+      .order('created_at', { ascending: false })
+      .then(({ data, error }) => {
+        setNewsLoading(false)
+        if (!error && Array.isArray(data)) setNewsList(data as NewsRow[])
+        else setNewsList([])
+      })
+  }
+
+  useEffect(() => {
+    if (activeView === 'home' || activeView === 'admin') fetchNews()
+  }, [activeView])
+
+  const NEWS_BUCKET = 'news'
+  const addNews = async () => {
+    const title = newsTitle.trim()
+    if (!title || !isAdminUser) return
+    setNewsSending(true)
+    setNewsResult(null)
+    try {
+      const { data: inserted, error: insertErr } = await supabase
+        .from('news')
+        .insert({ title, body: newsBody.trim() || '', image_url: null })
+        .select('id')
+        .single()
+      if (insertErr) {
+        setNewsResult(`Ошибка: ${insertErr.message}`)
+        setNewsSending(false)
+        return
+      }
+      const id = (inserted as { id: string }).id
+      let imageUrl: string | null = null
+      if (newsImageFile && newsImageFile.type.startsWith('image/')) {
+        const ext = newsImageFile.name.split('.').pop()?.toLowerCase() || 'jpg'
+        const path = `${id}.${ext}`
+        const { error: uploadErr } = await supabase.storage.from(NEWS_BUCKET).upload(path, newsImageFile, { upsert: true })
+        if (!uploadErr) {
+          const { data: urlData } = supabase.storage.from(NEWS_BUCKET).getPublicUrl(path)
+          imageUrl = urlData.publicUrl
+          await supabase.from('news').update({ image_url: imageUrl }).eq('id', id)
+        }
+      }
+      setNewsTitle('')
+      setNewsBody('')
+      setNewsImageFile(null)
+      fetchNews()
+      setNewsResult('Новость добавлена.')
+    } catch (e: any) {
+      setNewsResult(`Ошибка: ${e?.message || String(e)}`)
+    } finally {
+      setNewsSending(false)
+    }
+  }
+
+  const deleteNews = async (id: string) => {
+    if (!isAdminUser) return
+    const { error } = await supabase.from('news').delete().eq('id', id)
+    if (!error) fetchNews()
+  }
+
   const saveProfileAvatarCountry = async () => {
     if (!playerId) return
     setProfileSaveLoading(true)
@@ -1749,7 +1834,7 @@ function App() {
   ]
 
   return (
-    <div className={`app ${useMobileLayout ? 'app--mobile' : 'app--desktop'} strike-theme`}>
+    <div className={`app ${useMobileLayout ? 'app--mobile' : 'app--desktop'} strike-theme${activeView === 'rating' && selectedPlayerRow ? ' rating-modal-open' : ''}`}>
       <div className="site-header strike-header">
         <header className="app-header">
           <div className="app-header-main">
@@ -1771,48 +1856,53 @@ function App() {
               <span className={`nav-hamburger-line ${navOpen ? 'nav-hamburger-line--open' : ''}`} />
               <span className={`nav-hamburger-line ${navOpen ? 'nav-hamburger-line--open' : ''}`} />
             </button>
-            <div className={`nav-drawer-backdrop ${navOpen ? 'nav-drawer-backdrop--open' : ''}`} onClick={() => setNavOpen(false)} aria-hidden="true" />
-            <nav className={`nav-drawer ${navOpen ? 'nav-drawer--open' : ''}`} aria-hidden={!navOpen}>
-              <div className="nav-drawer-header">
-                <span className="nav-drawer-title">{t.appTitle}</span>
-                <button
-                  type="button"
-                  className="nav-drawer-close"
-                  onClick={() => setNavOpen(false)}
-                  aria-label="Close menu"
-                >
-                  <span className="nav-drawer-close-icon" aria-hidden>×</span>
-                </button>
-              </div>
-              <div className="nav-drawer-user">
-                <span className="nav-drawer-user-name">{displayName}</span>
-                <span className="nav-drawer-user-elo">ELO: {elo ?? '—'}</span>
-              </div>
-              <div className="nav-drawer-lang">
-                {(['en', 'ro', 'ru'] as const).map((l) => (
-                  <button
-                    key={l}
-                    type="button"
-                    className={lang === l ? 'lang-btn active' : 'lang-btn'}
-                    onClick={() => setLang(l)}
-                  >
-                    {l.toUpperCase()}
-                  </button>
-                ))}
-              </div>
-              <div className="nav-drawer-links">
-                {navLinks.map(({ view, label }) => (
-                  <button
-                    key={view}
-                    type="button"
-                    className={activeView === view ? 'nav-drawer-btn active' : 'nav-drawer-btn'}
-                    onClick={() => closeNavAnd(view)}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-            </nav>
+            {navOpen && createPortal(
+              <div className="app strike-theme" style={{ position: 'fixed', inset: 0, zIndex: 99999, pointerEvents: 'none' }}>
+                <div className={`nav-drawer-backdrop nav-drawer-backdrop--open`} style={{ pointerEvents: 'auto' }} onClick={() => setNavOpen(false)} aria-hidden="true" />
+                <nav className="nav-drawer nav-drawer--open" style={{ pointerEvents: 'auto' }} aria-hidden={false}>
+                  <div className="nav-drawer-header">
+                    <span className="nav-drawer-title">{t.appTitle}</span>
+                    <button
+                      type="button"
+                      className="nav-drawer-close"
+                      onClick={() => setNavOpen(false)}
+                      aria-label="Close menu"
+                    >
+                      <span className="nav-drawer-close-icon" aria-hidden>×</span>
+                    </button>
+                  </div>
+                  <div className="nav-drawer-user">
+                    <span className="nav-drawer-user-name">{displayName}</span>
+                    <span className="nav-drawer-user-elo">ELO: {elo ?? '—'}</span>
+                  </div>
+                  <div className="nav-drawer-lang">
+                    {(['en', 'ro', 'ru'] as const).map((l) => (
+                      <button
+                        key={l}
+                        type="button"
+                        className={lang === l ? 'lang-btn active' : 'lang-btn'}
+                        onClick={() => setLang(l)}
+                      >
+                        {l.toUpperCase()}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="nav-drawer-links">
+                    {navLinks.map(({ view, label }) => (
+                      <button
+                        key={view}
+                        type="button"
+                        className={activeView === view ? 'nav-drawer-btn active' : 'nav-drawer-btn'}
+                        onClick={() => closeNavAnd(view)}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </nav>
+              </div>,
+              document.body
+            )}
           </>
         ) : (
           <nav className="app-nav">
@@ -2078,24 +2168,27 @@ function App() {
               <section className="strike-section strike-section--news">
                 <h3 className="strike-section-title">{t.homeLatestNews}</h3>
                 <div className="strike-news-grid">
-                  <article className="strike-news-card">
-                    <div className="strike-news-thumb" />
-                    <h4 className="strike-news-card-title">{t.homeNewsTitle1}</h4>
-                    <p className="strike-news-card-desc">{t.homeNewsDesc1}</p>
-                    <span className="strike-news-date">7 days ago</span>
-                  </article>
-                  <article className="strike-news-card">
-                    <div className="strike-news-thumb" />
-                    <h4 className="strike-news-card-title">{t.homeNewsTitle2}</h4>
-                    <p className="strike-news-card-desc">{t.homeNewsDesc2}</p>
-                    <span className="strike-news-date">7 days ago</span>
-                  </article>
-                  <article className="strike-news-card">
-                    <div className="strike-news-thumb" />
-                    <h4 className="strike-news-card-title">{t.homeNewsTitle3}</h4>
-                    <p className="strike-news-card-desc">{t.homeNewsDesc3}</p>
-                    <span className="strike-news-date">7 days ago</span>
-                  </article>
+                  {newsLoading && <p className="panel-text small strike-news-loading">{t.ratingLoading}</p>}
+                  {!newsLoading && newsList.length === 0 && (
+                    <article className="strike-news-card">
+                      <div className="strike-news-thumb" />
+                      <h4 className="strike-news-card-title">{t.homeNewsTitle1}</h4>
+                      <p className="strike-news-card-desc">{t.homeNewsDesc1}</p>
+                      <span className="strike-news-date">—</span>
+                    </article>
+                  )}
+                  {!newsLoading && newsList.slice(0, 6).map((n) => (
+                    <article key={n.id} className="strike-news-card">
+                      <div className="strike-news-thumb">
+                        {n.image_url ? <img src={n.image_url} alt="" /> : null}
+                      </div>
+                      <h4 className="strike-news-card-title">{n.title}</h4>
+                      <p className="strike-news-card-desc">{n.body || '—'}</p>
+                      <span className="strike-news-date">
+                        {formatNewsDate(n.created_at)}
+                      </span>
+                    </article>
+                  ))}
                 </div>
               </section>
             </div>
@@ -2212,6 +2305,70 @@ function App() {
                 {adminSending ? 'Отправляем…' : 'Отправить'}
               </button>
             </div>
+
+            <h3 className="panel-title admin-news-title">Новости (главная)</h3>
+            <p className="panel-text small">Добавьте новость: заголовок, текст и по желанию фото. Они отображаются в блоке «Последние новости» на главной.</p>
+            <div className="form-row">
+              <label className="form-label">Заголовок</label>
+              <input
+                type="text"
+                className="form-input"
+                value={newsTitle}
+                onChange={(e) => setNewsTitle(e.target.value)}
+                placeholder="Заголовок новости"
+              />
+            </div>
+            <div className="form-row">
+              <label className="form-label">Текст</label>
+              <textarea
+                className="form-input"
+                rows={4}
+                value={newsBody}
+                onChange={(e) => setNewsBody(e.target.value)}
+                placeholder="Краткое описание или полный текст"
+              />
+            </div>
+            <div className="form-row">
+              <label className="form-label">Фото (опционально)</label>
+              <input
+                type="file"
+                accept="image/*"
+                className="form-input"
+                onChange={(e) => setNewsImageFile(e.target.files?.[0] ?? null)}
+              />
+              {newsImageFile && <span className="panel-text small">Выбран файл: {newsImageFile.name}</span>}
+            </div>
+            {newsResult && <p className="panel-text small">{newsResult}</p>}
+            <div className="admin-actions">
+              <button
+                type="button"
+                className="primary-button"
+                disabled={newsSending || !newsTitle.trim()}
+                onClick={addNews}
+              >
+                {newsSending ? 'Добавляем…' : 'Добавить новость'}
+              </button>
+            </div>
+            <h4 className="panel-subtitle">Опубликованные новости</h4>
+            {newsLoading && <p className="panel-text small">Загрузка…</p>}
+            {!newsLoading && newsList.length === 0 && <p className="panel-text small">Пока нет новостей.</p>}
+            {!newsLoading && newsList.length > 0 && (
+              <ul className="admin-news-list">
+                {newsList.map((n) => (
+                  <li key={n.id} className="admin-news-item">
+                    <div className="admin-news-item-preview">
+                      {n.image_url ? <img src={n.image_url} alt="" className="admin-news-item-thumb" /> : <span className="admin-news-item-no-thumb">нет фото</span>}
+                      <div>
+                        <strong>{n.title}</strong>
+                        <p className="panel-text small">{n.body.slice(0, 80)}{n.body.length > 80 ? '…' : ''}</p>
+                        <span className="panel-text small">{new Date(n.created_at).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+                    <button type="button" className="admin-news-delete" onClick={() => deleteNews(n.id)}>Удалить</button>
+                  </li>
+                ))}
+              </ul>
+            )}
           </section>
         )}
 
@@ -2278,123 +2435,269 @@ function App() {
                 )}
               </div>
 
-              <aside className="rating-details">
-                {profileFromHashLoading && !selectedPlayerRow && (
-                  <p className="panel-text small">{t.ratingLoading}</p>
-                )}
-                {selectedPlayerRow ? (
-                  <>
-                    <div className="rating-details-header">
-                      <div className="rating-details-name-row">
-                        <h2 className="rating-player-heading">{selectedPlayerRow.display_name ?? '—'}</h2>
-                        {selectedPlayerRow.country_code && (
-                          <span className="rating-player-country">
-                            {COUNTRIES.find((c) => c.code === selectedPlayerRow.country_code)?.flag ?? '🌐'}
-                          </span>
-                        )}
-                      </div>
-                      <div className="rating-elo-block-big">
-                        <span className="rating-elo-label-small">{t.ratingElo}</span>
-                        <span className="rating-elo-big">{selectedPlayerRow.elo ?? '—'}</span>
-                        <div className="rating-rank-chip">
-                          {(() => {
-                            const rank = getRankFromElo(selectedPlayerRow.elo ?? null)
-                            return getRankDisplayLabel(rank)
-                          })()}
+              {/* На мобильных модалка рендерится в body через Portal — поверх футера */}
+              {!isWideScreen && selectedPlayerRow && createPortal(
+                <div className="app strike-theme" style={{ position: 'fixed', inset: 0, zIndex: 9999, pointerEvents: 'none' }}>
+                  <aside
+                    className="rating-details rating-details--has-player rating-details--portal"
+                    style={{ pointerEvents: 'auto', width: '100%', height: '100%' }}
+                    onClick={(e) => { if (e.target === e.currentTarget) setSelectedPlayerRow(null) }}
+                  >
+                    <div className="rating-details-close-wrap">
+                      <button
+                        type="button"
+                        className="rating-details-close"
+                        onClick={(e) => { e.stopPropagation(); setSelectedPlayerRow(null) }}
+                        aria-label={t.ratingBack}
+                      >
+                        ×
+                      </button>
+                    </div>
+                    <div className="rating-details-inner" onClick={(e) => e.stopPropagation()}>
+                      <div className="rating-details-header">
+                        <div className="rating-details-name-row">
+                          <h2 className="rating-player-heading">{selectedPlayerRow.display_name ?? '—'}</h2>
+                          {selectedPlayerRow.country_code && (
+                            <span className="rating-player-country">
+                              {COUNTRIES.find((c) => c.code === selectedPlayerRow.country_code)?.flag ?? '🌐'}
+                            </span>
+                          )}
+                        </div>
+                        <div className="rating-elo-block-big">
+                          <span className="rating-elo-label-small">{t.ratingElo}</span>
+                          <span className="rating-elo-big">{selectedPlayerRow.elo ?? '—'}</span>
+                          <div className="rating-rank-chip">
+                            {(() => {
+                              const rank = getRankFromElo(selectedPlayerRow.elo ?? null)
+                              return getRankDisplayLabel(rank)
+                            })()}
+                          </div>
                         </div>
                       </div>
-                    </div>
-
-                    <div className="rating-stats-grid">
-                      <div className="rating-stat-card">
-                        <span className="rating-stat-label">{t.ratingMatches}</span>
-                        <span className="rating-stat-value">{selectedPlayerRow.matches_count}</span>
+                      <div className="rating-stats-grid">
+                        <div className="rating-stat-card">
+                          <span className="rating-stat-label">{t.ratingMatches}</span>
+                          <span className="rating-stat-value">{selectedPlayerRow.matches_count}</span>
+                        </div>
+                        <div className="rating-stat-card">
+                          <span className="rating-stat-label">{t.ratingWins}</span>
+                          <span className="rating-stat-value">{selectedPlayerRow.wins}</span>
+                        </div>
+                        <div className="rating-stat-card">
+                          <span className="rating-stat-label">{t.ratingLosses}</span>
+                          <span className="rating-stat-value">{selectedPlayerRow.losses}</span>
+                        </div>
+                        <div className="rating-stat-card">
+                          <span className="rating-stat-label">GF/GA</span>
+                          <span className="rating-stat-value">
+                            {selectedPlayerRow.goals_for}/{selectedPlayerRow.goals_against}
+                          </span>
+                        </div>
+                        <div className="rating-stat-card rating-stat-card-accent">
+                          <span className="rating-stat-label">{t.ratingWinRate}</span>
+                          <span className="rating-stat-value">
+                            {selectedPlayerRow.win_rate != null ? `${selectedPlayerRow.win_rate}%` : '—'}
+                          </span>
+                        </div>
                       </div>
-                      <div className="rating-stat-card">
-                        <span className="rating-stat-label">{t.ratingWins}</span>
-                        <span className="rating-stat-value">{selectedPlayerRow.wins}</span>
-                      </div>
-                      <div className="rating-stat-card">
-                        <span className="rating-stat-label">{t.ratingLosses}</span>
-                        <span className="rating-stat-value">{selectedPlayerRow.losses}</span>
-                      </div>
-                      <div className="rating-stat-card">
-                        <span className="rating-stat-label">GF/GA</span>
-                        <span className="rating-stat-value">
-                          {selectedPlayerRow.goals_for}/{selectedPlayerRow.goals_against}
-                        </span>
-                      </div>
-                      <div className="rating-stat-card rating-stat-card-accent">
-                        <span className="rating-stat-label">{t.ratingWinRate}</span>
-                        <span className="rating-stat-value">
-                          {selectedPlayerRow.win_rate != null ? `${selectedPlayerRow.win_rate}%` : '—'}
-                        </span>
-                      </div>
-                    </div>
-
-                    <h4 className="rating-last-title">{t.profileLast10Matches}</h4>
-                    {recentMatchesLoading && <p className="panel-text small">…</p>}
-                    {!recentMatchesLoading && recentMatches.length === 0 && (
-                      <p className="panel-text small">{t.profileRecentMatchesEmpty}</p>
-                    )}
-                    {!recentMatchesLoading && recentMatches.length > 0 && (
-                      <div className="profile-recent-table-wrap rating-last-table">
-                        <table className="profile-recent-table">
-                          <thead>
-                            <tr>
-                              <th>{t.profilePlayerLabel}</th>
-                              <th>{t.profileTableScore}</th>
-                              <th>{t.profileTableResult}</th>
-                              <th>{t.profileTableElo}</th>
-                              <th>{t.profileTableDate}</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {recentMatches.slice(0, 5).map((match) => (
-                              <tr key={match.match_id} className={`profile-recent-match profile-recent-match--${match.result}`}>
-                                <td className="profile-recent-opponent">{match.opponent_name ?? '—'}</td>
-                                <td className="profile-recent-score">
-                                  {match.my_score}:{match.opp_score}
-                                </td>
-                                <td>
-                                  <span className={`profile-result-pill profile-result-pill--${match.result}`}>
-                                    {match.result === 'win' ? 'W' : match.result === 'loss' ? 'L' : 'D'}
-                                  </span>
-                                </td>
-                                <td className="profile-recent-elo-cell">
-                                  {typeof match.elo_delta === 'number' && match.elo_delta !== 0 ? (
-                                    <>
-                                      {match.elo_delta > 0 ? <IconEloUpSvg /> : <IconEloDownSvg />}
-                                      <span className="profile-recent-elo-delta">
-                                        {match.elo_delta > 0 ? `+${match.elo_delta}` : match.elo_delta}
-                                      </span>
-                                    </>
-                                  ) : (
-                                    '—'
-                                  )}
-                                </td>
-                                <td className="profile-recent-date">
-                                  {match.played_at
-                                    ? new Date(match.played_at).toLocaleDateString(undefined, {
-                                        day: '2-digit',
-                                        month: '2-digit',
-                                        year: 'numeric',
-                                      })
-                                    : '—'}
-                                </td>
+                      <h4 className="rating-last-title">{t.profileLast10Matches}</h4>
+                      {recentMatchesLoading && <p className="panel-text small">…</p>}
+                      {!recentMatchesLoading && recentMatches.length === 0 && (
+                        <p className="panel-text small">{t.profileRecentMatchesEmpty}</p>
+                      )}
+                      {!recentMatchesLoading && recentMatches.length > 0 && (
+                        <div className="profile-recent-table-wrap rating-last-table">
+                          <table className="profile-recent-table">
+                            <thead>
+                              <tr>
+                                <th>{t.profilePlayerLabel}</th>
+                                <th>{t.profileTableScore}</th>
+                                <th>{t.profileTableResult}</th>
+                                <th>{t.profileTableElo}</th>
+                                <th>{t.profileTableDate}</th>
                               </tr>
-                            ))}
-                          </tbody>
-                        </table>
+                            </thead>
+                            <tbody>
+                              {recentMatches.slice(0, 5).map((match) => (
+                                <tr key={match.match_id} className={`profile-recent-match profile-recent-match--${match.result}`}>
+                                  <td className="profile-recent-opponent">{match.opponent_name ?? '—'}</td>
+                                  <td className="profile-recent-score">
+                                    {match.my_score}:{match.opp_score}
+                                  </td>
+                                  <td>
+                                    <span className={`profile-result-pill profile-result-pill--${match.result}`}>
+                                      {match.result === 'win' ? 'W' : match.result === 'loss' ? 'L' : 'D'}
+                                    </span>
+                                  </td>
+                                  <td className="profile-recent-elo-cell">
+                                    {typeof match.elo_delta === 'number' && match.elo_delta !== 0 ? (
+                                      <>
+                                        {match.elo_delta > 0 ? <IconEloUpSvg /> : <IconEloDownSvg />}
+                                        <span className="profile-recent-elo-delta">
+                                          {match.elo_delta > 0 ? `+${match.elo_delta}` : match.elo_delta}
+                                        </span>
+                                      </>
+                                    ) : (
+                                      '—'
+                                    )}
+                                  </td>
+                                  <td className="profile-recent-date">
+                                    {match.played_at
+                                      ? new Date(match.played_at).toLocaleDateString(undefined, {
+                                          day: '2-digit',
+                                          month: '2-digit',
+                                          year: 'numeric',
+                                        })
+                                      : '—'}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                    </div>
+                  </aside>
+                </div>,
+                document.body
+              )}
+
+              {(isWideScreen || !selectedPlayerRow) && (
+                <aside
+                  className={`rating-details ${selectedPlayerRow ? 'rating-details--has-player' : ''}`}
+                  onClick={selectedPlayerRow ? (e) => { if (e.target === e.currentTarget && window.innerWidth <= 1023) setSelectedPlayerRow(null) } : undefined}
+                >
+                  {selectedPlayerRow && (
+                    <div className="rating-details-close-wrap">
+                      <button
+                        type="button"
+                        className="rating-details-close"
+                        onClick={(e) => { e.stopPropagation(); setSelectedPlayerRow(null) }}
+                        aria-label={t.ratingBack}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  )}
+                  <div className="rating-details-inner" onClick={selectedPlayerRow ? (e) => e.stopPropagation() : undefined}>
+                  {profileFromHashLoading && !selectedPlayerRow && (
+                    <p className="panel-text small">{t.ratingLoading}</p>
+                  )}
+                  {selectedPlayerRow ? (
+                    <>
+                      <div className="rating-details-header">
+                        <div className="rating-details-name-row">
+                          <h2 className="rating-player-heading">{selectedPlayerRow.display_name ?? '—'}</h2>
+                          {selectedPlayerRow.country_code && (
+                            <span className="rating-player-country">
+                              {COUNTRIES.find((c) => c.code === selectedPlayerRow.country_code)?.flag ?? '🌐'}
+                            </span>
+                          )}
+                        </div>
+                        <div className="rating-elo-block-big">
+                          <span className="rating-elo-label-small">{t.ratingElo}</span>
+                          <span className="rating-elo-big">{selectedPlayerRow.elo ?? '—'}</span>
+                          <div className="rating-rank-chip">
+                            {(() => {
+                              const rank = getRankFromElo(selectedPlayerRow.elo ?? null)
+                              return getRankDisplayLabel(rank)
+                            })()}
+                          </div>
+                        </div>
                       </div>
-                    )}
-                  </>
-                ) : (
-                  <p className="panel-text small rating-details-placeholder">
-                    {t.ratingEmptySelectedPlayer ?? 'Select a player on the left to see details.'}
-                  </p>
-                )}
-              </aside>
+
+                      <div className="rating-stats-grid">
+                        <div className="rating-stat-card">
+                          <span className="rating-stat-label">{t.ratingMatches}</span>
+                          <span className="rating-stat-value">{selectedPlayerRow.matches_count}</span>
+                        </div>
+                        <div className="rating-stat-card">
+                          <span className="rating-stat-label">{t.ratingWins}</span>
+                          <span className="rating-stat-value">{selectedPlayerRow.wins}</span>
+                        </div>
+                        <div className="rating-stat-card">
+                          <span className="rating-stat-label">{t.ratingLosses}</span>
+                          <span className="rating-stat-value">{selectedPlayerRow.losses}</span>
+                        </div>
+                        <div className="rating-stat-card">
+                          <span className="rating-stat-label">GF/GA</span>
+                          <span className="rating-stat-value">
+                            {selectedPlayerRow.goals_for}/{selectedPlayerRow.goals_against}
+                          </span>
+                        </div>
+                        <div className="rating-stat-card rating-stat-card-accent">
+                          <span className="rating-stat-label">{t.ratingWinRate}</span>
+                          <span className="rating-stat-value">
+                            {selectedPlayerRow.win_rate != null ? `${selectedPlayerRow.win_rate}%` : '—'}
+                          </span>
+                        </div>
+                      </div>
+
+                      <h4 className="rating-last-title">{t.profileLast10Matches}</h4>
+                      {recentMatchesLoading && <p className="panel-text small">…</p>}
+                      {!recentMatchesLoading && recentMatches.length === 0 && (
+                        <p className="panel-text small">{t.profileRecentMatchesEmpty}</p>
+                      )}
+                      {!recentMatchesLoading && recentMatches.length > 0 && (
+                        <div className="profile-recent-table-wrap rating-last-table">
+                          <table className="profile-recent-table">
+                            <thead>
+                              <tr>
+                                <th>{t.profilePlayerLabel}</th>
+                                <th>{t.profileTableScore}</th>
+                                <th>{t.profileTableResult}</th>
+                                <th>{t.profileTableElo}</th>
+                                <th>{t.profileTableDate}</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {recentMatches.slice(0, 5).map((match) => (
+                                <tr key={match.match_id} className={`profile-recent-match profile-recent-match--${match.result}`}>
+                                  <td className="profile-recent-opponent">{match.opponent_name ?? '—'}</td>
+                                  <td className="profile-recent-score">
+                                    {match.my_score}:{match.opp_score}
+                                  </td>
+                                  <td>
+                                    <span className={`profile-result-pill profile-result-pill--${match.result}`}>
+                                      {match.result === 'win' ? 'W' : match.result === 'loss' ? 'L' : 'D'}
+                                    </span>
+                                  </td>
+                                  <td className="profile-recent-elo-cell">
+                                    {typeof match.elo_delta === 'number' && match.elo_delta !== 0 ? (
+                                      <>
+                                        {match.elo_delta > 0 ? <IconEloUpSvg /> : <IconEloDownSvg />}
+                                        <span className="profile-recent-elo-delta">
+                                          {match.elo_delta > 0 ? `+${match.elo_delta}` : match.elo_delta}
+                                        </span>
+                                      </>
+                                    ) : (
+                                      '—'
+                                    )}
+                                  </td>
+                                  <td className="profile-recent-date">
+                                    {match.played_at
+                                      ? new Date(match.played_at).toLocaleDateString(undefined, {
+                                          day: '2-digit',
+                                          month: '2-digit',
+                                          year: 'numeric',
+                                        })
+                                      : '—'}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <p className="panel-text small rating-details-placeholder">
+                      {t.ratingEmptySelectedPlayer ?? 'Select a player on the left to see details.'}
+                    </p>
+                  )}
+                  </div>
+                </aside>
+              )}
             </div>
           </section>
         )}
