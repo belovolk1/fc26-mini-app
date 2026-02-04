@@ -153,4 +153,98 @@ setTimeout(async () => {
   }
 }, 2000)
 
-console.log('✅ Бот успешно запущен! Ожидаю сообщений...')
+// ========== Уведомления турниров: старт турнира (всем) и напоминание перед раундом (участникам матча) ==========
+const ROUND_REMINDER_MINUTES = 10 // за сколько минут до начала раунда отправлять напоминание
+const NOTIFICATION_POLL_INTERVAL_MS = 60 * 1000 // раз в минуту
+
+async function enqueueRoundReminders() {
+  try {
+    const from = new Date(Date.now() + (ROUND_REMINDER_MINUTES - 1) * 60 * 1000).toISOString()
+    const to = new Date(Date.now() + (ROUND_REMINDER_MINUTES + 1) * 60 * 1000).toISOString()
+    const { data: matches, error: matchErr } = await supabase
+      .from('tournament_matches')
+      .select('id, tournament_id')
+      .gte('scheduled_start', from)
+      .lte('scheduled_start', to)
+    if (matchErr || !matches?.length) return
+    for (const m of matches) {
+      const { data: existing } = await supabase
+        .from('tournament_telegram_notifications')
+        .select('id')
+        .eq('match_id', m.id)
+        .eq('type', 'round_reminder')
+        .maybeSingle()
+      if (!existing) {
+        await supabase.from('tournament_telegram_notifications').insert({
+          tournament_id: m.tournament_id,
+          type: 'round_reminder',
+          match_id: m.id,
+        })
+      }
+    }
+  } catch (e) {
+    console.error('Ошибка enqueueRoundReminders:', e.message)
+  }
+}
+
+async function processTournamentNotifications() {
+  try {
+    await enqueueRoundReminders()
+    const { data: rows, error } = await supabase
+      .from('tournament_telegram_notifications')
+      .select('id, tournament_id, type, match_id')
+      .is('sent_at', null)
+      .order('created_at', { ascending: true })
+    if (error) {
+      if (error.code === '42P01') return // table does not exist
+      console.error('Ошибка выборки уведомлений:', error.message)
+      return
+    }
+    if (!rows?.length) return
+    for (const row of rows) {
+      let telegramIds = []
+      let message = ''
+      if (row.type === 'tournament_started') {
+        const { data: tour } = await supabase.from('tournaments').select('name').eq('id', row.tournament_id).single()
+        const { data: regs } = await supabase.from('tournament_registrations').select('player_id').eq('tournament_id', row.tournament_id)
+        if (!regs?.length) {
+          await supabase.from('tournament_telegram_notifications').update({ sent_at: new Date().toISOString() }).eq('id', row.id)
+          continue
+        }
+        const playerIds = regs.map((r) => r.player_id)
+        const { data: players } = await supabase.from('players').select('telegram_id').in('id', playerIds).not('telegram_id', 'is', null)
+        telegramIds = (players || []).map((p) => p.telegram_id).filter(Boolean)
+        const name = tour?.name || 'Турнир'
+        message = `🏆 Турнир «${name}» начался!\n\nСетка доступна в приложении — зайдите и проверьте свой матч.`
+      } else if (row.type === 'round_reminder' && row.match_id) {
+        const { data: match } = await supabase.from('tournament_matches').select('player_a_id, player_b_id').eq('id', row.match_id).single()
+        if (!match || (!match.player_a_id && !match.player_b_id)) {
+          await supabase.from('tournament_telegram_notifications').update({ sent_at: new Date().toISOString() }).eq('id', row.id)
+          continue
+        }
+        const ids = [match.player_a_id, match.player_b_id].filter(Boolean)
+        const { data: players } = await supabase.from('players').select('telegram_id').in('id', ids).not('telegram_id', 'is', null)
+        telegramIds = (players || []).map((p) => p.telegram_id).filter(Boolean)
+        const { data: tour } = await supabase.from('tournaments').select('name').eq('id', row.tournament_id).single()
+        const name = tour?.name || 'Турнир'
+        message = `⏰ Через ${ROUND_REMINDER_MINUTES} минут начинается ваш матч в турнире «${name}».\n\nЗайдите в приложение и отметьте готовность к игре.`
+      }
+      for (const chatId of telegramIds) {
+        try {
+          await bot.sendMessage(String(chatId), message)
+          await new Promise((r) => setTimeout(r, 80))
+        } catch (err) {
+          console.error('Не удалось отправить уведомление в', chatId, err.message)
+        }
+      }
+      await supabase.from('tournament_telegram_notifications').update({ sent_at: new Date().toISOString() }).eq('id', row.id)
+    }
+  } catch (e) {
+    console.error('Ошибка processTournamentNotifications:', e.message)
+  }
+}
+
+setInterval(processTournamentNotifications, NOTIFICATION_POLL_INTERVAL_MS)
+setTimeout(processTournamentNotifications, 15000) // первый запуск через 15 сек после старта бота
+
+console.log('✅ Бот успешно запущен! Ожидаю сообщений. Уведомления турниров: каждые', NOTIFICATION_POLL_INTERVAL_MS / 1000, 'сек.')

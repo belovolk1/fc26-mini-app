@@ -83,14 +83,23 @@ ALTER TABLE public.tournaments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.tournament_registrations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.tournament_matches ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "tournaments_select" ON public.tournaments;
+DROP POLICY IF EXISTS "tournaments_insert" ON public.tournaments;
+DROP POLICY IF EXISTS "tournaments_update" ON public.tournaments;
 CREATE POLICY "tournaments_select" ON public.tournaments FOR SELECT TO public USING (true);
 CREATE POLICY "tournaments_insert" ON public.tournaments FOR INSERT TO anon WITH CHECK (true);
 CREATE POLICY "tournaments_update" ON public.tournaments FOR UPDATE TO anon USING (true) WITH CHECK (true);
 
+DROP POLICY IF EXISTS "tournament_registrations_select" ON public.tournament_registrations;
+DROP POLICY IF EXISTS "tournament_registrations_insert" ON public.tournament_registrations;
+DROP POLICY IF EXISTS "tournament_registrations_delete" ON public.tournament_registrations;
 CREATE POLICY "tournament_registrations_select" ON public.tournament_registrations FOR SELECT TO public USING (true);
 CREATE POLICY "tournament_registrations_insert" ON public.tournament_registrations FOR INSERT TO anon WITH CHECK (true);
 CREATE POLICY "tournament_registrations_delete" ON public.tournament_registrations FOR DELETE TO anon USING (true);
 
+DROP POLICY IF EXISTS "tournament_matches_select" ON public.tournament_matches;
+DROP POLICY IF EXISTS "tournament_matches_insert" ON public.tournament_matches;
+DROP POLICY IF EXISTS "tournament_matches_update" ON public.tournament_matches;
 CREATE POLICY "tournament_matches_select" ON public.tournament_matches FOR SELECT TO public USING (true);
 CREATE POLICY "tournament_matches_insert" ON public.tournament_matches FOR INSERT TO anon WITH CHECK (true);
 CREATE POLICY "tournament_matches_update" ON public.tournament_matches FOR UPDATE TO anon USING (true) WITH CHECK (true);
