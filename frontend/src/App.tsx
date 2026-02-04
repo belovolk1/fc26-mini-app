@@ -1828,7 +1828,7 @@ function App() {
     try {
       const now = new Date().toISOString().slice(0, 16)
       const status = now >= regStart ? 'registration' : 'draft'
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('tournaments')
         .insert({
           name,
@@ -1914,7 +1914,7 @@ function App() {
     leaderboard: LeaderboardRow[]
     onRefresh: () => void | Promise<void>
   }) {
-    const { tournament, matches, playerId: pid, leaderboard, onRefresh } = props
+    const { matches, playerId: pid, leaderboard, onRefresh } = props
     const [matchMessage, setMatchMessage] = useState<string | null>(null)
     const [savingMatchId, setSavingMatchId] = useState<string | null>(null)
     const [scoreInputs, setScoreInputs] = useState<Record<string, { a: string; b: string }>>({})
@@ -1996,7 +1996,6 @@ function App() {
                 const isPlayerA = m.player_a_id === pid
                 const isPlayerB = m.player_b_id === pid
                 const isInMatch = isPlayerA || isPlayerB
-                const canReady = isInMatch && !m.player_a_ready_at && !m.player_b_ready_at && (isPlayerA ? !m.player_a_ready_at : !m.player_b_ready_at)
                 const needsReady = isInMatch && ((isPlayerA && !m.player_a_ready_at) || (isPlayerB && !m.player_b_ready_at))
                 const canSubmit = isInMatch && (m.status === 'both_ready' || m.status === 'score_submitted') && m.score_submitted_by !== pid
                 const canConfirm = isInMatch && m.status === 'score_submitted' && m.score_submitted_by !== pid
@@ -3688,9 +3687,6 @@ function App() {
                 {tournamentsList.map((tr) => {
                   const isRegistered = tournamentRegistrations.has(tr.id)
                   const canRegister = tr.status === 'registration' && playerId
-                  const now = new Date().getTime()
-                  const regOpen = now >= new Date(tr.registration_start).getTime()
-                  const regClosed = now >= new Date(tr.registration_end).getTime()
                   return (
                     <div key={tr.id} className="strike-card tournament-card">
                       <div className="tournament-card-main">
