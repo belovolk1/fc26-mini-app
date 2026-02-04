@@ -1776,6 +1776,111 @@
 .admin-news-delete:hover {
   background: rgba(248, 81, 73, 0.15);
 }
+
+/* Турниры: список и призовой пул в админке */
+.tournaments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-top: 16px;
+}
+.tournament-card {
+  padding: 20px;
+  margin: 0;
+}
+.tournament-card-main {
+  margin-bottom: 12px;
+}
+.tournament-card-name {
+  margin: 0 0 8px;
+  font-size: 18px;
+  font-weight: 700;
+}
+.tournament-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+}
+.admin-prize-pool {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.admin-prize-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.admin-prize-row input {
+  width: 56px;
+}
+.form-row--inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.form-row--inline .form-label {
+  min-width: 140px;
+}
+
+/* Сетка турнира */
+.tournament-bracket {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--strike-border);
+}
+.bracket-round {
+  margin-bottom: 24px;
+}
+.bracket-round-title {
+  margin: 0 0 12px;
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--strike-muted);
+}
+.bracket-matches {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.bracket-match {
+  padding: 14px 18px;
+  margin: 0;
+}
+.bracket-match-players {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.bracket-winner {
+  color: var(--strike-accent);
+}
+.bracket-vs {
+  color: var(--strike-muted);
+  margin: 0 4px;
+}
+.bracket-match-score {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 4px 0;
+}
+.bracket-match-meta {
+  margin: 6px 0 10px;
+}
+.bracket-match-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.bracket-match-actions input {
+  width: 48px;
+  text-align: center;
+}
+
 .strike-news-loading {
   grid-column: 1 / -1;
   margin: 12px 0;
@@ -4291,6 +4396,107 @@
   font-family: var(--strike-font-body);
   color: var(--strike-muted);
 }
+.strike-news-card--clickable {
+  cursor: pointer;
+}
+.strike-news-card--clickable:hover {
+  border-color: var(--border-hover);
+}
+.app.strike-theme .strike-news-card--clickable:hover {
+  border-color: var(--strike-orange);
+}
+
+/* Детальная страница новости */
+.news-detail-panel {
+  padding: 24px 20px 48px;
+  max-width: 720px;
+  margin: 0 auto;
+}
+.news-detail-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 24px;
+  padding: 10px 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--accent);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+.news-detail-back:hover {
+  text-decoration: underline;
+}
+.app.strike-theme .news-detail-back {
+  color: var(--strike-orange);
+  font-family: var(--strike-font-body);
+}
+.news-detail-article {
+  margin: 0;
+}
+.news-detail-title {
+  margin: 0 0 12px;
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1.3;
+  color: var(--text);
+}
+.app.strike-theme .news-detail-title {
+  font-family: var(--strike-font);
+  color: var(--strike-text);
+  letter-spacing: 0.02em;
+}
+.news-detail-date {
+  display: block;
+  margin-bottom: 20px;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+.app.strike-theme .news-detail-date {
+  font-family: var(--strike-font-body);
+  color: var(--strike-muted);
+}
+.news-detail-image-wrap {
+  margin-bottom: 24px;
+  border-radius: var(--radius);
+  overflow: hidden;
+  border: 2px solid var(--border);
+  max-height: 380px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-elevated);
+}
+.app.strike-theme .news-detail-image-wrap {
+  border-color: var(--strike-border);
+  border-radius: var(--strike-radius);
+  background: var(--strike-elevated);
+}
+.news-detail-image {
+  width: 100%;
+  height: auto;
+  max-height: 380px;
+  display: block;
+  vertical-align: top;
+  object-fit: contain;
+}
+.news-detail-body {
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--text);
+}
+.news-detail-body p {
+  margin: 0 0 1em;
+}
+.news-detail-body p:last-child {
+  margin-bottom: 0;
+}
+.app.strike-theme .news-detail-body {
+  font-family: var(--strike-font-body);
+  color: var(--strike-text);
+}
+
 .strike-footer {
   display: flex;
   flex-wrap: wrap;

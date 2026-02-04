@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import './App.css'
 import { supabase } from './supabaseClient'
 
-type View = 'home' | 'profile' | 'ladder' | 'tournaments' | 'matches' | 'rating' | 'admin'
+type View = 'home' | 'profile' | 'ladder' | 'tournaments' | 'matches' | 'rating' | 'admin' | 'news-detail'
 type Lang = 'en' | 'ro' | 'ru'
 
 const messages: Record<
@@ -153,6 +153,7 @@ const messages: Record<
     homeNewsDesc2: string
     homeNewsTitle3: string
     homeNewsDesc3: string
+    newsBack: string
     footerAbout: string
     footerTerms: string
     footerPrivacy: string
@@ -170,6 +171,7 @@ const messages: Record<
       matches: 'Matches',
       rating: 'Rating',
       admin: 'Admin',
+      'news-detail': 'News',
     },
     quickPlayTitle: 'Quick play',
     quickPlayText:
@@ -318,6 +320,7 @@ const messages: Record<
     homeNewsDesc2: 'Weekly and monthly cups. Big prizes.',
     homeNewsTitle3: 'Community spotlight: top 10 goals',
     homeNewsDesc3: 'Track your ELO, stats and achievements.',
+    newsBack: 'Back to home',
     footerAbout: 'About Us',
     footerTerms: 'Terms of Service',
     footerPrivacy: 'Privacy Policy',
@@ -334,6 +337,7 @@ const messages: Record<
       matches: 'Meciuri',
       rating: 'Clasament',
       admin: 'Admin',
+      'news-detail': 'Știri',
     },
     quickPlayTitle: 'Joc rapid',
     quickPlayText:
@@ -482,6 +486,7 @@ const messages: Record<
     homeNewsDesc2: 'Cupe săptămânale și lunare. Premii mari.',
     homeNewsTitle3: 'Community spotlight: top 10 goluri',
     homeNewsDesc3: 'Urmărește ELO, statistici și realizări.',
+    newsBack: 'Înapoi la prima pagină',
     footerAbout: 'Despre noi',
     footerTerms: 'Termeni și condiții',
     footerPrivacy: 'Confidențialitate',
@@ -498,6 +503,7 @@ const messages: Record<
       matches: 'Матчи',
       rating: 'Рейтинг',
       admin: 'Админка',
+      'news-detail': 'Новость',
     },
     quickPlayTitle: 'Быстрая игра',
     quickPlayText:
@@ -646,6 +652,7 @@ const messages: Record<
     homeNewsDesc2: 'Еженедельные и месячные кубки. Крупные призы.',
     homeNewsTitle3: 'Лучшие голы сообщества',
     homeNewsDesc3: 'Отслеживай ELO, статистику и достижения.',
+    newsBack: 'Назад на главную',
     footerAbout: 'О нас',
     footerTerms: 'Условия использования',
     footerPrivacy: 'Конфиденциальность',
@@ -1027,6 +1034,36 @@ function App() {
   const [adminResult, setAdminResult] = useState<string | null>(null)
 
   type NewsRow = { id: string; title: string; body: string; image_url: string | null; created_at: string }
+  type TournamentRow = {
+    id: string
+    name: string
+    status: string
+    registration_start: string
+    registration_end: string
+    tournament_start: string
+    tournament_end: string
+    round_duration_minutes: number
+    prize_pool: { place: number; elo_bonus: number }[]
+    created_at: string
+    registrations_count: number
+  }
+  type TournamentMatchRow = {
+    id: string
+    tournament_id: string
+    round: number
+    match_index: number
+    player_a_id: string | null
+    player_b_id: string | null
+    score_a: number | null
+    score_b: number | null
+    winner_id: string | null
+    status: string
+    score_submitted_by: string | null
+    player_a_ready_at: string | null
+    player_b_ready_at: string | null
+    scheduled_start: string
+    scheduled_end: string
+  }
   const [newsList, setNewsList] = useState<NewsRow[]>([])
   const [newsLoading, setNewsLoading] = useState(false)
   const [newsTitle, setNewsTitle] = useState('')
@@ -1034,6 +1071,43 @@ function App() {
   const [newsImageFile, setNewsImageFile] = useState<File | null>(null)
   const [newsSending, setNewsSending] = useState(false)
   const [newsResult, setNewsResult] = useState<string | null>(null)
+  const [selectedNews, setSelectedNews] = useState<NewsRow | null>(null)
+  const [newsDetailLoading, setNewsDetailLoading] = useState(false)
+
+  const [tournamentsList, setTournamentsList] = useState<TournamentRow[]>([])
+  const [tournamentsLoading, setTournamentsLoading] = useState(false)
+  const [selectedTournamentId, setSelectedTournamentId] = useState<string | null>(null)
+  const [tournamentMatches, setTournamentMatches] = useState<TournamentMatchRow[]>([])
+  const [tournamentRegistrations, setTournamentRegistrations] = useState<Set<string>>(new Set())
+  const [adminTourName, setAdminTourName] = useState('')
+  const [adminTourRegStart, setAdminTourRegStart] = useState('')
+  const [adminTourRegEnd, setAdminTourRegEnd] = useState('')
+  const [adminTourStart, setAdminTourStart] = useState('')
+  const [adminTourEnd, setAdminTourEnd] = useState('')
+  const [adminTourRoundMins, setAdminTourRoundMins] = useState('30')
+  const [adminTourPrizePool, setAdminTourPrizePool] = useState<{ place: number; elo_bonus: number }[]>([{ place: 1, elo_bonus: 50 }, { place: 2, elo_bonus: 30 }])
+  const [adminTourSending, setAdminTourSending] = useState(false)
+  const [adminTourResult, setAdminTourResult] = useState<string | null>(null)
+
+  useEffect(() => {
+    const hash = window.location.hash
+    const m = hash.match(/^#news=(.+)$/)
+    if (m) {
+      const id = m[1].trim()
+      setActiveView('news-detail')
+      setSelectedNews(null)
+      setNewsDetailLoading(true)
+      supabase
+        .from('news')
+        .select('id, title, body, image_url, created_at')
+        .eq('id', id)
+        .single()
+        .then(({ data, error }) => {
+          setNewsDetailLoading(false)
+          if (!error && data) setSelectedNews(data as NewsRow)
+        })
+    }
+  }, [])
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -1590,9 +1664,9 @@ function App() {
     })
   }, [selectedPlayerRow?.player_id])
 
-  // Загрузка рейтинга при открытии страницы «Рейтинг» или главной (для блока Top Players)
+  // Загрузка рейтинга при открытии страницы «Рейтинг», главной (Top Players) или турниров (имена в сетке)
   useEffect(() => {
-    if (activeView !== 'rating' && activeView !== 'home') return
+    if (activeView !== 'rating' && activeView !== 'home' && activeView !== 'tournaments') return
     if (activeView === 'rating' && !window.location.hash.includes('player=')) setSelectedPlayerRow(null)
     setLeaderboardLoading(true)
     supabase.rpc('get_leaderboard').then(({ data, error }) => {
@@ -1653,10 +1727,20 @@ function App() {
         const ext = newsImageFile.name.split('.').pop()?.toLowerCase() || 'jpg'
         const path = `${id}.${ext}`
         const { error: uploadErr } = await supabase.storage.from(NEWS_BUCKET).upload(path, newsImageFile, { upsert: true })
-        if (!uploadErr) {
-          const { data: urlData } = supabase.storage.from(NEWS_BUCKET).getPublicUrl(path)
-          imageUrl = urlData.publicUrl
-          await supabase.from('news').update({ image_url: imageUrl }).eq('id', id)
+        if (uploadErr) {
+          setNewsResult(`Новость создана, но фото не загрузилось: ${uploadErr.message}. Проверьте, что бакет "news" создан и включён как Public в Supabase → Storage.`)
+          setNewsSending(false)
+          fetchNews()
+          return
+        }
+        const { data: urlData } = supabase.storage.from(NEWS_BUCKET).getPublicUrl(path)
+        imageUrl = urlData.publicUrl
+        const { error: updateErr } = await supabase.from('news').update({ image_url: imageUrl }).eq('id', id)
+        if (updateErr) {
+          setNewsResult(`Новость создана, фото загружено, но ссылку не удалось сохранить: ${updateErr.message}.`)
+          setNewsSending(false)
+          fetchNews()
+          return
         }
       }
       setNewsTitle('')
@@ -1675,6 +1759,288 @@ function App() {
     if (!isAdminUser) return
     const { error } = await supabase.from('news').delete().eq('id', id)
     if (!error) fetchNews()
+  }
+
+  const fetchTournaments = async () => {
+    setTournamentsLoading(true)
+    const { data: list, error } = await supabase.rpc('get_tournaments_with_counts')
+    if (!error && Array.isArray(list)) {
+      setTournamentsList(list.map((r: any) => ({
+        ...r,
+        prize_pool: Array.isArray(r.prize_pool) ? r.prize_pool : [],
+        registrations_count: Number(r.registrations_count ?? 0),
+      })))
+    } else {
+      setTournamentsList([])
+    }
+    if (playerId) {
+      const { data: regs } = await supabase.from('tournament_registrations').select('tournament_id').eq('player_id', playerId)
+      setTournamentRegistrations(new Set((regs || []).map((r: { tournament_id: string }) => r.tournament_id)))
+    }
+    setTournamentsLoading(false)
+  }
+
+  useEffect(() => {
+    if (activeView === 'tournaments' || activeView === 'admin') fetchTournaments()
+  }, [activeView, playerId])
+
+  useEffect(() => {
+    if (activeView !== 'tournaments') return
+    const runTick = async () => {
+      await supabase.rpc('tournament_tick', { p_tournament_id: null })
+      fetchTournaments()
+      if (selectedTournamentId) {
+        const { data } = await supabase.from('tournament_matches').select('*').eq('tournament_id', selectedTournamentId).order('round', { ascending: false }).order('match_index')
+        if (data) setTournamentMatches(data as TournamentMatchRow[])
+      }
+    }
+    runTick()
+    const interval = setInterval(runTick, 60000)
+    return () => clearInterval(interval)
+  }, [activeView, selectedTournamentId])
+
+  useEffect(() => {
+    if (!selectedTournamentId) {
+      setTournamentMatches([])
+      return
+    }
+    const load = async () => {
+      const { data } = await supabase.from('tournament_matches').select('*').eq('tournament_id', selectedTournamentId).order('round', { ascending: false }).order('match_index')
+      setTournamentMatches((data || []) as TournamentMatchRow[])
+    }
+    load()
+  }, [selectedTournamentId])
+
+  const createTournament = async () => {
+    if (!isAdminUser) return
+    const name = adminTourName.trim()
+    const regStart = adminTourRegStart.trim()
+    const regEnd = adminTourRegEnd.trim()
+    const tourStart = adminTourStart.trim()
+    const tourEnd = adminTourEnd.trim()
+    const roundMins = parseInt(adminTourRoundMins, 10)
+    if (!name || !regStart || !regEnd || !tourStart || !tourEnd || Number.isNaN(roundMins) || roundMins < 1) {
+      setAdminTourResult('Заполните все поля и укажите длительность раунда (мин).')
+      return
+    }
+    setAdminTourSending(true)
+    setAdminTourResult(null)
+    try {
+      const now = new Date().toISOString().slice(0, 16)
+      const status = now >= regStart ? 'registration' : 'draft'
+      const { data, error } = await supabase
+        .from('tournaments')
+        .insert({
+          name,
+          status,
+          registration_start: new Date(regStart).toISOString(),
+          registration_end: new Date(regEnd).toISOString(),
+          tournament_start: new Date(tourStart).toISOString(),
+          tournament_end: new Date(tourEnd).toISOString(),
+          round_duration_minutes: roundMins,
+          prize_pool: adminTourPrizePool.filter((p) => p.place >= 1 && p.elo_bonus >= 0),
+        })
+        .select('id')
+        .single()
+      if (error) {
+        setAdminTourResult(`Ошибка: ${error.message}`)
+        setAdminTourSending(false)
+        return
+      }
+      setAdminTourName('')
+      setAdminTourRegStart('')
+      setAdminTourRegEnd('')
+      setAdminTourStart('')
+      setAdminTourEnd('')
+      setAdminTourRoundMins('30')
+      setAdminTourPrizePool([{ place: 1, elo_bonus: 50 }, { place: 2, elo_bonus: 30 }])
+      fetchTournaments()
+      setAdminTourResult('Турнир создан.')
+    } catch (e: any) {
+      setAdminTourResult(e?.message || 'Ошибка')
+    } finally {
+      setAdminTourSending(false)
+    }
+  }
+
+  const tournamentRegister = async (tournamentId: string) => {
+    if (!playerId) return
+    const { error } = await supabase.from('tournament_registrations').insert({ tournament_id: tournamentId, player_id: playerId })
+    if (!error) {
+      setTournamentRegistrations((prev) => new Set(prev).add(tournamentId))
+      fetchTournaments()
+    }
+  }
+
+  const tournamentUnregister = async (tournamentId: string) => {
+    if (!playerId) return
+    const { error } = await supabase.from('tournament_registrations').delete().eq('tournament_id', tournamentId).eq('player_id', playerId)
+    if (!error) {
+      setTournamentRegistrations((prev) => {
+        const next = new Set(prev)
+        next.delete(tournamentId)
+        return next
+      })
+      fetchTournaments()
+    }
+  }
+
+  const tournamentTick = async (tournamentId: string) => {
+    await supabase.rpc('tournament_tick', { p_tournament_id: tournamentId })
+    fetchTournaments()
+    if (selectedTournamentId === tournamentId) {
+      const { data } = await supabase.from('tournament_matches').select('*').eq('tournament_id', tournamentId).order('round', { ascending: false }).order('match_index')
+      setTournamentMatches((data || []) as TournamentMatchRow[])
+    }
+  }
+
+  const tournamentStartBracket = async (tournamentId: string) => {
+    const { data } = await supabase.rpc('tournament_start_bracket', { p_tournament_id: tournamentId })
+    const res = data as { ok?: boolean; error?: string }
+    if (res?.ok) {
+      fetchTournaments()
+      if (selectedTournamentId === tournamentId) {
+        const { data: matches } = await supabase.from('tournament_matches').select('*').eq('tournament_id', tournamentId).order('round', { ascending: false }).order('match_index')
+        setTournamentMatches((matches || []) as TournamentMatchRow[])
+      }
+    }
+    return res
+  }
+
+  function TournamentBracketBlock(props: {
+    tournament: TournamentRow
+    matches: TournamentMatchRow[]
+    playerId: string | null
+    leaderboard: LeaderboardRow[]
+    onRefresh: () => void | Promise<void>
+  }) {
+    const { tournament, matches, playerId: pid, leaderboard, onRefresh } = props
+    const [matchMessage, setMatchMessage] = useState<string | null>(null)
+    const [savingMatchId, setSavingMatchId] = useState<string | null>(null)
+    const [scoreInputs, setScoreInputs] = useState<Record<string, { a: string; b: string }>>({})
+
+    const getPlayerName = (id: string | null) => {
+      if (!id) return '—'
+      const r = leaderboard.find((x) => x.player_id === id)
+      return r?.display_name || id.slice(0, 8)
+    }
+
+    const rounds = useMemo(() => {
+      const byRound: Record<number, TournamentMatchRow[]> = {}
+      matches.forEach((m) => {
+        if (!byRound[m.round]) byRound[m.round] = []
+        byRound[m.round].push(m)
+      })
+      Object.keys(byRound).forEach((r) => byRound[Number(r)].sort((a, b) => a.match_index - b.match_index))
+      return byRound
+    }, [matches])
+
+    const roundNames: Record<number, string> = { 1: 'Финал', 2: '1/2 финала', 3: '1/4 финала', 4: '1/8 финала', 5: '1/16', 6: '1/32' }
+
+    const markReady = async (m: TournamentMatchRow) => {
+      if (!pid) return
+      setSavingMatchId(m.id)
+      setMatchMessage(null)
+      const isA = m.player_a_id === pid
+      const { error } = await supabase
+        .from('tournament_matches')
+        .update(isA ? { player_a_ready_at: new Date().toISOString(), status: m.player_b_ready_at ? 'both_ready' : 'ready_a' } : { player_b_ready_at: new Date().toISOString(), status: m.player_a_ready_at ? 'both_ready' : 'ready_b' })
+        .eq('id', m.id)
+      setSavingMatchId(null)
+      if (error) setMatchMessage(error.message)
+      else void onRefresh()
+    }
+
+    const submitScore = async (m: TournamentMatchRow) => {
+      if (!pid) return
+      const inp = scoreInputs[m.id] || { a: String(m.score_a ?? 0), b: String(m.score_b ?? 0) }
+      const a = parseInt(inp.a, 10)
+      const b = parseInt(inp.b, 10)
+      if (Number.isNaN(a) || Number.isNaN(b)) {
+        setMatchMessage('Введите счёт')
+        return
+      }
+      setSavingMatchId(m.id)
+      setMatchMessage(null)
+      const isA = m.player_a_id === pid
+      const { error } = await supabase
+        .from('tournament_matches')
+        .update({ score_a: isA ? a : b, score_b: isA ? b : a, score_submitted_by: pid, status: 'score_submitted' })
+        .eq('id', m.id)
+      setSavingMatchId(null)
+      if (error) setMatchMessage(error.message)
+      else void onRefresh()
+    }
+
+    const confirmScore = async (m: TournamentMatchRow) => {
+      if (!pid || m.player_a_id === null || m.player_b_id === null) return
+      const sa = m.score_a ?? 0
+      const sb = m.score_b ?? 0
+      const winner = sa > sb ? m.player_a_id : sb > sa ? m.player_b_id : null
+      setSavingMatchId(m.id)
+      setMatchMessage(null)
+      const { error } = await supabase.from('tournament_matches').update({ winner_id: winner, status: 'confirmed' }).eq('id', m.id)
+      setSavingMatchId(null)
+      if (error) setMatchMessage(error.message)
+      else void onRefresh()
+    }
+
+    return (
+      <div className="tournament-bracket">
+        {matchMessage && <p className="panel-text small">{matchMessage}</p>}
+        {[1, 2, 3, 4, 5, 6].filter((r) => rounds[r]?.length).map((roundNum) => (
+          <div key={roundNum} className="bracket-round">
+            <h4 className="bracket-round-title">{roundNames[roundNum] || `Раунд ${roundNum}`}</h4>
+            <div className="bracket-matches">
+              {(rounds[roundNum] || []).map((m) => {
+                const isPlayerA = m.player_a_id === pid
+                const isPlayerB = m.player_b_id === pid
+                const isInMatch = isPlayerA || isPlayerB
+                const canReady = isInMatch && !m.player_a_ready_at && !m.player_b_ready_at && (isPlayerA ? !m.player_a_ready_at : !m.player_b_ready_at)
+                const needsReady = isInMatch && ((isPlayerA && !m.player_a_ready_at) || (isPlayerB && !m.player_b_ready_at))
+                const canSubmit = isInMatch && (m.status === 'both_ready' || m.status === 'score_submitted') && m.score_submitted_by !== pid
+                const canConfirm = isInMatch && m.status === 'score_submitted' && m.score_submitted_by !== pid
+                const finished = ['confirmed', 'finished', 'auto_win_a', 'auto_win_b', 'auto_no_show'].includes(m.status)
+                const inp = scoreInputs[m.id] ?? { a: String(m.score_a ?? ''), b: String(m.score_b ?? '') }
+                return (
+                  <div key={m.id} className="bracket-match strike-card">
+                    <div className="bracket-match-players">
+                      <span className={m.winner_id === m.player_a_id ? 'bracket-winner' : ''}>{getPlayerName(m.player_a_id)}</span>
+                      <span className="bracket-vs"> – </span>
+                      <span className={m.winner_id === m.player_b_id ? 'bracket-winner' : ''}>{getPlayerName(m.player_b_id)}</span>
+                    </div>
+                    <div className="bracket-match-score">
+                      {m.score_a != null && m.score_b != null ? `${m.score_a} : ${m.score_b}` : '—'}
+                    </div>
+                    <div className="bracket-match-meta panel-text small">
+                      {new Date(m.scheduled_start).toLocaleString()} – {new Date(m.scheduled_end).toLocaleString()} · {m.status}
+                    </div>
+                    {isInMatch && !finished && (
+                      <div className="bracket-match-actions">
+                        {needsReady && (
+                          <button type="button" className="strike-btn strike-btn-primary" disabled={savingMatchId === m.id} onClick={() => markReady(m)}>
+                            {savingMatchId === m.id ? '…' : 'Готов играть'}
+                          </button>
+                        )}
+                        {(m.status === 'both_ready' || m.status === 'score_submitted') && (
+                          <>
+                            <input type="number" min={0} className="form-input" style={{ width: 48 }} value={inp.a} onChange={(e) => setScoreInputs((prev) => ({ ...prev, [m.id]: { ...prev[m.id], a: e.target.value } }))} />
+                            <span>–</span>
+                            <input type="number" min={0} className="form-input" style={{ width: 48 }} value={inp.b} onChange={(e) => setScoreInputs((prev) => ({ ...prev, [m.id]: { ...prev[m.id], b: e.target.value } }))} />
+                            {canSubmit && <button type="button" className="strike-btn strike-btn-secondary" disabled={savingMatchId === m.id} onClick={() => submitScore(m)}>Отправить счёт</button>}
+                            {canConfirm && <button type="button" className="strike-btn strike-btn-primary" disabled={savingMatchId === m.id} onClick={() => confirmScore(m)}>Подтвердить</button>}
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+    )
   }
 
   const saveProfileAvatarCountry = async () => {
@@ -2178,9 +2544,27 @@ function App() {
                     </article>
                   )}
                   {!newsLoading && newsList.slice(0, 6).map((n) => (
-                    <article key={n.id} className="strike-news-card">
+                    <article
+                      key={n.id}
+                      className="strike-news-card strike-news-card--clickable"
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => {
+                        setSelectedNews(n)
+                        setActiveView('news-detail')
+                        window.location.hash = `news=${n.id}`
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault()
+                          setSelectedNews(n)
+                          setActiveView('news-detail')
+                          window.location.hash = `news=${n.id}`
+                        }
+                      }}
+                    >
                       <div className="strike-news-thumb">
-                        {n.image_url ? <img src={n.image_url} alt="" /> : null}
+                        {n.image_url ? <img src={n.image_url} alt="" referrerPolicy="no-referrer" /> : null}
                       </div>
                       <h4 className="strike-news-card-title">{n.title}</h4>
                       <p className="strike-news-card-desc">{n.body || '—'}</p>
@@ -2213,6 +2597,38 @@ function App() {
 
         {activeView !== 'home' && (
           <h2 className="view-title">{t.viewTitle[activeView]}</h2>
+        )}
+
+        {activeView === 'news-detail' && (
+          <section className="panel news-detail-panel">
+            <button
+              type="button"
+              className="news-detail-back"
+              onClick={() => { setActiveView('home'); setSelectedNews(null); window.location.hash = '' }}
+            >
+              ← {t.newsBack}
+            </button>
+            {newsDetailLoading && <p className="panel-text">{t.ratingLoading}</p>}
+            {!newsDetailLoading && !selectedNews && <p className="panel-text">{t.ratingEmpty}</p>}
+            {!newsDetailLoading && selectedNews && (
+              <article className="news-detail-article">
+                <h1 className="news-detail-title">{selectedNews.title}</h1>
+                <time className="news-detail-date" dateTime={selectedNews.created_at}>
+                  {formatNewsDate(selectedNews.created_at)}
+                </time>
+                {selectedNews.image_url && (
+                  <div className="news-detail-image-wrap">
+                    <img src={selectedNews.image_url} alt="" className="news-detail-image" referrerPolicy="no-referrer" />
+                  </div>
+                )}
+                <div className="news-detail-body">
+                  {selectedNews.body.split('\n').map((p, i) => (
+                    <p key={i}>{p || '\u00A0'}</p>
+                  ))}
+                </div>
+              </article>
+            )}
+          </section>
         )}
 
         {activeView === 'matches' && (
@@ -2357,7 +2773,7 @@ function App() {
                 {newsList.map((n) => (
                   <li key={n.id} className="admin-news-item">
                     <div className="admin-news-item-preview">
-                      {n.image_url ? <img src={n.image_url} alt="" className="admin-news-item-thumb" /> : <span className="admin-news-item-no-thumb">нет фото</span>}
+                      {n.image_url ? <img src={n.image_url} alt="" className="admin-news-item-thumb" referrerPolicy="no-referrer" /> : <span className="admin-news-item-no-thumb">нет фото</span>}
                       <div>
                         <strong>{n.title}</strong>
                         <p className="panel-text small">{n.body.slice(0, 80)}{n.body.length > 80 ? '…' : ''}</p>
@@ -2365,6 +2781,76 @@ function App() {
                       </div>
                     </div>
                     <button type="button" className="admin-news-delete" onClick={() => deleteNews(n.id)}>Удалить</button>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            <h3 className="panel-title admin-news-title">Турниры</h3>
+            <p className="panel-text small">Создайте турнир: укажите даты регистрации и проведения, длительность раунда (мин) и призовой пул (место → бонус ELO).</p>
+            <div className="form-row">
+              <label className="form-label">Название</label>
+              <input type="text" className="form-input" value={adminTourName} onChange={(e) => setAdminTourName(e.target.value)} placeholder="Например: Кубок пятницы" />
+            </div>
+            <div className="form-row form-row--inline">
+              <label className="form-label">Начало регистрации</label>
+              <input type="datetime-local" className="form-input" value={adminTourRegStart} onChange={(e) => setAdminTourRegStart(e.target.value)} />
+            </div>
+            <div className="form-row form-row--inline">
+              <label className="form-label">Конец регистрации</label>
+              <input type="datetime-local" className="form-input" value={adminTourRegEnd} onChange={(e) => setAdminTourRegEnd(e.target.value)} />
+            </div>
+            <div className="form-row form-row--inline">
+              <label className="form-label">Старт турнира</label>
+              <input type="datetime-local" className="form-input" value={adminTourStart} onChange={(e) => setAdminTourStart(e.target.value)} />
+            </div>
+            <div className="form-row form-row--inline">
+              <label className="form-label">Конец турнира</label>
+              <input type="datetime-local" className="form-input" value={adminTourEnd} onChange={(e) => setAdminTourEnd(e.target.value)} />
+            </div>
+            <div className="form-row">
+              <label className="form-label">Длительность раунда (минут)</label>
+              <input type="number" min={5} className="form-input" style={{ maxWidth: '120px' }} value={adminTourRoundMins} onChange={(e) => setAdminTourRoundMins(e.target.value)} />
+            </div>
+            <div className="form-row">
+              <label className="form-label">Призовой пул (место → ELO)</label>
+              <div className="admin-prize-pool">
+                {adminTourPrizePool.map((p, i) => (
+                  <div key={i} className="admin-prize-row">
+                    <span>Место</span>
+                    <input type="number" min={1} className="form-input" style={{ width: '56px' }} value={p.place} onChange={(e) => setAdminTourPrizePool((prev) => prev.map((x, j) => j === i ? { ...x, place: parseInt(e.target.value, 10) || 1 } : x))} />
+                    <span>ELO</span>
+                    <input type="number" min={0} className="form-input" style={{ width: '64px' }} value={p.elo_bonus} onChange={(e) => setAdminTourPrizePool((prev) => prev.map((x, j) => j === i ? { ...x, elo_bonus: parseInt(e.target.value, 10) || 0 } : x))} />
+                    <button type="button" className="strike-btn strike-btn-secondary" onClick={() => setAdminTourPrizePool((prev) => prev.filter((_, j) => j !== i))}>−</button>
+                  </div>
+                ))}
+                <button type="button" className="strike-btn strike-btn-secondary" onClick={() => setAdminTourPrizePool((prev) => [...prev, { place: prev.length + 1, elo_bonus: 0 }])}>+ Добавить место</button>
+              </div>
+            </div>
+            {adminTourResult && <p className="panel-text small">{adminTourResult}</p>}
+            <div className="admin-actions">
+              <button type="button" className="primary-button" disabled={adminTourSending || !adminTourName.trim()} onClick={createTournament}>
+                {adminTourSending ? 'Создаём…' : 'Создать турнир'}
+              </button>
+            </div>
+            <h4 className="panel-subtitle">Список турниров (админ)</h4>
+            {tournamentsLoading && <p className="panel-text small">Загрузка…</p>}
+            {!tournamentsLoading && tournamentsList.length === 0 && <p className="panel-text small">Турниров пока нет.</p>}
+            {!tournamentsLoading && tournamentsList.length > 0 && (
+              <ul className="admin-news-list">
+                {tournamentsList.map((t) => (
+                  <li key={t.id} className="admin-news-item">
+                    <div>
+                      <strong>{t.name}</strong>
+                      <span className="panel-text small"> — {t.status}</span>
+                      <p className="panel-text small">Рег.: {new Date(t.registration_start).toLocaleString()} – {new Date(t.registration_end).toLocaleString()} | Участников: {t.registrations_count}</p>
+                    </div>
+                    <div className="admin-actions" style={{ flexDirection: 'row', gap: 8 }}>
+                      {t.status === 'registration' && (
+                        <button type="button" className="strike-btn strike-btn-secondary" onClick={() => tournamentStartBracket(t.id)}>Старт сетки</button>
+                      )}
+                      <button type="button" className="strike-btn strike-btn-secondary" onClick={() => tournamentTick(t.id)}>Обновить по времени</button>
+                    </div>
                   </li>
                 ))}
               </ul>
@@ -3195,19 +3681,59 @@ function App() {
           <section className="panel">
             <h3 className="panel-title">{t.tournamentsHeader}</h3>
             <p className="panel-text">{t.tournamentsIntro}</p>
-            <ul className="list">
-              <li className="list-item">
-                <span className="list-title">{t.weeklyCupTitle}</span>
-                <span className="list-sub">{t.weeklyCupSubtitle}</span>
-              </li>
-              <li className="list-item">
-                <span className="list-title">{t.doubleLeagueTitle}</span>
-                <span className="list-sub">{t.doubleLeagueSubtitle}</span>
-              </li>
-            </ul>
-            <p className="panel-hint">
-              {t.tournamentsHint}
-            </p>
+            {tournamentsLoading && <p className="panel-text small">{t.profileLoading}</p>}
+            {!tournamentsLoading && tournamentsList.length === 0 && <p className="panel-text small">Турниров пока нет.</p>}
+            {!tournamentsLoading && tournamentsList.length > 0 && (
+              <div className="tournaments-list">
+                {tournamentsList.map((tr) => {
+                  const isRegistered = tournamentRegistrations.has(tr.id)
+                  const canRegister = tr.status === 'registration' && playerId
+                  const now = new Date().getTime()
+                  const regOpen = now >= new Date(tr.registration_start).getTime()
+                  const regClosed = now >= new Date(tr.registration_end).getTime()
+                  return (
+                    <div key={tr.id} className="strike-card tournament-card">
+                      <div className="tournament-card-main">
+                        <h4 className="tournament-card-name">{tr.name}</h4>
+                        <p className="panel-text small">
+                          Регистрация: {new Date(tr.registration_start).toLocaleString()} – {new Date(tr.registration_end).toLocaleString()}
+                          <br />
+                          Турнир: {new Date(tr.tournament_start).toLocaleString()} – {new Date(tr.tournament_end).toLocaleString()}
+                        </p>
+                        <p className="panel-text small">Статус: {tr.status} · Участников: {tr.registrations_count}</p>
+                        <div className="tournament-card-actions">
+                          {canRegister && !isRegistered && (
+                            <button type="button" className="strike-btn strike-btn-primary" onClick={() => tournamentRegister(tr.id)}>Зарегистрироваться</button>
+                          )}
+                          {canRegister && isRegistered && (
+                            <button type="button" className="strike-btn strike-btn-secondary" onClick={() => tournamentUnregister(tr.id)}>Отменить регистрацию</button>
+                          )}
+                          {(tr.status === 'ongoing' || tr.status === 'finished') && (
+                            <button type="button" className="strike-btn strike-btn-secondary" onClick={() => setSelectedTournamentId(selectedTournamentId === tr.id ? null : tr.id)}>
+                              {selectedTournamentId === tr.id ? 'Скрыть сетку' : 'Сетка'}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                      {selectedTournamentId === tr.id && (tr.status === 'ongoing' || tr.status === 'finished') && (
+                        <TournamentBracketBlock
+                          tournament={tr}
+                          matches={tournamentMatches}
+                          playerId={playerId}
+                          leaderboard={leaderboard}
+                          onRefresh={async () => {
+                            fetchTournaments()
+                            const { data } = await supabase.from('tournament_matches').select('*').eq('tournament_id', tr.id).order('round', { ascending: false }).order('match_index')
+                            if (data) setTournamentMatches(data as TournamentMatchRow[])
+                          }}
+                        />
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+            <p className="panel-hint">{t.tournamentsHint}</p>
           </section>
         )}
       </main>

@@ -1,5 +1,6 @@
 -- Модуль новостей: таблица + RLS. Картинки — в Storage bucket "news".
--- 1) В Supabase Dashboard → Storage создай бакет "news", Public = true.
+-- 1) В Supabase Dashboard → Storage создай бакет с именем "news".
+--    Обязательно включи "Public bucket" (публичный бакет), иначе фото не будут отображаться.
 -- 2) Выполни этот скрипт в SQL Editor.
 
 -- Таблица новостей
