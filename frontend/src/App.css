@@ -321,6 +321,25 @@
   color: var(--text-muted);
   margin-top: 4px;
 }
+.nav-drawer-tournament-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 8px;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--strike-orange, var(--accent));
+  background: rgba(255, 140, 0, 0.12);
+  border: 1px solid rgba(255, 140, 0, 0.35);
+  border-radius: 999px;
+  cursor: pointer;
+  width: 100%;
+  justify-content: center;
+}
+.nav-drawer-tournament-badge:hover {
+  background: rgba(255, 140, 0, 0.2);
+}
 
 .nav-drawer-lang {
   padding: 14px 24px;
@@ -1777,24 +1796,151 @@
   background: rgba(248, 81, 73, 0.15);
 }
 
-/* Турниры: список и призовой пул в админке */
+/* ========== Страница турниров по референсу (hero + две колонки + карточки) ========== */
+.tournaments-page {
+  padding: var(--strike-space-lg, 24px) var(--strike-space-md, 16px);
+  max-width: 1400px;
+  margin: 0 auto;
+}
+.tournaments-hero {
+  text-align: center;
+  margin-bottom: var(--strike-space-xl, 32px);
+}
+.tournaments-hero-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+  filter: drop-shadow(0 0 20px var(--strike-orange-glow, rgba(255, 107, 0, 0.4)));
+}
+.tournaments-hero-title {
+  margin: 0 0 8px;
+  font-family: var(--strike-font, inherit);
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: var(--strike-text, #f5f7fa);
+}
+.tournaments-hero-underline {
+  width: 80px;
+  height: 3px;
+  margin: 0 auto 16px;
+  background: linear-gradient(90deg, var(--strike-orange, #ff6b00), var(--strike-orange-bright, #ff8533));
+  border-radius: 2px;
+}
+.tournaments-hero-desc {
+  margin: 0;
+  font-size: 15px;
+  color: var(--strike-muted, #7d8590);
+  max-width: 420px;
+  margin-left: auto;
+  margin-right: auto;
+  line-height: 1.5;
+}
+
+.tournaments-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+@media (min-width: 1024px) {
+  .tournaments-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 28px;
+    align-items: start;
+  }
+}
+.tournaments-active-column {
+  min-width: 0;
+}
+.tournaments-list-wrap {
+  border: 2px solid var(--strike-orange, #ff6b00);
+  border-radius: var(--strike-radius, 10px);
+  padding: 20px;
+  background: rgba(255, 107, 0, 0.03);
+  box-shadow: 0 0 24px var(--strike-orange-glow, rgba(255, 107, 0, 0.15));
+}
 .tournaments-list {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  margin-top: 16px;
+  gap: 16px;
+  margin: 0;
 }
+
 .tournament-card {
   padding: 20px;
   margin: 0;
+  background: var(--strike-card, #111419);
+  border: 1px solid var(--strike-border, #23272e);
+  border-radius: var(--strike-radius, 10px);
+  position: relative;
 }
-.tournament-card-main {
-  margin-bottom: 12px;
+.tournament-card--active {
+  border-color: var(--strike-orange, #ff6b00);
+  border-top-width: 2px;
+  border-left-width: 2px;
+  box-shadow: 0 0 16px var(--strike-orange-glow, rgba(255, 107, 0, 0.2));
+}
+.tournament-card--featured {
+  margin-bottom: 0;
+}
+.tournament-card-badge {
+  position: absolute;
+  top: -10px;
+  left: 16px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--strike-orange, #ff6b00);
+  background: var(--strike-card, #111419);
+  padding: 4px 10px;
+  border: 1px solid var(--strike-orange, #ff6b00);
+  border-radius: 4px;
 }
 .tournament-card-name {
-  margin: 0 0 8px;
-  font-size: 18px;
+  margin: 0 0 14px;
+  font-size: 16px;
   font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--strike-text, #f5f7fa);
+  line-height: 1.3;
+}
+.tournament-card-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.tournament-card-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--strike-muted, #7d8590);
+}
+.tournament-card-line--participants {
+  flex-wrap: wrap;
+  align-items: center;
+}
+.tournament-card-icon {
+  flex-shrink: 0;
+  width: 18px;
+  text-align: center;
+  color: var(--strike-orange, #ff6b00);
+  font-size: 12px;
+}
+.tournament-participants-bar {
+  width: 100%;
+  height: 6px;
+  margin-top: 6px;
+  background: var(--strike-elevated, #171a1f);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.tournament-participants-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--strike-orange, #ff6b00), var(--strike-orange-bright, #ff8533));
+  border-radius: 999px;
+  transition: width 0.3s ease;
 }
 .tournament-card-actions {
   display: flex;
@@ -1802,6 +1948,44 @@
   gap: 10px;
   margin-top: 12px;
 }
+.tournament-btn-register {
+  font-weight: 700;
+}
+.tournament-btn-bracket {
+  border-color: var(--strike-orange, #ff6b00);
+  color: var(--strike-orange, #ff6b00);
+}
+.tournament-btn-bracket:hover {
+  background: var(--strike-orange-soft, rgba(255, 107, 0, 0.15));
+}
+
+.tournaments-footer-hint {
+  margin: 28px 0 0;
+  padding-top: 20px;
+  border-top: 1px solid var(--strike-border, #23272e);
+  font-size: 14px;
+  color: var(--strike-muted, #7d8590);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.tournaments-footer-icon {
+  font-size: 16px;
+  opacity: 0.8;
+}
+
+.tournaments-bracket-wrap {
+  margin-top: 28px;
+  padding-top: 24px;
+  border-top: 2px solid var(--strike-border, #23272e);
+}
+
+/* Турниры: призовой пул в админке */
+.tournament-card-main {
+  margin-bottom: 12px;
+}
+.admin-prize-pool {
 .admin-prize-pool {
   display: flex;
   flex-direction: column;
@@ -3593,6 +3777,24 @@
 .app.strike-theme .strike-header-elo-value {
   font-family: var(--strike-font);
   color: var(--strike-orange);
+}
+.strike-header-tournament-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--strike-orange, var(--accent));
+  background: rgba(255, 140, 0, 0.12);
+  border: 1px solid rgba(255, 140, 0, 0.35);
+  border-radius: 999px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.strike-header-tournament-badge:hover {
+  background: rgba(255, 140, 0, 0.2);
 }
 .strike-header-cta {
   padding: 8px 16px;
