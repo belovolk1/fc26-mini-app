@@ -1477,6 +1477,13 @@ function App() {
     setSearchStatus('searching')
   }
 
+  const handlePlayNowClick = async () => {
+    setActiveView('ladder')
+    if (searchStatus === 'idle') {
+      await startSearch()
+    }
+  }
+
   const cancelSearch = async () => {
     if (!playerId) return
     await supabase.from('matchmaking_queue').delete().eq('player_id', playerId)
@@ -1796,7 +1803,7 @@ function App() {
                 <span className="strike-header-elo-value">{elo ?? '—'} ELO</span>
               </div>
             </div>
-            <button type="button" className="strike-header-cta strike-btn strike-btn-primary" onClick={() => setActiveView('ladder')}>
+            <button type="button" className="strike-header-cta strike-btn strike-btn-primary" onClick={handlePlayNowClick}>
               {t.homePlayNow}
             </button>
           </div>
