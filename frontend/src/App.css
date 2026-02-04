@@ -2662,8 +2662,184 @@
   background: rgba(244, 117, 33, 0.12);
 }
 
+.rating-row--active {
+  background: rgba(244, 117, 33, 0.18);
+}
+
 .panel-text-muted {
   color: var(--text-muted);
+}
+
+/* ========== Страница рейтинга в стиле референса ========== */
+.rating-panel {
+  padding: 24px 20px 32px;
+}
+@media (min-width: 1024px) {
+  .rating-panel {
+    padding: 28px 28px 32px;
+  }
+}
+.rating-layout {
+  display: grid;
+  grid-template-columns: 2.1fr 1.2fr;
+  gap: 28px;
+}
+@media (max-width: 1023px) {
+  .rating-layout {
+    grid-template-columns: 1fr;
+  }
+}
+.rating-title {
+  margin: 0 0 8px;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.app.strike-theme .rating-title {
+  font-family: var(--strike-font);
+  font-size: 14px;
+  color: var(--strike-text);
+}
+.rating-subtitle {
+  margin-bottom: 12px;
+}
+.rating-details {
+  border-radius: var(--radius);
+  border: 2px solid var(--border);
+  background: var(--bg-elevated);
+  padding: 20px 22px;
+}
+.app.strike-theme .rating-details {
+  background: var(--strike-card);
+  border: var(--strike-border-w) solid var(--strike-border);
+  border-radius: var(--strike-radius);
+  box-shadow: var(--strike-shadow-sm);
+}
+.rating-details-header {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+.rating-details-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.rating-player-heading {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+}
+.app.strike-theme .rating-player-heading {
+  font-family: var(--strike-font);
+  font-size: 16px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--strike-text);
+}
+.rating-player-country {
+  font-size: 18px;
+}
+.rating-elo-block-big {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.rating-elo-label-small {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+.app.strike-theme .rating-elo-label-small {
+  color: var(--strike-muted);
+  font-family: var(--strike-font);
+}
+.rating-elo-big {
+  font-size: 34px;
+  font-weight: 800;
+}
+.app.strike-theme .rating-elo-big {
+  font-family: var(--strike-font);
+  color: var(--strike-orange);
+}
+.rating-rank-chip {
+  display: inline-block;
+  align-self: flex-start;
+  margin-top: 4px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: rgba(244, 117, 33, 0.16);
+  color: var(--accent);
+}
+.app.strike-theme .rating-rank-chip {
+  background: rgba(255, 107, 0, 0.16);
+  color: var(--strike-orange);
+  font-family: var(--strike-font);
+}
+.rating-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 18px;
+}
+@media (max-width: 768px) {
+  .rating-stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.rating-stat-card {
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--bg-main);
+  border: 1px solid var(--border);
+}
+.app.strike-theme .rating-stat-card {
+  background: var(--strike-elevated);
+  border: var(--strike-border-w) solid var(--strike-border);
+}
+.rating-stat-card-accent {
+  border-color: rgba(244, 117, 33, 0.6);
+}
+.rating-stat-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+.app.strike-theme .rating-stat-label {
+  font-family: var(--strike-font);
+  color: var(--strike-muted);
+}
+.rating-stat-value {
+  display: block;
+  margin-top: 4px;
+  font-size: 16px;
+  font-weight: 700;
+}
+.app.strike-theme .rating-stat-value {
+  font-family: var(--strike-font-body);
+  color: var(--strike-text);
+}
+.rating-last-title {
+  margin: 4px 0 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.app.strike-theme .rating-last-title {
+  font-family: var(--strike-font);
+  color: var(--strike-text);
+}
+.rating-details-placeholder {
+  margin: 0;
 }
 
 /* ========== Список (турниры) ========== */

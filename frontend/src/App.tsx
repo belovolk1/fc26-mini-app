@@ -107,6 +107,7 @@ const messages: Record<
     ratingGoalsFor: string
     ratingGoalsAgainst: string
     ratingWinRate: string
+    ratingEmptySelectedPlayer?: string
     ratingBack: string
     homeHowTitle: string
     homeHowStep1: string
@@ -271,6 +272,7 @@ const messages: Record<
     ratingGoalsFor: 'GF',
     ratingGoalsAgainst: 'GA',
     ratingWinRate: 'W%',
+    ratingEmptySelectedPlayer: 'Click a player in the table to view details.',
     ratingBack: 'Back to rating',
     homeHowTitle: 'How it works',
     homeHowStep1: 'Log in with Telegram and open Quick play.',
@@ -434,6 +436,7 @@ const messages: Record<
     ratingGoalsFor: 'GM',
     ratingGoalsAgainst: 'GP',
     ratingWinRate: 'V%',
+    ratingEmptySelectedPlayer: 'Alege un jucător din tabel pentru detalii.',
     ratingBack: 'Înapoi la clasament',
     homeHowTitle: 'Cum funcționează',
     homeHowStep1: 'Autentifică-te cu Telegram și deschide Joc rapid.',
@@ -597,6 +600,7 @@ const messages: Record<
     ratingGoalsFor: 'ГЗ',
     ratingGoalsAgainst: 'ГП',
     ratingWinRate: 'Винрейт %',
+    ratingEmptySelectedPlayer: 'Нажми на игрока в таблице, чтобы увидеть детали.',
     ratingBack: 'Назад к рейтингу',
     homeHowTitle: 'Как это работает',
     homeHowStep1: 'Войдите через Telegram и откройте раздел «Быстрая игра».',
@@ -1243,6 +1247,15 @@ function App() {
             setSearchStartedAt(null)
             setSearchElapsed(0)
             refetchMatchesCount()
+            // сразу после засчитанного матча перезагружаем профиль,
+            // чтобы ELO и статы в шапке обновились в реальном времени
+            void supabase
+              .rpc('get_player_profile', { p_player_id: playerId })
+              .then(({ data, error }) => {
+                if (!error && Array.isArray(data) && data[0]) {
+                  setMyProfileStats(data[0] as LeaderboardRow)
+                }
+              })
             return
           }
           setCurrentMatch((prev) =>
@@ -1280,6 +1293,13 @@ function App() {
         setSearchStartedAt(null)
         setSearchElapsed(0)
         refetchMatchesCount()
+        void supabase
+          .rpc('get_player_profile', { p_player_id: playerId })
+          .then(({ data: prof, error: profErr }) => {
+            if (!profErr && Array.isArray(prof) && prof[0]) {
+              setMyProfileStats(prof[0] as LeaderboardRow)
+            }
+          })
         return
       }
       if (!error && data && (data as { id: number }).id === matchId) {
@@ -2196,126 +2216,11 @@ function App() {
         )}
 
         {activeView === 'rating' && (
-          <section className="panel">
-            {profileFromHashLoading && !selectedPlayerRow ? (
-              <p className="panel-text">{t.ratingLoading}</p>
-            ) : selectedPlayerRow ? (
-              <div className="profile-page">
-                <button
-                  type="button"
-                  className="link-button rating-back-btn"
-                  onClick={() => {
-                    setSelectedPlayerRow(null)
-                    window.history.replaceState(null, '', window.location.pathname + window.location.search)
-                    window.location.hash = ''
-                  }}
-                >
-                  ← {t.ratingBack}
-                </button>
-                <div className="profile-page-layout">
-                  <aside className="profile-sidebar">
-                    <div className="profile-avatar-wrap">
-                      {selectedPlayerRow.avatar_url ? (
-                        <img src={selectedPlayerRow.avatar_url} alt="" className="profile-avatar-img" />
-                      ) : (
-                        <div className="profile-avatar-placeholder">
-                          {(selectedPlayerRow.display_name ?? '?').charAt(0).toUpperCase()}
-                        </div>
-                      )}
-                    </div>
-                    <div className="profile-sidebar-info">
-                      <h2 className="profile-display-name">{selectedPlayerRow.display_name ?? '—'}</h2>
-                      {selectedPlayerRow.country_code && (
-                        <p className="profile-country-badge">
-                          {COUNTRIES.find((c) => c.code === selectedPlayerRow!.country_code)?.flag ?? '🌐'}{' '}
-                          {COUNTRIES.find((c) => c.code === selectedPlayerRow!.country_code)?.name ?? selectedPlayerRow.country_code}
-                        </p>
-                      )}
-                    </div>
-                  </aside>
-                  <div className="profile-main">
-                    <div className="profile-rank-card">
-                      <span className="profile-rank-badge">#{selectedPlayerRow.rank}</span>
-                      <span className="profile-elo-big">{selectedPlayerRow.elo ?? '—'}</span>
-                      {selectedPlayerRow.matches_count <= 10 ? (
-                        <span className="profile-calibration-label">{t.profileCalibrationLabel}</span>
-                      ) : (() => {
-                        const rank = getRankFromElo(selectedPlayerRow.elo ?? null)
-                        return rank ? (
-                          <span className="profile-rank-level">
-                            {rank.isElite ? `${t.profileRankElite} 🔥` : t.profileRankLevel.replace('{n}', String(rank.level))}
-                          </span>
-                        ) : null
-                      })()}
-                      <p className="profile-matches-summary">
-                        {selectedPlayerRow.matches_count} {t.profileMatchesWins.replace('{pct}', selectedPlayerRow.win_rate != null ? String(selectedPlayerRow.win_rate) : '0')}
-                      </p>
-                    </div>
-                    <h4 className="profile-stats-heading">{t.profileStatsSummary}</h4>
-                    <div className="profile-stats-grid">
-                      <div className="profile-stat-card">
-                        <span className="profile-stat-value">{selectedPlayerRow.matches_count}</span>
-                        <span className="profile-stat-label">{t.ratingMatches}</span>
-                      </div>
-                      <div className="profile-stat-card">
-                        <span className="profile-stat-value">{selectedPlayerRow.wins}</span>
-                        <span className="profile-stat-label">{t.ratingWins}</span>
-                      </div>
-                      <div className="profile-stat-card">
-                        <span className="profile-stat-value">{selectedPlayerRow.draws}</span>
-                        <span className="profile-stat-label">{t.ratingDraws}</span>
-                      </div>
-                      <div className="profile-stat-card">
-                        <span className="profile-stat-value">{selectedPlayerRow.losses}</span>
-                        <span className="profile-stat-label">{t.ratingLosses}</span>
-                      </div>
-                      <div className="profile-stat-card">
-                        <span className="profile-stat-value">{selectedPlayerRow.goals_for}</span>
-                        <span className="profile-stat-label">{t.ratingGoalsFor}</span>
-                      </div>
-                      <div className="profile-stat-card">
-                        <span className="profile-stat-value">{selectedPlayerRow.goals_against}</span>
-                        <span className="profile-stat-label">{t.ratingGoalsAgainst}</span>
-                      </div>
-                      <div className="profile-stat-card profile-stat-card-accent">
-                        <span className="profile-stat-value">
-                          {selectedPlayerRow.win_rate != null ? `${selectedPlayerRow.win_rate}%` : '—'}
-                        </span>
-                        <span className="profile-stat-label">{t.ratingWinRate}</span>
-                      </div>
-                    </div>
-                          <h4 className="profile-stats-heading">{t.profileLast10Matches}</h4>
-                    {recentMatchesLoading && <p className="panel-text small">…</p>}
-                    {!recentMatchesLoading && recentMatches.length === 0 && (
-                      <p className="panel-text small">{t.profileRecentMatchesEmpty}</p>
-                    )}
-                    {!recentMatchesLoading && recentMatches.length > 0 && (
-                      <ul className="profile-recent-matches">
-                        {recentMatches.map((match) => (
-                          <li key={match.match_id} className={`profile-recent-match profile-recent-match--${match.result}`}>
-                            <span className="profile-recent-opponent">{match.opponent_name ?? '—'}</span>
-                            <span className="profile-recent-score">
-                              {match.my_score} : {match.opp_score}
-                            </span>
-                            <span className="profile-recent-result">
-                              {match.result === 'win' ? t.profileResultWin : match.result === 'loss' ? t.profileResultLoss : t.profileResultDraw}
-                            </span>
-                            {match.played_at && (
-                              <span className="profile-recent-date">
-                                {new Date(match.played_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                              </span>
-                            )}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <>
-                <h3 className="panel-title">{t.ratingHeader}</h3>
-                <p className="panel-text small">{t.ratingIntro}</p>
+          <section className="panel rating-panel">
+            <div className="rating-layout">
+              <div className="rating-leaderboard">
+                <h3 className="rating-title">{t.ratingHeader}</h3>
+                <p className="panel-text small rating-subtitle">{t.ratingIntro}</p>
                 {leaderboardLoading && <p className="panel-text">{t.ratingLoading}</p>}
                 {!leaderboardLoading && leaderboard.length === 0 && (
                   <p className="panel-text">{t.ratingEmpty}</p>
@@ -2329,11 +2234,6 @@ function App() {
                           <th>{t.profilePlayerLabel}</th>
                           <th>{t.ratingElo}</th>
                           <th>{t.ratingMatches}</th>
-                          <th>{t.ratingWins}</th>
-                          <th>{t.ratingDraws}</th>
-                          <th>{t.ratingLosses}</th>
-                          <th>{t.ratingGoalsFor}</th>
-                          <th>{t.ratingGoalsAgainst}</th>
                           <th>{t.ratingWinRate}</th>
                         </tr>
                       </thead>
@@ -2341,7 +2241,7 @@ function App() {
                         {leaderboard.map((r) => (
                           <tr
                             key={r.player_id}
-                            className="rating-row-clickable"
+                            className={`rating-row-clickable ${selectedPlayerRow?.player_id === r.player_id ? 'rating-row--active' : ''}`}
                             onClick={() => setSelectedPlayerRow(r)}
                             role="button"
                             tabIndex={0}
@@ -2365,11 +2265,6 @@ function App() {
                             </td>
                             <td className="rating-elo-cell">{r.elo ?? '—'}</td>
                             <td>{r.matches_count}</td>
-                            <td>{r.wins}</td>
-                            <td>{r.draws}</td>
-                            <td>{r.losses}</td>
-                            <td>{r.goals_for}</td>
-                            <td>{r.goals_against}</td>
                             <td className="rating-winrate-cell">{r.win_rate != null ? `${r.win_rate}%` : '—'}</td>
                           </tr>
                         ))}
@@ -2377,8 +2272,126 @@ function App() {
                     </table>
                   </div>
                 )}
-              </>
-            )}
+              </div>
+
+              <aside className="rating-details">
+                {profileFromHashLoading && !selectedPlayerRow && (
+                  <p className="panel-text small">{t.ratingLoading}</p>
+                )}
+                {selectedPlayerRow ? (
+                  <>
+                    <div className="rating-details-header">
+                      <div className="rating-details-name-row">
+                        <h2 className="rating-player-heading">{selectedPlayerRow.display_name ?? '—'}</h2>
+                        {selectedPlayerRow.country_code && (
+                          <span className="rating-player-country">
+                            {COUNTRIES.find((c) => c.code === selectedPlayerRow.country_code)?.flag ?? '🌐'}
+                          </span>
+                        )}
+                      </div>
+                      <div className="rating-elo-block-big">
+                        <span className="rating-elo-label-small">{t.ratingElo}</span>
+                        <span className="rating-elo-big">{selectedPlayerRow.elo ?? '—'}</span>
+                        <div className="rating-rank-chip">
+                          {(() => {
+                            const rank = getRankFromElo(selectedPlayerRow.elo ?? null)
+                            return getRankDisplayLabel(rank)
+                          })()}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="rating-stats-grid">
+                      <div className="rating-stat-card">
+                        <span className="rating-stat-label">{t.ratingMatches}</span>
+                        <span className="rating-stat-value">{selectedPlayerRow.matches_count}</span>
+                      </div>
+                      <div className="rating-stat-card">
+                        <span className="rating-stat-label">{t.ratingWins}</span>
+                        <span className="rating-stat-value">{selectedPlayerRow.wins}</span>
+                      </div>
+                      <div className="rating-stat-card">
+                        <span className="rating-stat-label">{t.ratingLosses}</span>
+                        <span className="rating-stat-value">{selectedPlayerRow.losses}</span>
+                      </div>
+                      <div className="rating-stat-card">
+                        <span className="rating-stat-label">GF/GA</span>
+                        <span className="rating-stat-value">
+                          {selectedPlayerRow.goals_for}/{selectedPlayerRow.goals_against}
+                        </span>
+                      </div>
+                      <div className="rating-stat-card rating-stat-card-accent">
+                        <span className="rating-stat-label">{t.ratingWinRate}</span>
+                        <span className="rating-stat-value">
+                          {selectedPlayerRow.win_rate != null ? `${selectedPlayerRow.win_rate}%` : '—'}
+                        </span>
+                      </div>
+                    </div>
+
+                    <h4 className="rating-last-title">{t.profileLast10Matches}</h4>
+                    {recentMatchesLoading && <p className="panel-text small">…</p>}
+                    {!recentMatchesLoading && recentMatches.length === 0 && (
+                      <p className="panel-text small">{t.profileRecentMatchesEmpty}</p>
+                    )}
+                    {!recentMatchesLoading && recentMatches.length > 0 && (
+                      <div className="profile-recent-table-wrap rating-last-table">
+                        <table className="profile-recent-table">
+                          <thead>
+                            <tr>
+                              <th>{t.profilePlayerLabel}</th>
+                              <th>{t.profileTableScore}</th>
+                              <th>{t.profileTableResult}</th>
+                              <th>{t.profileTableElo}</th>
+                              <th>{t.profileTableDate}</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {recentMatches.slice(0, 5).map((match) => (
+                              <tr key={match.match_id} className={`profile-recent-match profile-recent-match--${match.result}`}>
+                                <td className="profile-recent-opponent">{match.opponent_name ?? '—'}</td>
+                                <td className="profile-recent-score">
+                                  {match.my_score}:{match.opp_score}
+                                </td>
+                                <td>
+                                  <span className={`profile-result-pill profile-result-pill--${match.result}`}>
+                                    {match.result === 'win' ? 'W' : match.result === 'loss' ? 'L' : 'D'}
+                                  </span>
+                                </td>
+                                <td className="profile-recent-elo-cell">
+                                  {typeof match.elo_delta === 'number' && match.elo_delta !== 0 ? (
+                                    <>
+                                      {match.elo_delta > 0 ? <IconEloUpSvg /> : <IconEloDownSvg />}
+                                      <span className="profile-recent-elo-delta">
+                                        {match.elo_delta > 0 ? `+${match.elo_delta}` : match.elo_delta}
+                                      </span>
+                                    </>
+                                  ) : (
+                                    '—'
+                                  )}
+                                </td>
+                                <td className="profile-recent-date">
+                                  {match.played_at
+                                    ? new Date(match.played_at).toLocaleDateString(undefined, {
+                                        day: '2-digit',
+                                        month: '2-digit',
+                                        year: 'numeric',
+                                      })
+                                    : '—'}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <p className="panel-text small rating-details-placeholder">
+                    {t.ratingEmptySelectedPlayer ?? 'Select a player on the left to see details.'}
+                  </p>
+                )}
+              </aside>
+            </div>
           </section>
         )}
 
