@@ -2232,6 +2232,7 @@ function App() {
                         <tr>
                           <th>{t.ratingRank}</th>
                           <th>{t.profilePlayerLabel}</th>
+                          <th>{t.profileCountry}</th>
                           <th>{t.ratingElo}</th>
                           <th>{t.ratingMatches}</th>
                           <th>{t.ratingWinRate}</th>
@@ -2262,6 +2263,9 @@ function App() {
                                 )}
                               </div>
                               <span className="rating-player-name">{r.display_name ?? '—'}</span>
+                            </td>
+                            <td className="rating-country-cell">
+                              {r.country_code ? (COUNTRIES.find((c) => c.code === r.country_code)?.flag ?? r.country_code) : '—'}
                             </td>
                             <td className="rating-elo-cell">{r.elo ?? '—'}</td>
                             <td>{r.matches_count}</td>

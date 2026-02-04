@@ -2642,14 +2642,12 @@
   color: var(--success);
 }
 
-.rating-table td:nth-child(3),
+.rating-country-cell {
+  white-space: nowrap;
+}
 .rating-table td:nth-child(4),
 .rating-table td:nth-child(5),
-.rating-table td:nth-child(6),
-.rating-table td:nth-child(7),
-.rating-table td:nth-child(8),
-.rating-table td:nth-child(9),
-.rating-table td:nth-child(10) {
+.rating-table td:nth-child(6) {
   text-align: right;
 }
 
@@ -2673,6 +2671,10 @@
 /* ========== Страница рейтинга в стиле референса ========== */
 .rating-panel {
   padding: 24px 20px 32px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 @media (min-width: 1024px) {
   .rating-panel {
@@ -2681,12 +2683,33 @@
 }
 .rating-layout {
   display: grid;
-  grid-template-columns: 2.1fr 1.2fr;
+  grid-template-columns: minmax(0, 2.1fr) minmax(0, 1.2fr);
   gap: 28px;
+  min-height: 0;
+  align-items: start;
 }
 @media (max-width: 1023px) {
   .rating-layout {
     grid-template-columns: 1fr;
+    grid-template-rows: auto auto;
+  }
+}
+.rating-leaderboard {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.rating-leaderboard .rating-table-wrap {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: min(70vh, 600px);
+  overflow: auto;
+  margin-top: 12px;
+}
+@media (max-width: 1023px) {
+  .rating-leaderboard .rating-table-wrap {
+    max-height: none;
   }
 }
 .rating-title {
@@ -2705,10 +2728,13 @@
   margin-bottom: 12px;
 }
 .rating-details {
+  min-width: 0;
   border-radius: var(--radius);
   border: 2px solid var(--border);
   background: var(--bg-elevated);
   padding: 20px 22px;
+  overflow-y: auto;
+  max-height: calc(100vh - 200px);
 }
 .app.strike-theme .rating-details {
   background: var(--strike-card);
