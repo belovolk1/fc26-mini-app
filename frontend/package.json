@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "simulate-tournament": "node scripts/simulate-tournament.mjs",
+    "simulate-tournament-users": "node scripts/simulate-tournament-users.mjs",
     "lint": "eslint .",
     "preview": "vite preview"
   },

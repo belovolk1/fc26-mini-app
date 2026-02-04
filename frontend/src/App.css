@@ -317,7 +317,7 @@
 
 .nav-drawer-user-elo {
   display: block;
-  font-size: 14px;
+    font-size: 14px;
   color: var(--text-muted);
   margin-top: 4px;
 }
@@ -650,7 +650,7 @@
     font-size: 24px;
   }
   .hero-stat-label {
-    font-size: 11px;
+  font-size: 11px;
   }
 }
 
@@ -1331,7 +1331,7 @@
   }
 
   .lobby-chat-send {
-    width: 100%;
+  width: 100%;
     min-width: 0;
     padding: 12px 14px;
   }
@@ -3133,7 +3133,7 @@
     border-radius: 50%;
     background: var(--bg-elevated);
     color: var(--text);
-    font-size: 28px;
+  font-size: 28px;
     line-height: 1;
     cursor: pointer;
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
@@ -3319,7 +3319,7 @@
 
 .list-title {
   display: block;
-  font-size: 18px;
+    font-size: 18px;
   font-weight: 700;
 }
 
@@ -3670,7 +3670,7 @@
 }
 .app.strike-theme .strike-btn-primary:hover {
   background: #ff7a1a;
-  transform: translateY(-2px);
+    transform: translateY(-2px);
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.25), 0 10px 32px var(--strike-orange-glow);
 }
 .strike-btn-secondary {
@@ -3878,7 +3878,7 @@
 .app.strike-theme .strike-card:hover {
   border-color: var(--strike-orange);
   box-shadow: var(--strike-shadow), 0 0 0 1px var(--strike-orange-soft);
-  transform: translateY(-2px);
+    transform: translateY(-2px);
 }
 .strike-card-primary {
   background: linear-gradient(145deg, rgba(244, 117, 33, 0.15), rgba(244, 117, 33, 0.06));

@@ -141,6 +141,7 @@ DECLARE
   v_scheduled_start timestamptz;
   v_scheduled_end timestamptz;
   v_i int;
+  v_target int;
 BEGIN
   SELECT * INTO v_tournament FROM tournaments WHERE id = p_tournament_id FOR UPDATE;
   IF NOT FOUND THEN
@@ -160,9 +161,15 @@ BEGIN
     RETURN jsonb_build_object('ok', false, 'error', 'Need at least 2 registered players');
   END IF;
 
-  v_rounds := ceil(ln(v_count) / ln(2))::int;
-  IF power(2, v_rounds) != v_count THEN
-    RETURN jsonb_build_object('ok', false, 'error', 'Player count must be 2, 4, 8, 16, 32 or 64');
+  -- Приводим число участников к степени двойки (2, 4, 8, 16, 32, 64, 128): лишние с наименьшим ELO удаляются
+  v_rounds := greatest(1, floor(ln(v_count) / ln(2))::int);
+  v_target := power(2, v_rounds);
+  IF v_count > v_target THEN
+    DELETE FROM tournament_registrations
+    WHERE tournament_id = p_tournament_id
+      AND player_id = ANY(v_players[v_target + 1 : v_count]);
+    v_players := v_players[1 : v_target];
+    v_count := v_target;
   END IF;
 
   UPDATE tournaments SET status = 'ongoing' WHERE id = p_tournament_id;

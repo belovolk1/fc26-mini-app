@@ -3734,8 +3734,9 @@ function App() {
                 {tournamentsList.map((tr) => {
                   const isRegistered = tournamentRegistrations.has(tr.id)
                   const now = new Date().getTime()
+                  const regStart = new Date(tr.registration_start).getTime()
                   const regEnd = new Date(tr.registration_end).getTime()
-                  const canRegister = tr.status === 'registration' && playerId && now < regEnd
+                  const canRegister = tr.status === 'registration' && playerId && now >= regStart && now < regEnd
                   return (
                     <div key={tr.id} className="strike-card tournament-card">
                       <div className="tournament-card-main">
