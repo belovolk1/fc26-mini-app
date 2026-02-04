@@ -1079,6 +1079,7 @@ function App() {
   const [selectedTournamentId, setSelectedTournamentId] = useState<string | null>(null)
   const [matchesByTournamentId, setMatchesByTournamentId] = useState<Record<string, TournamentMatchRow[]>>({})
   const [tournamentRegistrations, setTournamentRegistrations] = useState<Set<string>>(new Set())
+  const [myActiveTournamentRegistrations, setMyActiveTournamentRegistrations] = useState<{ id: string; name: string; status: string }[]>([])
   const [adminTourName, setAdminTourName] = useState('')
   const [adminTourRegStart, setAdminTourRegStart] = useState('')
   const [adminTourRegEnd, setAdminTourRegEnd] = useState('')
@@ -1769,13 +1770,15 @@ function App() {
       /* RPC может отсутствовать (404) */
     }
     const { data: list, error } = await supabase.rpc('get_tournaments_with_counts')
+    let currentList: TournamentRow[] = []
     if (!error && Array.isArray(list) && list.length > 0) {
-      setTournamentsList(list.map((r: any) => ({
+      currentList = list.map((r: any) => ({
         ...r,
         name: r.name ?? r.title ?? 'Tournament',
         prize_pool: Array.isArray(r.prize_pool) ? r.prize_pool : [],
         registrations_count: Number(r.registrations_count ?? 0),
-      })))
+      }))
+      setTournamentsList(currentList)
     } else {
       const { data: rows, error: tableError } = await supabase
         .from('tournaments')
@@ -1788,7 +1791,7 @@ function App() {
           acc[r.tournament_id] = (acc[r.tournament_id] ?? 0) + 1
           return acc
         }, {})
-        setTournamentsList(rows.map((r: any) => ({
+        currentList = rows.map((r: any) => ({
           id: r.id,
           name: r.name ?? r.title ?? 'Tournament',
           status: r.status ?? 'draft',
@@ -1800,14 +1803,20 @@ function App() {
           prize_pool: Array.isArray(r.prize_pool) ? r.prize_pool : [],
           created_at: r.created_at ?? new Date().toISOString(),
           registrations_count: countByTour[r.id] ?? 0,
-        })))
+        }))
+        setTournamentsList(currentList)
       } else {
         setTournamentsList([])
       }
     }
     if (playerId) {
       const { data: regs } = await supabase.from('tournament_registrations').select('tournament_id').eq('player_id', playerId)
-      setTournamentRegistrations(new Set((regs || []).map((r: { tournament_id: string }) => r.tournament_id)))
+      const regSet = new Set((regs || []).map((r: { tournament_id: string }) => r.tournament_id))
+      setTournamentRegistrations(regSet)
+      const active = currentList
+        .filter((t) => regSet.has(t.id) && ['registration', 'ongoing'].includes(t.status))
+        .map((t) => ({ id: t.id, name: t.name, status: t.status }))
+      setMyActiveTournamentRegistrations(active)
     }
     if (!silent) setTournamentsLoading(false)
   }
@@ -1815,6 +1824,29 @@ function App() {
   useEffect(() => {
     if (activeView === 'tournaments' || activeView === 'admin') fetchTournaments(true)
   }, [activeView, playerId])
+
+  // Участие в турнирах (registration/ongoing) — показывать вне страницы турниров
+  useEffect(() => {
+    if (!playerId) {
+      setMyActiveTournamentRegistrations([])
+      return
+    }
+    supabase
+      .from('tournament_registrations')
+      .select('tournament_id, tournaments(name, status)')
+      .eq('player_id', playerId)
+      .then(({ data }) => {
+        if (!data || !Array.isArray(data)) return
+        const list = data
+          .map((r: any) => {
+            const t = r.tournaments
+            if (!t || !['registration', 'ongoing'].includes(t.status)) return null
+            return { id: r.tournament_id, name: t.name ?? 'Турнир', status: t.status }
+          })
+          .filter(Boolean) as { id: string; name: string; status: string }[]
+        setMyActiveTournamentRegistrations(list)
+      })
+  }, [playerId])
 
   useEffect(() => {
     if (activeView !== 'tournaments') return
@@ -2140,6 +2172,12 @@ function App() {
     )
   }
 
+  const getTournamentPlayerName = (id: string | null) => {
+    if (!id) return '—'
+    const r = leaderboard.find((x) => x.player_id === id)
+    return r?.display_name || id.slice(0, 8)
+  }
+
   const renderTournamentCard = (tr: TournamentRow, _isFeatured: boolean) => {
     const isRegistered = tournamentRegistrations.has(tr.id)
     const now = new Date().getTime()
@@ -2156,11 +2194,17 @@ function App() {
             : tr.status
     const dateStr = (d: string) => new Date(d).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' })
     const text = `Рег.: до ${dateStr(tr.registration_end)} · Турнир: ${dateStr(tr.tournament_start)} – ${dateStr(tr.tournament_end)} · ${statusLabel} · Участников: ${tr.registrations_count}`
+    const matches = matchesByTournamentId[tr.id] ?? []
+    const finalMatch = tr.status === 'finished' ? matches.find((m) => m.round === 1 && m.match_index === 0) : null
+    const winnerName = finalMatch?.winner_id ? getTournamentPlayerName(finalMatch.winner_id) : null
     return (
       <div key={tr.id} className="strike-card tournament-card-strike">
         <div className="strike-card-icon" aria-hidden="true">🏆</div>
         <h3 className="strike-card-title">{tr.name}</h3>
         <p className="strike-card-text">{text}</p>
+        {tr.status === 'finished' && winnerName && (
+          <p className="strike-card-text tournament-card-winner panel-text small">Победитель: {winnerName}</p>
+        )}
         <div className="tournament-card-strike-actions">
           {canRegister && !isRegistered && (
             <button type="button" className="strike-btn strike-btn-primary" onClick={() => tournamentRegister(tr.id)}>
@@ -2357,10 +2401,10 @@ function App() {
     setNavOpen(false)
   }
 
-  const navLinks: { view: View; label: string }[] = [
+  const navLinks: { view: View; label: string; badge?: number }[] = [
     { view: 'home', label: t.navHome },
     { view: 'ladder', label: t.navPlay },
-    { view: 'tournaments', label: t.navTournaments },
+    { view: 'tournaments', label: t.navTournaments, badge: myActiveTournamentRegistrations.length || undefined },
     { view: 'matches', label: t.navMatches },
     { view: 'rating', label: t.navRating },
     { view: 'profile', label: t.navProfile },
@@ -2422,7 +2466,7 @@ function App() {
                     ))}
                   </div>
                   <div className="nav-drawer-links">
-              {navLinks.map(({ view, label }) => (
+              {navLinks.map(({ view, label, badge }) => (
                 <button
                   key={view}
                   type="button"
@@ -2430,6 +2474,7 @@ function App() {
                   onClick={() => closeNavAnd(view)}
                 >
                   {label}
+                  {badge != null && badge > 0 && <span className="nav-drawer-badge">{badge}</span>}
                 </button>
               ))}
                   </div>
@@ -2440,7 +2485,7 @@ function App() {
           </>
         ) : (
           <nav className="app-nav">
-            {navLinks.map(({ view, label }) => (
+            {navLinks.map(({ view, label, badge }) => (
               <button
                 key={view}
                 type="button"
@@ -2448,6 +2493,7 @@ function App() {
                 onClick={() => setActiveView(view)}
               >
                 {label}
+                {badge != null && badge > 0 && <span className="nav-badge">{badge}</span>}
               </button>
             ))}
           </nav>
@@ -2573,6 +2619,18 @@ function App() {
                 </svg>
               </div>
             </section>
+
+            {myActiveTournamentRegistrations.length > 0 && (
+              <section className="strike-tournament-banner">
+                <span className="strike-tournament-banner-text">
+                  Вы участвуете в турнире: {myActiveTournamentRegistrations[0].name}
+                  {myActiveTournamentRegistrations.length > 1 && ` (+${myActiveTournamentRegistrations.length - 1})`}
+                </span>
+                <button type="button" className="strike-btn strike-btn-secondary strike-tournament-banner-btn" onClick={() => setActiveView('tournaments')}>
+                  Перейти к турнирам
+                </button>
+              </section>
+            )}
 
             {/* Live strip */}
             <section className="strike-live-strip">

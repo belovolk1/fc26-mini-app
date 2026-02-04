@@ -3925,6 +3925,62 @@
   position: relative;
   z-index: 1;
 }
+
+/* Баннер «Вы участвуете в турнире» */
+.strike-tournament-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px var(--strike-space-lg, 20px);
+  margin: 0 0 var(--strike-space-lg, 24px);
+  background: var(--strike-card, var(--bg-card));
+  border: 1px solid var(--strike-border, var(--border));
+  border-radius: var(--radius-sm, 12px);
+}
+.strike-tournament-banner-text {
+  font-size: 15px;
+  color: var(--text);
+}
+.strike-tournament-banner-btn {
+  flex-shrink: 0;
+}
+
+/* Бейдж «в турнире» в навигации */
+.nav-badge,
+.nav-drawer-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  margin-left: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  color: #fff;
+  background: var(--accent);
+  border-radius: var(--radius-pill, 999px);
+}
+.nav-drawer-badge {
+  margin-left: 8px;
+}
+.app.strike-theme .nav-badge,
+.app.strike-theme .nav-drawer-badge {
+  background: var(--strike-orange);
+  color: #fff;
+}
+
+.tournament-card-winner {
+  margin: 4px 0 0;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+.app.strike-theme .tournament-card-winner {
+  color: var(--strike-muted);
+}
 .strike-live-arrow {
   background: none;
   border: none;
