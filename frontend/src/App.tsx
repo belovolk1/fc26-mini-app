@@ -1763,7 +1763,7 @@ function App() {
 
   const fetchTournaments = async () => {
     setTournamentsLoading(true)
-    await supabase.rpc('tournament_tick', { p_tournament_id: null })
+    await supabase.rpc('tournament_tick', { p_tournament_id: null }).catch(() => {})
     const { data: list, error } = await supabase.rpc('get_tournaments_with_counts')
     if (!error && Array.isArray(list) && list.length > 0) {
       setTournamentsList(list.map((r: any) => ({
@@ -1916,10 +1916,14 @@ function App() {
   const deleteTournament = async (tournamentId: string) => {
     if (!isAdminUser) return
     if (!window.confirm('Удалить турнир? Регистрации и матчи будут удалены.')) return
+    setAdminTourResult(null)
     const { error } = await supabase.from('tournaments').delete().eq('id', tournamentId)
-    if (!error) {
+    if (error) {
+      setAdminTourResult(`Ошибка удаления: ${error.message}. Выполни в Supabase SQL: CREATE POLICY "tournaments_delete" ON tournaments FOR DELETE TO anon USING (true);`)
+    } else {
       if (selectedTournamentId === tournamentId) setSelectedTournamentId(null)
       fetchTournaments()
+      setAdminTourResult('Турнир удалён.')
     }
   }
 
