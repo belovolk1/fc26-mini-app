@@ -21,6 +21,10 @@ const messages: Record<
     profilePlayerLabel: string
     profileEloLabel: string
     profileMatchesLabel: string
+    profileTableScore: string
+    profileTableResult: string
+    profileTableElo: string
+    profileTableDate: string
     profileCalibrationLabel: string
     profileLoading: string
     profileTelegramTitle: string
@@ -176,6 +180,10 @@ const messages: Record<
     profilePlayerLabel: 'Player',
     profileEloLabel: 'Global ELO rating',
     profileMatchesLabel: 'Matches played',
+    profileTableScore: 'Score',
+    profileTableResult: 'Result',
+    profileTableElo: 'ELO',
+    profileTableDate: 'Date',
     profileCalibrationLabel: 'Calibration: first 10 matches',
     profileLoading: 'Loading profile…',
     profileTelegramTitle: 'Telegram',
@@ -335,6 +343,10 @@ const messages: Record<
     profilePlayerLabel: 'Jucător',
     profileEloLabel: 'Rating ELO global',
     profileMatchesLabel: 'Meciuri jucate',
+    profileTableScore: 'Scor',
+    profileTableResult: 'Rezultat',
+    profileTableElo: 'ELO',
+    profileTableDate: 'Data',
     profileCalibrationLabel: 'Calibrare: primele 10 meciuri',
     profileLoading: 'Se încarcă profilul…',
     profileTelegramTitle: 'Telegram',
@@ -494,6 +506,10 @@ const messages: Record<
     profilePlayerLabel: 'Игрок',
     profileEloLabel: 'Общий рейтинг ELO',
     profileMatchesLabel: 'Матчей сыграно',
+    profileTableScore: 'Счёт',
+    profileTableResult: 'Результат',
+    profileTableElo: 'ELO',
+    profileTableDate: 'Дата',
     profileCalibrationLabel: 'Калибровка рейтинга: первые 10 матчей',
     profileLoading: 'Загружаем профиль…',
     profileTelegramTitle: 'Telegram',
@@ -1080,8 +1096,10 @@ function App() {
   const displayName = useMemo(() => {
     if (!user) return t.guestName
     if (myDisplayName.trim()) return myDisplayName.trim()
+    const realName = [user.first_name, user.last_name].filter(Boolean).join(' ')
+    if (realName) return realName
     if (user.username) return `@${user.username}`
-    return [user.first_name, user.last_name].filter(Boolean).join(' ') || t.guestName
+    return t.guestName
   }, [t.guestName, user, myDisplayName])
 
   const refetchMatchesCount = async () => {
@@ -1701,7 +1719,7 @@ function App() {
   ]
 
   return (
-    <div className={`app ${useMobileLayout ? 'app--mobile' : 'app--desktop'} ${activeView === 'home' || activeView === 'profile' ? 'strike-theme' : ''}`}>
+    <div className={`app ${useMobileLayout ? 'app--mobile' : 'app--desktop'} strike-theme`}>
       <div className="site-header strike-header">
         <header className="app-header">
           <div className="app-header-main">
@@ -1803,8 +1821,22 @@ function App() {
                 <span className="strike-header-elo-value">{elo ?? '—'} ELO</span>
               </div>
             </div>
-            <button type="button" className="strike-header-cta strike-btn strike-btn-primary" onClick={handlePlayNowClick}>
-              {t.homePlayNow}
+            <button
+              type="button"
+              className="strike-header-cta strike-btn strike-btn-primary"
+              onClick={
+                searchStatus === 'searching'
+                  ? cancelSearch
+                  : () => {
+                      void handlePlayNowClick()
+                    }
+              }
+            >
+              {searchStatus === 'idle'
+                ? t.homePlayNow
+                : searchStatus === 'searching'
+                  ? t.ladderSearching
+                  : t.ladderLobbyTitle}
             </button>
           </div>
           <div className="lang-switch">
@@ -2242,7 +2274,7 @@ function App() {
                         <span className="profile-stat-label">{t.ratingWinRate}</span>
                       </div>
                     </div>
-                    <h4 className="profile-stats-heading">{t.profileLast10Matches}</h4>
+                          <h4 className="profile-stats-heading">{t.profileLast10Matches}</h4>
                     {recentMatchesLoading && <p className="panel-text small">…</p>}
                     {!recentMatchesLoading && recentMatches.length === 0 && (
                       <p className="panel-text small">{t.profileRecentMatchesEmpty}</p>
@@ -2475,10 +2507,10 @@ function App() {
                                         <thead>
                                           <tr>
                                             <th>{t.profilePlayerLabel}</th>
-                                            <th>Score</th>
-                                            <th>Result</th>
-                                            <th>ELO</th>
-                                            <th>Date</th>
+                                            <th>{t.profileTableScore}</th>
+                                            <th>{t.profileTableResult}</th>
+                                            <th>{t.profileTableElo}</th>
+                                            <th>{t.profileTableDate}</th>
                                           </tr>
                                         </thead>
                                         <tbody>
