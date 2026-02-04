@@ -14,6 +14,11 @@ BEGIN
   END IF;
 END $$;
 
+-- 1b) Убрать CHECK на type, чтобы допускалось значение DEFAULT 'single_elimination'; при необходимости задать свой список значений
+ALTER TABLE public.tournaments DROP CONSTRAINT IF EXISTS tournaments_type_check;
+ALTER TABLE public.tournaments ADD CONSTRAINT tournaments_type_check
+  CHECK (type IN ('single_elimination', 'double_elimination', 'round_robin', 'draft', 'cup', 'league'));
+
 -- 2) Для ВСЕХ колонок tournaments с NOT NULL без DEFAULT — выставить DEFAULT (разом убирает все ошибки "null value in column X")
 DO $$
 DECLARE
