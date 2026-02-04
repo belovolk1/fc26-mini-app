@@ -1881,6 +1881,41 @@
   text-align: center;
 }
 
+.bracket-match-score-entry {
+  margin-top: 12px;
+  padding: 12px;
+  background: var(--strike-bg-secondary, rgba(0, 0, 0, 0.04));
+  border-radius: 8px;
+  width: 100%;
+}
+.bracket-match-score-entry-title {
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+.bracket-match-score-entry-hint {
+  font-size: 0.85rem;
+  color: var(--strike-muted, #666);
+  margin: 0 0 10px 0;
+}
+.bracket-match-score-entry-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.bracket-score-label {
+  font-size: 0.8rem;
+  color: var(--strike-muted, #666);
+}
+.bracket-score-input {
+  width: 52px;
+  text-align: center;
+}
+.bracket-score-sep {
+  font-weight: 600;
+  margin: 0 2px;
+}
+
 .strike-news-loading {
   grid-column: 1 / -1;
   margin: 12px 0;

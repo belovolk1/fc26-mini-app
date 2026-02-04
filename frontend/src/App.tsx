@@ -1843,6 +1843,34 @@ function App() {
     load()
   }, [selectedTournamentId])
 
+  // Realtime: всё содержимое страницы турниров обновляется в реальном времени (как рейтинг в шапке)
+  useEffect(() => {
+    if (activeView !== 'tournaments' && activeView !== 'admin') return
+    const refreshTournamentsAndMatches = () => {
+      fetchTournaments()
+      if (selectedTournamentId) {
+        supabase
+          .from('tournament_matches')
+          .select('*')
+          .eq('tournament_id', selectedTournamentId)
+          .order('round', { ascending: false })
+          .order('match_index')
+          .then(({ data }) => {
+            if (data) setTournamentMatches(data as TournamentMatchRow[])
+          })
+      }
+    }
+    const ch = supabase
+      .channel('tournaments-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'tournaments' }, () => refreshTournamentsAndMatches())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'tournament_registrations' }, () => refreshTournamentsAndMatches())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'tournament_matches' }, () => refreshTournamentsAndMatches())
+      .subscribe()
+    return () => {
+      supabase.removeChannel(ch)
+    }
+  }, [activeView, selectedTournamentId])
+
   const createTournament = async () => {
     if (!isAdminUser) return
     const name = adminTourName.trim()
@@ -2068,13 +2096,23 @@ function App() {
                           </button>
                         )}
                         {(m.status === 'both_ready' || m.status === 'score_submitted') && (
-                          <>
-                            <input type="number" min={0} className="form-input" style={{ width: 48 }} value={inp.a} onChange={(e) => setScoreInputs((prev) => ({ ...prev, [m.id]: { ...prev[m.id], a: e.target.value } }))} />
-                            <span>–</span>
-                            <input type="number" min={0} className="form-input" style={{ width: 48 }} value={inp.b} onChange={(e) => setScoreInputs((prev) => ({ ...prev, [m.id]: { ...prev[m.id], b: e.target.value } }))} />
-                            {canSubmit && <button type="button" className="strike-btn strike-btn-secondary" disabled={savingMatchId === m.id} onClick={() => submitScore(m)}>Отправить счёт</button>}
-                            {canConfirm && <button type="button" className="strike-btn strike-btn-primary" disabled={savingMatchId === m.id} onClick={() => confirmScore(m)}>Подтвердить</button>}
-                          </>
+                          <div className="bracket-match-score-entry">
+                            <div className="bracket-match-score-entry-title">Результат матча</div>
+                            <p className="bracket-match-score-entry-hint">
+                              {m.status === 'score_submitted' && canConfirm
+                                ? 'Соперник ввёл счёт. Подтвердите результат, если он верный.'
+                                : 'Введите счёт и нажмите «Отправить счёт». Соперник должен подтвердить результат.'}
+                            </p>
+                            <div className="bracket-match-score-entry-row">
+                              <label className="bracket-score-label">Ваши голы</label>
+                              <input type="number" min={0} className="form-input bracket-score-input" value={isPlayerA ? inp.a : inp.b} onChange={(e) => setScoreInputs((prev) => ({ ...prev, [m.id]: { ...prev[m.id], a: isPlayerA ? e.target.value : prev[m.id]?.a ?? '', b: isPlayerB ? e.target.value : prev[m.id]?.b ?? '' } }))} />
+                              <span className="bracket-score-sep">–</span>
+                              <label className="bracket-score-label">Голы соперника</label>
+                              <input type="number" min={0} className="form-input bracket-score-input" value={isPlayerA ? inp.b : inp.a} onChange={(e) => setScoreInputs((prev) => ({ ...prev, [m.id]: { ...prev[m.id], a: isPlayerB ? e.target.value : prev[m.id]?.a ?? '', b: isPlayerA ? e.target.value : prev[m.id]?.b ?? '' } }))} />
+                              {canSubmit && <button type="button" className="strike-btn strike-btn-secondary" disabled={savingMatchId === m.id} onClick={() => submitScore(m)}>Отправить счёт</button>}
+                              {canConfirm && <button type="button" className="strike-btn strike-btn-primary" disabled={savingMatchId === m.id} onClick={() => confirmScore(m)}>Подтвердить результат</button>}
+                            </div>
+                          </div>
                         )}
                       </div>
                     )}
