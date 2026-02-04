@@ -14,12 +14,41 @@ BEGIN
   END IF;
 END $$;
 
--- 2) Для колонки type: если есть — задать DEFAULT, иначе при вставке без type будет null и ошибка
+-- 2) Для ВСЕХ колонок tournaments с NOT NULL без DEFAULT — выставить DEFAULT (разом убирает все ошибки "null value in column X")
 DO $$
+DECLARE
+  r record;
+  def text;
 BEGIN
-  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'tournaments' AND column_name = 'type') THEN
-    ALTER TABLE public.tournaments ALTER COLUMN type SET DEFAULT 'single_elimination';
-  END IF;
+  FOR r IN
+    SELECT column_name, data_type
+    FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'tournaments'
+      AND is_nullable = 'NO'
+      AND (column_default IS NULL OR trim(column_default) = '')
+  LOOP
+    IF r.data_type IN ('timestamp with time zone', 'timestamp without time zone', 'date') THEN
+      def := 'now()';
+    ELSIF r.data_type IN ('text', 'character varying', 'character') THEN
+      CASE r.column_name
+        WHEN 'status' THEN def := '''draft''';
+        WHEN 'type' THEN def := '''single_elimination''';
+        WHEN 'name' THEN def := '''Tournament''';
+        ELSE def := ''''';
+      END CASE;
+    ELSIF r.data_type IN ('integer', 'bigint', 'smallint') THEN
+      IF r.column_name = 'round_duration_minutes' THEN def := '30'; ELSE def := '0'; END IF;
+    ELSIF r.data_type = 'jsonb' THEN
+      def := '''[]''::jsonb';
+    ELSIF r.data_type = 'boolean' THEN
+      def := 'false';
+    ELSE
+      def := NULL;
+    END IF;
+    IF def IS NOT NULL THEN
+      EXECUTE 'ALTER TABLE public.tournaments ALTER COLUMN ' || quote_ident(r.column_name) || ' SET DEFAULT ' || def;
+    END IF;
+  END LOOP;
 END $$;
 
 -- 3) Добавить все колонки по supabase-tournaments.sql (если чего-то нет)
@@ -33,7 +62,9 @@ ALTER TABLE public.tournaments
   ADD COLUMN IF NOT EXISTS tournament_end timestamptz NOT NULL DEFAULT now(),
   ADD COLUMN IF NOT EXISTS round_duration_minutes int NOT NULL DEFAULT 30,
   ADD COLUMN IF NOT EXISTS prize_pool jsonb NOT NULL DEFAULT '[]'::jsonb,
-  ADD COLUMN IF NOT EXISTS created_at timestamptz NOT NULL DEFAULT now();
+  ADD COLUMN IF NOT EXISTS created_at timestamptz NOT NULL DEFAULT now(),
+  ADD COLUMN IF NOT EXISTS starts_at timestamptz NOT NULL DEFAULT now(),
+  ADD COLUMN IF NOT EXISTS ends_at timestamptz NOT NULL DEFAULT now();
 
 COMMENT ON COLUMN public.tournaments.name IS 'Tournament display name';
 COMMENT ON COLUMN public.tournaments.prize_pool IS 'Array of {place: 1, elo_bonus: 50}. Place 1 = winner, 2 = finalist, etc.';
