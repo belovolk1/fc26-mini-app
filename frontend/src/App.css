@@ -1778,12 +1778,6 @@
   overflow-x: auto;
   margin-top: 12px;
 }
-@media (min-width: 1024px) {
-  .profile-recent-table-wrap {
-    max-height: 340px;
-    overflow-y: auto;
-  }
-}
 .profile-recent-table {
   width: 100%;
   border-collapse: collapse;
@@ -1794,6 +1788,22 @@
   padding: 12px 14px;
   text-align: left;
   border-bottom: 1px solid var(--border);
+}
+
+/* Внутри таблицы строки не должны быть grid-карточками — выравниваем по колонкам */
+.profile-recent-table .profile-recent-match {
+  display: table-row;
+  grid-template-columns: none;
+  gap: 0;
+  padding: 0;
+  margin-bottom: 0;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  font-size: inherit;
+}
+.profile-recent-table .profile-recent-date {
+  grid-column: auto;
 }
 
 @media (max-width: 768px) {
