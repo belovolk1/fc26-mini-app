@@ -81,7 +81,6 @@ const messages: Record<
     doubleLeagueTitle: string
     doubleLeagueSubtitle: string
     tournamentsHint: string
-    tournamentsFooter: string
     navHome: string
     navPlay: string
     navTournaments: string
@@ -249,7 +248,6 @@ const messages: Record<
     doubleLeagueSubtitle: 'format: double round robin',
     tournamentsHint:
       'Tournament data will later be stored in Supabase tables and managed via admin panel.',
-    tournamentsFooter: 'Stay tuned for more events. Join our community on Telegram.',
     navHome: 'Home',
     navPlay: 'Play',
     navTournaments: 'Tournaments',
@@ -416,7 +414,6 @@ const messages: Record<
     doubleLeagueSubtitle: 'format: double round robin',
     tournamentsHint:
       'Datele turneelor vor fi stocate în tabele Supabase și administrate din panoul de admin.',
-    tournamentsFooter: 'Urmează evenimente noi. Alătură-te comunității pe Telegram.',
     navHome: 'Acasă',
     navPlay: 'Joacă',
     navTournaments: 'Turnee',
@@ -583,7 +580,6 @@ const messages: Record<
     doubleLeagueSubtitle: 'формат: double round robin',
     tournamentsHint:
       'Турнирные данные позже будем хранить в Supabase и управлять через админку.',
-    tournamentsFooter: 'Следите за новыми событиями. Присоединяйтесь к сообществу в Telegram.',
     navHome: 'Главная',
     navPlay: 'Игра',
     navTournaments: 'Турниры',
@@ -1081,7 +1077,7 @@ function App() {
   const [tournamentsList, setTournamentsList] = useState<TournamentRow[]>([])
   const [tournamentsLoading, setTournamentsLoading] = useState(false)
   const [selectedTournamentId, setSelectedTournamentId] = useState<string | null>(null)
-  const [tournamentMatches, setTournamentMatches] = useState<TournamentMatchRow[]>([])
+  const [matchesByTournamentId, setMatchesByTournamentId] = useState<Record<string, TournamentMatchRow[]>>({})
   const [tournamentRegistrations, setTournamentRegistrations] = useState<Set<string>>(new Set())
   const [adminTourName, setAdminTourName] = useState('')
   const [adminTourRegStart, setAdminTourRegStart] = useState('')
@@ -1817,13 +1813,8 @@ function App() {
   }
 
   useEffect(() => {
-    if (activeView === 'tournaments' || activeView === 'admin') fetchTournaments()
+    if (activeView === 'tournaments' || activeView === 'admin') fetchTournaments(true)
   }, [activeView, playerId])
-
-  // Подгрузить турниры при входе (тихо), чтобы в шапке показывать «Участвует в турнире»
-  useEffect(() => {
-    if (playerId) fetchTournaments(true)
-  }, [playerId])
 
   useEffect(() => {
     if (activeView !== 'tournaments') return
@@ -1832,7 +1823,7 @@ function App() {
       fetchTournaments(true)
       if (selectedTournamentId) {
         const { data } = await supabase.from('tournament_matches').select('*').eq('tournament_id', selectedTournamentId).order('round', { ascending: false }).order('match_index')
-        if (data) setTournamentMatches(data as TournamentMatchRow[])
+        if (data) setMatchesByTournamentId((prev) => ({ ...prev, [selectedTournamentId]: data as TournamentMatchRow[] }))
       }
     }
     runTick()
@@ -1840,34 +1831,56 @@ function App() {
     return () => clearInterval(interval)
   }, [activeView, selectedTournamentId])
 
+  // Предзагрузка матчей для всех турниров ongoing/finished — при открытии сетки данные уже есть
   useEffect(() => {
-    if (!selectedTournamentId) {
-      setTournamentMatches([])
-      return
-    }
-    const load = async () => {
-      const { data } = await supabase.from('tournament_matches').select('*').eq('tournament_id', selectedTournamentId).order('round', { ascending: false }).order('match_index')
-      setTournamentMatches((data || []) as TournamentMatchRow[])
-    }
-    load()
-  }, [selectedTournamentId])
+    if (activeView !== 'tournaments' && activeView !== 'admin') return
+    const need = tournamentsList.filter((t) => (t.status === 'ongoing' || t.status === 'finished'))
+    if (need.length === 0) return
+    need.forEach((t) => {
+      supabase
+        .from('tournament_matches')
+        .select('*')
+        .eq('tournament_id', t.id)
+        .order('round', { ascending: false })
+        .order('match_index')
+        .then(({ data }) => {
+          setMatchesByTournamentId((prev) => ({ ...prev, [t.id]: (data || []) as TournamentMatchRow[] }))
+        })
+    })
+  }, [activeView, tournamentsList])
 
-  // Realtime: обновление без мигания (silent = не показывать загрузку, только подменить данные)
+  // Если открыли сетку турнира, для которого ещё нет матчей в кэше — подгрузить тихо
+  useEffect(() => {
+    if (!selectedTournamentId) return
+    if (matchesByTournamentId[selectedTournamentId] !== undefined) return
+    supabase
+      .from('tournament_matches')
+      .select('*')
+      .eq('tournament_id', selectedTournamentId)
+      .order('round', { ascending: false })
+      .order('match_index')
+      .then(({ data }) => {
+        setMatchesByTournamentId((prev) => ({ ...prev, [selectedTournamentId]: (data || []) as TournamentMatchRow[] }))
+      })
+  }, [selectedTournamentId, matchesByTournamentId])
+
+  // Realtime: обновление без мерцания (silent)
   useEffect(() => {
     if (activeView !== 'tournaments' && activeView !== 'admin') return
     const refreshTournamentsAndMatches = () => {
       fetchTournaments(true)
-      if (selectedTournamentId) {
+      tournamentsList.forEach((t) => {
+        if (t.status !== 'ongoing' && t.status !== 'finished') return
         supabase
           .from('tournament_matches')
           .select('*')
-          .eq('tournament_id', selectedTournamentId)
+          .eq('tournament_id', t.id)
           .order('round', { ascending: false })
           .order('match_index')
           .then(({ data }) => {
-            if (data) setTournamentMatches(data as TournamentMatchRow[])
+            if (data) setMatchesByTournamentId((prev) => ({ ...prev, [t.id]: data as TournamentMatchRow[] }))
           })
-      }
+      })
     }
     const ch = supabase
       .channel('tournaments-realtime')
@@ -1878,7 +1891,7 @@ function App() {
     return () => {
       supabase.removeChannel(ch)
     }
-  }, [activeView, selectedTournamentId])
+  }, [activeView, tournamentsList])
 
   const createTournament = async () => {
     if (!isAdminUser) return
@@ -1937,7 +1950,7 @@ function App() {
     const { error } = await supabase.from('tournament_registrations').insert({ tournament_id: tournamentId, player_id: playerId })
     if (!error) {
       setTournamentRegistrations((prev) => new Set(prev).add(tournamentId))
-      fetchTournaments()
+      fetchTournaments(true)
     }
   }
 
@@ -1950,7 +1963,7 @@ function App() {
         next.delete(tournamentId)
         return next
       })
-      fetchTournaments()
+      fetchTournaments(true)
     }
   }
 
@@ -1970,22 +1983,18 @@ function App() {
 
   const tournamentTick = async (tournamentId: string) => {
     await supabase.rpc('tournament_tick', { p_tournament_id: tournamentId })
-    fetchTournaments()
-    if (selectedTournamentId === tournamentId) {
-      const { data } = await supabase.from('tournament_matches').select('*').eq('tournament_id', tournamentId).order('round', { ascending: false }).order('match_index')
-      setTournamentMatches((data || []) as TournamentMatchRow[])
-    }
+    fetchTournaments(true)
+    const { data } = await supabase.from('tournament_matches').select('*').eq('tournament_id', tournamentId).order('round', { ascending: false }).order('match_index')
+    if (data) setMatchesByTournamentId((prev) => ({ ...prev, [tournamentId]: data as TournamentMatchRow[] }))
   }
 
   const tournamentStartBracket = async (tournamentId: string) => {
     const { data } = await supabase.rpc('tournament_start_bracket', { p_tournament_id: tournamentId })
     const res = data as { ok?: boolean; error?: string }
     if (res?.ok) {
-      fetchTournaments()
-      if (selectedTournamentId === tournamentId) {
-        const { data: matches } = await supabase.from('tournament_matches').select('*').eq('tournament_id', tournamentId).order('round', { ascending: false }).order('match_index')
-        setTournamentMatches((matches || []) as TournamentMatchRow[])
-      }
+      fetchTournaments(true)
+      const { data: matches } = await supabase.from('tournament_matches').select('*').eq('tournament_id', tournamentId).order('round', { ascending: false }).order('match_index')
+      if (matches) setMatchesByTournamentId((prev) => ({ ...prev, [tournamentId]: matches as TournamentMatchRow[] }))
     }
     return res
   }
@@ -1996,8 +2005,9 @@ function App() {
     playerId: string | null
     leaderboard: LeaderboardRow[]
     onRefresh: () => void | Promise<void>
+    onMatchUpdated?: (updated: TournamentMatchRow) => void
   }) {
-    const { matches, playerId: pid, leaderboard, onRefresh } = props
+    const { matches, playerId: pid, leaderboard, onRefresh, onMatchUpdated } = props
     const [matchMessage, setMatchMessage] = useState<string | null>(null)
     const [savingMatchId, setSavingMatchId] = useState<string | null>(null)
     const [scoreInputs, setScoreInputs] = useState<Record<string, { a: string; b: string }>>({})
@@ -2025,13 +2035,11 @@ function App() {
       setSavingMatchId(m.id)
       setMatchMessage(null)
       const isA = m.player_a_id === pid
-      const { error } = await supabase
-        .from('tournament_matches')
-        .update(isA ? { player_a_ready_at: new Date().toISOString(), status: m.player_b_ready_at ? 'both_ready' : 'ready_a' } : { player_b_ready_at: new Date().toISOString(), status: m.player_a_ready_at ? 'both_ready' : 'ready_b' })
-        .eq('id', m.id)
+      const updates = isA ? { player_a_ready_at: new Date().toISOString(), status: m.player_b_ready_at ? 'both_ready' : 'ready_a' } : { player_b_ready_at: new Date().toISOString(), status: m.player_a_ready_at ? 'both_ready' : 'ready_b' }
+      const { data, error } = await supabase.from('tournament_matches').update(updates).eq('id', m.id).select().single()
       setSavingMatchId(null)
       if (error) setMatchMessage(error.message)
-      else void onRefresh()
+      else if (data && onMatchUpdated) onMatchUpdated(data as TournamentMatchRow)
     }
 
     const submitScore = async (m: TournamentMatchRow) => {
@@ -2046,13 +2054,10 @@ function App() {
       setSavingMatchId(m.id)
       setMatchMessage(null)
       const isA = m.player_a_id === pid
-      const { error } = await supabase
-        .from('tournament_matches')
-        .update({ score_a: isA ? a : b, score_b: isA ? b : a, score_submitted_by: pid, status: 'score_submitted' })
-        .eq('id', m.id)
+      const { data, error } = await supabase.from('tournament_matches').update({ score_a: isA ? a : b, score_b: isA ? b : a, score_submitted_by: pid, status: 'score_submitted' }).eq('id', m.id).select().single()
       setSavingMatchId(null)
       if (error) setMatchMessage(error.message)
-      else void onRefresh()
+      else if (data && onMatchUpdated) onMatchUpdated(data as TournamentMatchRow)
     }
 
     const confirmScore = async (m: TournamentMatchRow) => {
@@ -2062,10 +2067,10 @@ function App() {
       const winner = sa > sb ? m.player_a_id : sb > sa ? m.player_b_id : null
       setSavingMatchId(m.id)
       setMatchMessage(null)
-      const { error } = await supabase.from('tournament_matches').update({ winner_id: winner, status: 'confirmed' }).eq('id', m.id)
+      const { data, error } = await supabase.from('tournament_matches').update({ winner_id: winner, status: 'confirmed' }).eq('id', m.id).select().single()
       setSavingMatchId(null)
       if (error) setMatchMessage(error.message)
-      else void onRefresh()
+      else if (data && onMatchUpdated) onMatchUpdated(data as TournamentMatchRow)
     }
 
     return (
@@ -2101,39 +2106,25 @@ function App() {
                       <div className="bracket-match-actions">
                         {needsReady && (
                           <button type="button" className="strike-btn strike-btn-primary" disabled={savingMatchId === m.id} onClick={() => markReady(m)}>
-                            {savingMatchId === m.id ? '…' : 'Готов играть'}
+                            Готов играть
                           </button>
                         )}
-                        {m.status === 'both_ready' && canSubmit && (
+                        {(m.status === 'both_ready' || m.status === 'score_submitted') && (
                           <div className="bracket-match-score-entry">
                             <div className="bracket-match-score-entry-title">Результат матча</div>
-                            <p className="bracket-match-score-entry-hint">Введите счёт и нажмите «Отправить счёт». Соперник должен подтвердить результат.</p>
+                            <p className="bracket-match-score-entry-hint">
+                              {m.status === 'score_submitted' && canConfirm
+                                ? 'Соперник ввёл счёт. Подтвердите результат, если он верный.'
+                                : 'Введите счёт и нажмите «Отправить счёт». Соперник должен подтвердить результат.'}
+                            </p>
                             <div className="bracket-match-score-entry-row">
                               <label className="bracket-score-label">Ваши голы</label>
                               <input type="number" min={0} className="form-input bracket-score-input" value={isPlayerA ? inp.a : inp.b} onChange={(e) => setScoreInputs((prev) => ({ ...prev, [m.id]: { ...prev[m.id], a: isPlayerA ? e.target.value : prev[m.id]?.a ?? '', b: isPlayerB ? e.target.value : prev[m.id]?.b ?? '' } }))} />
                               <span className="bracket-score-sep">–</span>
                               <label className="bracket-score-label">Голы соперника</label>
                               <input type="number" min={0} className="form-input bracket-score-input" value={isPlayerA ? inp.b : inp.a} onChange={(e) => setScoreInputs((prev) => ({ ...prev, [m.id]: { ...prev[m.id], a: isPlayerB ? e.target.value : prev[m.id]?.a ?? '', b: isPlayerA ? e.target.value : prev[m.id]?.b ?? '' } }))} />
-                              <button type="button" className="strike-btn strike-btn-secondary" disabled={savingMatchId === m.id} onClick={() => submitScore(m)}>Отправить счёт</button>
-                            </div>
-                          </div>
-                        )}
-                        {m.status === 'score_submitted' && m.score_submitted_by === pid && (
-                          <div className="bracket-match-score-entry">
-                            <div className="bracket-match-score-entry-title">Результат матча</div>
-                            <p className="bracket-match-score-entry-hint">
-                              Вы ввели счёт: {isPlayerA ? (m.score_a ?? 0) : (m.score_b ?? 0)} – {isPlayerA ? (m.score_b ?? 0) : (m.score_a ?? 0)} (ваши голы – голы соперника). Ожидайте подтверждения соперника.
-                            </p>
-                          </div>
-                        )}
-                        {canConfirm && (
-                          <div className="bracket-match-score-entry">
-                            <div className="bracket-match-score-entry-title">Результат матча</div>
-                            <p className="bracket-match-score-entry-hint">
-                              Соперник ввёл счёт: {isPlayerA ? (m.score_a ?? 0) : (m.score_b ?? 0)} – {isPlayerA ? (m.score_b ?? 0) : (m.score_a ?? 0)} (ваши голы – голы соперника). Подтвердите результат, если он верный.
-                            </p>
-                            <div className="bracket-match-score-entry-row">
-                              <button type="button" className="strike-btn strike-btn-primary" disabled={savingMatchId === m.id} onClick={() => confirmScore(m)}>Подтвердить результат</button>
+                              {canSubmit && <button type="button" className="strike-btn strike-btn-secondary" disabled={savingMatchId === m.id} onClick={() => submitScore(m)}>Отправить счёт</button>}
+                              {canConfirm && <button type="button" className="strike-btn strike-btn-primary" disabled={savingMatchId === m.id} onClick={() => confirmScore(m)}>Подтвердить результат</button>}
                             </div>
                           </div>
                         )}
@@ -2145,6 +2136,77 @@ function App() {
             </div>
           </div>
         ))}
+      </div>
+    )
+  }
+
+  const renderTournamentCard = (tr: TournamentRow, _isFeatured: boolean) => {
+    const isRegistered = tournamentRegistrations.has(tr.id)
+    const now = new Date().getTime()
+    const regStart = new Date(tr.registration_start).getTime()
+    const regEnd = new Date(tr.registration_end).getTime()
+    const canRegister = tr.status === 'registration' && playerId && now >= regStart && now < regEnd
+    const statusLabel =
+      tr.status === 'registration'
+        ? 'Регистрация открыта'
+        : tr.status === 'ongoing'
+          ? 'Идёт турнир'
+          : tr.status === 'finished'
+            ? 'Завершён'
+            : tr.status
+    const dateStr = (d: string) => new Date(d).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' })
+    const text = `Рег.: до ${dateStr(tr.registration_end)} · Турнир: ${dateStr(tr.tournament_start)} – ${dateStr(tr.tournament_end)} · ${statusLabel} · Участников: ${tr.registrations_count}`
+    return (
+      <div key={tr.id} className="strike-card tournament-card-strike">
+        <div className="strike-card-icon" aria-hidden="true">🏆</div>
+        <h3 className="strike-card-title">{tr.name}</h3>
+        <p className="strike-card-text">{text}</p>
+        <div className="tournament-card-strike-actions">
+          {canRegister && !isRegistered && (
+            <button type="button" className="strike-btn strike-btn-primary" onClick={() => tournamentRegister(tr.id)}>
+              Регистрация
+            </button>
+          )}
+          {canRegister && isRegistered && (
+            <button type="button" className="strike-btn strike-btn-secondary" onClick={() => tournamentUnregister(tr.id)}>
+              Отменить регистрацию
+            </button>
+          )}
+          {(tr.status === 'ongoing' || tr.status === 'finished') && (
+            <button
+              type="button"
+              className="strike-btn strike-btn-secondary"
+              onClick={() => {
+                if (selectedTournamentId === tr.id) {
+                  setSelectedTournamentId(null)
+                } else {
+                  setSelectedTournamentId(tr.id)
+                }
+              }}
+            >
+              {selectedTournamentId === tr.id ? 'Скрыть сетку' : 'Сетка'}
+            </button>
+          )}
+        </div>
+        {selectedTournamentId === tr.id && (tr.status === 'ongoing' || tr.status === 'finished') && (
+          <TournamentBracketBlock
+            tournament={tr}
+            matches={matchesByTournamentId[tr.id] ?? []}
+            playerId={playerId}
+            leaderboard={leaderboard}
+            onRefresh={async () => {
+              fetchTournaments(true)
+              const { data } = await supabase.from('tournament_matches').select('*').eq('tournament_id', tr.id).order('round', { ascending: false }).order('match_index')
+              if (data) setMatchesByTournamentId((prev) => ({ ...prev, [tr.id]: data as TournamentMatchRow[] }))
+            }}
+            onMatchUpdated={(updated) => {
+              setMatchesByTournamentId((prev) => ({
+                ...prev,
+                [tr.id]: (prev[tr.id] ?? []).map((match) => (match.id === updated.id ? updated : match)),
+              }))
+            }}
+          />
+        )}
       </div>
     )
   }
@@ -2346,11 +2408,6 @@ function App() {
                   <div className="nav-drawer-user">
                     <span className="nav-drawer-user-name">{displayName}</span>
                     <span className="nav-drawer-user-elo">ELO: {elo ?? '—'}</span>
-                    {tournamentsList.some((t) => t.status === 'ongoing' && tournamentRegistrations.has(t.id)) && (
-                      <button type="button" className="nav-drawer-tournament-badge" onClick={() => closeNavAnd('tournaments')}>
-                        🏆 В турнире
-                      </button>
-                    )}
                   </div>
                   <div className="nav-drawer-lang">
                     {(['en', 'ro', 'ru'] as const).map((l) => (
@@ -2417,16 +2474,6 @@ function App() {
                 </div>
                 <span className="strike-header-elo-value">{elo ?? '—'} ELO</span>
               </div>
-              {tournamentsList.some((t) => t.status === 'ongoing' && tournamentRegistrations.has(t.id)) && (
-                <button
-                  type="button"
-                  className="strike-header-tournament-badge"
-                  onClick={() => setActiveView('tournaments')}
-                  title="У вас активное участие в турнире"
-                >
-                  🏆 В турнире
-                </button>
-              )}
             </div>
             <button
               type="button"
@@ -3800,94 +3847,28 @@ function App() {
         )}
 
         {activeView === 'tournaments' && (
-          <section className="panel tournaments-panel">
-            <div className="tournaments-hero">
-              <div className="tournaments-hero-trophy" aria-hidden>🏆</div>
-              <h1 className="tournaments-hero-title">{t.tournamentsHeader.toUpperCase()}</h1>
-              <div className="tournaments-hero-underline" />
-              <p className="tournaments-hero-intro">{t.tournamentsIntro}</p>
+          <section className="tournaments-page">
+            <div className="tournaments-page-hero">
+              <h1 className="tournaments-page-title">{t.tournamentsHeader.toUpperCase()}</h1>
+              <div className="tournaments-page-accent" />
+              <p className="tournaments-page-subtitle">{t.tournamentsIntro}</p>
             </div>
-            {tournamentsLoading && <p className="panel-text small">{t.profileLoading}</p>}
-            {!tournamentsLoading && tournamentsList.length === 0 && <p className="panel-text small">Турниров пока нет.</p>}
+
+            {tournamentsLoading && <p className="panel-text small tournaments-page-loading">{t.profileLoading}</p>}
+            {!tournamentsLoading && tournamentsList.length === 0 && (
+              <p className="panel-text small tournaments-page-empty">Турниров пока нет.</p>
+            )}
             {!tournamentsLoading && tournamentsList.length > 0 && (
-              <div className="tournaments-layout">
-                <div className="tournaments-list">
-                  {tournamentsList.map((tr, index) => {
-                    const isRegistered = tournamentRegistrations.has(tr.id)
-                    const now = new Date().getTime()
-                    const regStart = new Date(tr.registration_start).getTime()
-                    const regEnd = new Date(tr.registration_end).getTime()
-                    const canRegister = tr.status === 'registration' && playerId && now >= regStart && now < regEnd
-                    const isFeatured = index === 0
-                    const statusTag = tr.status === 'ongoing' ? 'ACTIVE' : tr.status === 'registration' ? 'REGISTRATION OPEN' : tr.status === 'finished' ? 'FINISHED' : 'DRAFT'
-                    const participantMax = [2, 4, 8, 16, 32, 64, 128].find((m) => m >= tr.registrations_count) || 128
-                    const participantPct = Math.min(100, (tr.registrations_count / participantMax) * 100)
-                    return (
-                      <div
-                        key={tr.id}
-                        className={`tournament-card-ref ${selectedTournamentId === tr.id ? 'tournament-card-ref--active' : ''} ${isFeatured ? 'tournament-card-ref--featured' : ''}`}
-                      >
-                        <span className="tournament-card-ref-tag">{statusTag}</span>
-                        <div className="tournament-card-ref-body">
-                          <h4 className="tournament-card-ref-name">{tr.name}</h4>
-                          <div className="tournament-card-ref-rows">
-                            <div className="tournament-card-ref-row">
-                              <span className="tournament-card-ref-icon" aria-hidden>📅</span>
-                              <span>Регистрация: {new Date(tr.registration_start).toLocaleDateString()} – {new Date(tr.registration_end).toLocaleDateString()}</span>
-                            </div>
-                            <div className="tournament-card-ref-row">
-                              <span className="tournament-card-ref-icon" aria-hidden>🕐</span>
-                              <span>Турнир: {new Date(tr.tournament_start).toLocaleDateString()} – {new Date(tr.tournament_end).toLocaleDateString()}</span>
-                            </div>
-                            <div className="tournament-card-ref-row">
-                              <span className="tournament-card-ref-icon" aria-hidden>▶</span>
-                              <span>Статус: {tr.status === 'ongoing' ? 'ACTIVE' : tr.status === 'registration' ? 'REGISTRATION OPEN' : tr.status === 'finished' ? 'FINISHED' : tr.status}</span>
-                            </div>
-                            <div className="tournament-card-ref-row tournament-card-ref-row--participants">
-                              <span className="tournament-card-ref-icon" aria-hidden>👥</span>
-                              <span>Участников: {tr.registrations_count} / {participantMax}</span>
-                              <div className="tournament-card-ref-progress-wrap">
-                                <div className="tournament-card-ref-progress" style={{ width: `${participantPct}%` }} />
-                              </div>
-                            </div>
-                          </div>
-                          <div className="tournament-card-ref-actions">
-                            {canRegister && !isRegistered && (
-                              <button type="button" className="strike-btn strike-btn-primary tournament-card-ref-btn" onClick={() => tournamentRegister(tr.id)}>Регистрация</button>
-                            )}
-                            {canRegister && isRegistered && (
-                              <button type="button" className="strike-btn strike-btn-secondary tournament-card-ref-btn" onClick={() => tournamentUnregister(tr.id)}>Отменить</button>
-                            )}
-                            {(tr.status === 'ongoing' || tr.status === 'finished') && (
-                              <button type="button" className="strike-btn strike-btn-outline tournament-card-ref-btn" onClick={() => setSelectedTournamentId(selectedTournamentId === tr.id ? null : tr.id)}>
-                                {selectedTournamentId === tr.id ? 'Скрыть сетку' : 'Сетка'}
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                        {selectedTournamentId === tr.id && (tr.status === 'ongoing' || tr.status === 'finished') && (
-                          <TournamentBracketBlock
-                            tournament={tr}
-                            matches={tournamentMatches}
-                            playerId={playerId}
-                            leaderboard={leaderboard}
-                            onRefresh={async () => {
-                              fetchTournaments()
-                              const { data } = await supabase.from('tournament_matches').select('*').eq('tournament_id', tr.id).order('round', { ascending: false }).order('match_index')
-                              if (data) setTournamentMatches(data as TournamentMatchRow[])
-                            }}
-                          />
-                        )}
-                      </div>
-                    )
-                  })}
+              <div className="tournaments-page-list-wrap" key="tournaments-list">
+                <div className="tournaments-page-cards" key="tournaments-cards">
+                  {tournamentsList.map((tr) => renderTournamentCard(tr, false))}
                 </div>
+                <p className="tournaments-page-footer-hint">
+                  <span className="tournaments-page-footer-icon" aria-hidden="true" />
+                  {t.tournamentsHint}
+                </p>
               </div>
             )}
-            <p className="tournaments-footer-hint">
-              <span className="tournaments-footer-icon" aria-hidden>✈</span>
-              {t.tournamentsFooter}
-            </p>
           </section>
         )}
       </main>
