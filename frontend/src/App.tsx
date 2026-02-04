@@ -1093,6 +1093,16 @@ function App() {
     })
   }, [activeView, playerId])
 
+  // Когда полная статистика профиля обновилась — синхронизируем ELO и общее число матчей в шапке
+  useEffect(() => {
+    if (myProfileStats?.elo != null) {
+      setElo(myProfileStats.elo)
+    }
+    if (myProfileStats?.matches_count != null) {
+      setMatchesCount(myProfileStats.matches_count)
+    }
+  }, [myProfileStats])
+
   const displayName = useMemo(() => {
     if (!user) return t.guestName
     if (myDisplayName.trim()) return myDisplayName.trim()
