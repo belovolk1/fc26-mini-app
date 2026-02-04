@@ -247,6 +247,14 @@
   transform: translateX(0);
 }
 
+@media (max-width: 768px) {
+  .nav-drawer {
+    width: 100vw;
+    max-width: 100vw;
+    border-right: none;
+  }
+}
+
 .nav-drawer-header {
   display: flex;
   align-items: center;
@@ -1770,6 +1778,12 @@
   overflow-x: auto;
   margin-top: 12px;
 }
+@media (min-width: 1024px) {
+  .profile-recent-table-wrap {
+    max-height: 340px;
+    overflow-y: auto;
+  }
+}
 .profile-recent-table {
   width: 100%;
   border-collapse: collapse;
@@ -1780,6 +1794,16 @@
   padding: 12px 14px;
   text-align: left;
   border-bottom: 1px solid var(--border);
+}
+
+@media (max-width: 768px) {
+  .profile-recent-table {
+    font-size: 13px;
+  }
+  .profile-recent-table th,
+  .profile-recent-table td {
+    padding: 10px 10px;
+  }
 }
 .profile-recent-table th {
   font-weight: 700;
@@ -1793,9 +1817,9 @@
 }
 .profile-result-pill {
   display: inline-block;
-  padding: 4px 10px;
+  padding: 6px 14px;
   border-radius: 999px;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
 }
 .profile-result-pill--win {
@@ -2123,7 +2147,7 @@
 @media (min-width: 1024px) {
   .app.strike-theme .profile-page-layout {
     gap: 28px;
-    align-items: stretch;
+    align-items: flex-start;
   }
 }
 /* Левая колонка — карточка с аватаром и инфо */
@@ -2135,21 +2159,7 @@
   padding: var(--strike-space-xl) var(--strike-space-lg);
   position: relative;
   overflow: hidden;
-}
-.app.strike-theme .profile-sidebar::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  border-radius: inherit;
-  background-image: var(--strike-cloud-url);
-  background-size: cover;
-  mix-blend-mode: overlay;
-  opacity: 0.5;
-}
-.app.strike-theme .profile-sidebar > * {
-  position: relative;
-  z-index: 1;
+  align-self: flex-start;
 }
 .app.strike-theme .profile-avatar-wrap {
   background: var(--strike-elevated);
@@ -2733,24 +2743,15 @@
   --strike-shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.25);
   --strike-inset: inset 0 1px 0 rgba(255, 255, 255, 0.1);
   --strike-btn-glow: 0 6px 20px var(--strike-orange-glow);
-  /* Облачный шум (data URL как в примере) */
-  --strike-cloud-url: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.11' numOctaves='5' seed='2'/%3E%3CfeGaussianBlur stdDeviation='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)' opacity='0.35'/%3E%3C/svg%3E");
   position: relative;
   min-height: 100vh;
   background: var(--strike-bg) !important;
 }
-/* Задний фон — шум поверх цвета, mix-blend-mode: overlay */
+
 .app.strike-theme::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  background-image: var(--strike-cloud-url);
-  background-size: cover;
-  mix-blend-mode: overlay;
+  content: none;
 }
-.app.strike-theme > * {
+.app.strike-theme > *:not(.nav-drawer):not(.nav-drawer-backdrop) {
   position: relative;
   z-index: 1;
 }
