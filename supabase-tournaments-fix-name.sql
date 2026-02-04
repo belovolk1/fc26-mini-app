@@ -75,3 +75,80 @@ ALTER TABLE public.tournaments
 
 COMMENT ON COLUMN public.tournaments.name IS 'Tournament display name';
 COMMENT ON COLUMN public.tournaments.prize_pool IS 'Array of {place: 1, elo_bonus: 50}. Place 1 = winner, 2 = finalist, etc.';
+
+-- 3b) Таблицы для регистраций и матчей (нужны для функции get_tournaments_with_counts и для модуля турниров)
+CREATE TABLE IF NOT EXISTS public.tournament_registrations (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  tournament_id uuid NOT NULL REFERENCES public.tournaments(id) ON DELETE CASCADE,
+  player_id uuid NOT NULL REFERENCES public.players(id) ON DELETE CASCADE,
+  registered_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE (tournament_id, player_id)
+);
+CREATE INDEX IF NOT EXISTS tournament_registrations_tournament_id ON public.tournament_registrations(tournament_id);
+CREATE INDEX IF NOT EXISTS tournament_registrations_player_id ON public.tournament_registrations(player_id);
+
+CREATE TABLE IF NOT EXISTS public.tournament_matches (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  tournament_id uuid NOT NULL REFERENCES public.tournaments(id) ON DELETE CASCADE,
+  round int NOT NULL,
+  match_index int NOT NULL,
+  player_a_id uuid REFERENCES public.players(id) ON DELETE SET NULL,
+  player_b_id uuid REFERENCES public.players(id) ON DELETE SET NULL,
+  score_a int,
+  score_b int,
+  winner_id uuid REFERENCES public.players(id) ON DELETE SET NULL,
+  status text NOT NULL DEFAULT 'scheduled' CHECK (status IN (
+    'scheduled', 'ready_a', 'ready_b', 'both_ready', 'score_submitted', 'confirmed',
+    'auto_win_a', 'auto_win_b', 'auto_no_show', 'finished'
+  )),
+  score_submitted_by uuid REFERENCES public.players(id) ON DELETE SET NULL,
+  player_a_ready_at timestamptz,
+  player_b_ready_at timestamptz,
+  scheduled_start timestamptz NOT NULL,
+  scheduled_end timestamptz NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE (tournament_id, round, match_index)
+);
+CREATE INDEX IF NOT EXISTS tournament_matches_tournament_id ON public.tournament_matches(tournament_id);
+
+ALTER TABLE public.tournament_registrations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.tournament_matches ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "tournament_registrations_select" ON public.tournament_registrations;
+DROP POLICY IF EXISTS "tournament_registrations_insert" ON public.tournament_registrations;
+DROP POLICY IF EXISTS "tournament_registrations_delete" ON public.tournament_registrations;
+CREATE POLICY "tournament_registrations_select" ON public.tournament_registrations FOR SELECT TO public USING (true);
+CREATE POLICY "tournament_registrations_insert" ON public.tournament_registrations FOR INSERT TO anon WITH CHECK (true);
+CREATE POLICY "tournament_registrations_delete" ON public.tournament_registrations FOR DELETE TO anon USING (true);
+DROP POLICY IF EXISTS "tournament_matches_select" ON public.tournament_matches;
+DROP POLICY IF EXISTS "tournament_matches_insert" ON public.tournament_matches;
+DROP POLICY IF EXISTS "tournament_matches_update" ON public.tournament_matches;
+CREATE POLICY "tournament_matches_select" ON public.tournament_matches FOR SELECT TO public USING (true);
+CREATE POLICY "tournament_matches_insert" ON public.tournament_matches FOR INSERT TO anon WITH CHECK (true);
+CREATE POLICY "tournament_matches_update" ON public.tournament_matches FOR UPDATE TO anon USING (true) WITH CHECK (true);
+
+-- 4) Функция для списка турниров (чтобы турниры отображались на сайте)
+CREATE OR REPLACE FUNCTION public.get_tournaments_with_counts()
+RETURNS TABLE (
+  id uuid,
+  name text,
+  status text,
+  registration_start timestamptz,
+  registration_end timestamptz,
+  tournament_start timestamptz,
+  tournament_end timestamptz,
+  round_duration_minutes int,
+  prize_pool jsonb,
+  created_at timestamptz,
+  registrations_count bigint
+)
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT t.id, t.name, t.status, t.registration_start, t.registration_end,
+         t.tournament_start, t.tournament_end, t.round_duration_minutes, t.prize_pool, t.created_at,
+         (SELECT count(*) FROM tournament_registrations r WHERE r.tournament_id = t.id)
+  FROM tournaments t
+  ORDER BY t.registration_start DESC;
+$$;

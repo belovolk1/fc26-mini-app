@@ -945,7 +945,7 @@ function App() {
   const widgetContainerRef = useRef<HTMLDivElement>(null)
   const chatMessagesScrollRef = useRef<HTMLDivElement>(null)
   const chatMessagesEndRef = useRef<HTMLDivElement>(null)
-
+  
   // Парсим редирект один раз при загрузке (до первого рендера)
   const parsedRedirectRef = useRef<TelegramUser | null>(null)
   if (parsedRedirectRef.current === null) {
@@ -957,7 +957,7 @@ function App() {
       parsedRedirectRef.current = parsed
     }
   }
-
+  
   const [widgetUser, setWidgetUser] = useState<TelegramUser | null>(() => {
     return parsedRedirectRef.current || getStoredWidgetUser()
   })
@@ -1764,14 +1764,41 @@ function App() {
   const fetchTournaments = async () => {
     setTournamentsLoading(true)
     const { data: list, error } = await supabase.rpc('get_tournaments_with_counts')
-    if (!error && Array.isArray(list)) {
+    if (!error && Array.isArray(list) && list.length > 0) {
       setTournamentsList(list.map((r: any) => ({
         ...r,
+        name: r.name ?? r.title ?? 'Tournament',
         prize_pool: Array.isArray(r.prize_pool) ? r.prize_pool : [],
         registrations_count: Number(r.registrations_count ?? 0),
       })))
     } else {
-      setTournamentsList([])
+      const { data: rows, error: tableError } = await supabase
+        .from('tournaments')
+        .select('*')
+        .order('registration_start', { ascending: false })
+      if (!tableError && Array.isArray(rows) && rows.length > 0) {
+        const ids = (rows as any[]).map((x) => x.id)
+        const { data: counts } = await supabase.from('tournament_registrations').select('tournament_id').in('tournament_id', ids)
+        const countByTour = (counts || []).reduce((acc: Record<string, number>, r: { tournament_id: string }) => {
+          acc[r.tournament_id] = (acc[r.tournament_id] ?? 0) + 1
+          return acc
+        }, {})
+        setTournamentsList(rows.map((r: any) => ({
+          id: r.id,
+          name: r.name ?? r.title ?? 'Tournament',
+          status: r.status ?? 'draft',
+          registration_start: r.registration_start ?? r.created_at,
+          registration_end: r.registration_end ?? r.created_at,
+          tournament_start: r.tournament_start ?? r.starts_at ?? r.created_at,
+          tournament_end: r.tournament_end ?? r.ends_at ?? r.created_at,
+          round_duration_minutes: r.round_duration_minutes ?? 30,
+          prize_pool: Array.isArray(r.prize_pool) ? r.prize_pool : [],
+          created_at: r.created_at ?? new Date().toISOString(),
+          registrations_count: countByTour[r.id] ?? 0,
+        })))
+      } else {
+        setTournamentsList([])
+      }
     }
     if (playerId) {
       const { data: regs } = await supabase.from('tournament_registrations').select('tournament_id').eq('player_id', playerId)
@@ -2253,18 +2280,18 @@ function App() {
                     ))}
                   </div>
                   <div className="nav-drawer-links">
-                    {navLinks.map(({ view, label }) => (
-                      <button
-                        key={view}
-                        type="button"
-                        className={activeView === view ? 'nav-drawer-btn active' : 'nav-drawer-btn'}
-                        onClick={() => closeNavAnd(view)}
-                      >
-                        {label}
-                      </button>
-                    ))}
+              {navLinks.map(({ view, label }) => (
+                <button
+                  key={view}
+                  type="button"
+                  className={activeView === view ? 'nav-drawer-btn active' : 'nav-drawer-btn'}
+                  onClick={() => closeNavAnd(view)}
+                >
+                  {label}
+                </button>
+              ))}
                   </div>
-                </nav>
+            </nav>
               </div>,
               document.body
             )}
@@ -2352,11 +2379,11 @@ function App() {
 
       <main className="app-main">
         {user && searchStatus === 'searching' && activeView !== 'ladder' && (
-          <button
-            type="button"
+            <button
+              type="button"
             className="active-search-banner"
-            onClick={() => setActiveView('ladder')}
-          >
+              onClick={() => setActiveView('ladder')}
+            >
             <span className="active-search-banner-icon" aria-hidden="true">⏱</span>
             {t.ladderSearching}
             {searchElapsed > 0 && (
@@ -2365,17 +2392,17 @@ function App() {
                 ({Math.floor(searchElapsed / 60)}:{String(searchElapsed % 60).padStart(2, '0')})
               </span>
             )}
-          </button>
+            </button>
         )}
         {user && searchStatus === 'in_lobby' && currentMatch && activeView !== 'ladder' && (
-          <button
-            type="button"
+            <button
+              type="button"
             className="active-lobby-banner"
             onClick={() => setActiveView('ladder')}
-          >
+            >
             <span className="active-lobby-banner-icon" aria-hidden="true">●</span>
             {t.ladderActiveLobbyBanner}
-          </button>
+            </button>
         )}
 
         {activeView === 'home' && (
@@ -2388,7 +2415,7 @@ function App() {
                 <div className="strike-hero-buttons">
                   <button type="button" className="strike-btn strike-btn-primary" onClick={() => setActiveView('ladder')}>
                     {t.homeJoinNow}
-                  </button>
+            </button>
                   <button type="button" className="strike-btn strike-btn-secondary" onClick={() => setActiveView('tournaments')}>
                     {t.homeLearnMore}
                   </button>
@@ -2424,7 +2451,7 @@ function App() {
                   <h3 className="strike-card-title">{t.quickPlayTitle}</h3>
                   <p className="strike-card-text">{t.quickPlayText}</p>
                   <span className="strike-card-btn strike-btn strike-btn-primary">{t.homePlayNow}</span>
-                </button>
+            </button>
                 <button type="button" className="strike-card" onClick={() => setActiveView('tournaments')}>
                   <div className="strike-card-icon">🏆</div>
                   <h3 className="strike-card-title">{t.tournamentsTitle}</h3>
@@ -2711,15 +2738,15 @@ function App() {
             </div>
             {adminResult && <p className="panel-text small">{adminResult}</p>}
             <div className="admin-actions">
-              <button
-                type="button"
+                <button
+                  type="button"
                 className="primary-button"
                 disabled={adminSending || !adminMessage.trim()}
                 onClick={handleAdminSend}
               >
                 {adminSending ? 'Отправляем…' : 'Отправить'}
-              </button>
-            </div>
+                </button>
+                        </div>
 
             <h3 className="panel-title admin-news-title">Новости (главная)</h3>
             <p className="panel-text small">Добавьте новость: заголовок, текст и по желанию фото. Они отображаются в блоке «Последние новости» на главной.</p>
@@ -2732,7 +2759,7 @@ function App() {
                 onChange={(e) => setNewsTitle(e.target.value)}
                 placeholder="Заголовок новости"
               />
-            </div>
+                    </div>
             <div className="form-row">
               <label className="form-label">Текст</label>
               <textarea
@@ -2790,27 +2817,27 @@ function App() {
             <div className="form-row">
               <label className="form-label">Название</label>
               <input type="text" className="form-input" value={adminTourName} onChange={(e) => setAdminTourName(e.target.value)} placeholder="Например: Кубок пятницы" />
-            </div>
+                    </div>
             <div className="form-row form-row--inline">
               <label className="form-label">Начало регистрации</label>
               <input type="datetime-local" className="form-input" value={adminTourRegStart} onChange={(e) => setAdminTourRegStart(e.target.value)} />
-            </div>
+                      </div>
             <div className="form-row form-row--inline">
               <label className="form-label">Конец регистрации</label>
               <input type="datetime-local" className="form-input" value={adminTourRegEnd} onChange={(e) => setAdminTourRegEnd(e.target.value)} />
-            </div>
+                      </div>
             <div className="form-row form-row--inline">
               <label className="form-label">Старт турнира</label>
               <input type="datetime-local" className="form-input" value={adminTourStart} onChange={(e) => setAdminTourStart(e.target.value)} />
-            </div>
+                      </div>
             <div className="form-row form-row--inline">
               <label className="form-label">Конец турнира</label>
               <input type="datetime-local" className="form-input" value={adminTourEnd} onChange={(e) => setAdminTourEnd(e.target.value)} />
-            </div>
+                      </div>
             <div className="form-row">
               <label className="form-label">Длительность раунда (минут)</label>
               <input type="number" min={5} className="form-input" style={{ maxWidth: '120px' }} value={adminTourRoundMins} onChange={(e) => setAdminTourRoundMins(e.target.value)} />
-            </div>
+                      </div>
             <div className="form-row">
               <label className="form-label">Призовой пул (место → ELO)</label>
               <div className="admin-prize-pool">
@@ -2821,11 +2848,11 @@ function App() {
                     <span>ELO</span>
                     <input type="number" min={0} className="form-input" style={{ width: '64px' }} value={p.elo_bonus} onChange={(e) => setAdminTourPrizePool((prev) => prev.map((x, j) => j === i ? { ...x, elo_bonus: parseInt(e.target.value, 10) || 0 } : x))} />
                     <button type="button" className="strike-btn strike-btn-secondary" onClick={() => setAdminTourPrizePool((prev) => prev.filter((_, j) => j !== i))}>−</button>
-                  </div>
+                      </div>
                 ))}
                 <button type="button" className="strike-btn strike-btn-secondary" onClick={() => setAdminTourPrizePool((prev) => [...prev, { place: prev.length + 1, elo_bonus: 0 }])}>+ Добавить место</button>
-              </div>
-            </div>
+                      </div>
+                    </div>
             {adminTourResult && <p className="panel-text small">{adminTourResult}</p>}
             <div className="admin-actions">
               <button type="button" className="primary-button" disabled={adminTourSending || !adminTourName.trim()} onClick={createTournament}>
@@ -2850,10 +2877,10 @@ function App() {
                       )}
                       <button type="button" className="strike-btn strike-btn-secondary" onClick={() => tournamentTick(t.id)}>Обновить по времени</button>
                     </div>
-                  </li>
-                ))}
-              </ul>
-            )}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
           </section>
         )}
 
@@ -3214,9 +3241,9 @@ function App() {
                           ) : (
                             <div className="profile-avatar-placeholder">
                               {(displayName || '?').charAt(0).toUpperCase()}
-                            </div>
+            </div>
                           )}
-                        </div>
+            </div>
                         <div className="profile-sidebar-info">
                           <h2 className="profile-display-name">{displayName}</h2>
                           {myCountryCode && (
@@ -3266,8 +3293,8 @@ function App() {
                                     {(myProfileStats?.matches_count ?? matchesCount ?? 0) <= 10
                                       ? t.profileCalibrationLabel
                                       : getRankDisplayLabel(getRankFromElo(myProfileStats?.elo ?? elo ?? null))}
-                                  </span>
-                                </div>
+              </span>
+            </div>
                                 <div className="profile-rank-card-right">
                                   <span className="profile-elo-big">{myProfileStats?.elo ?? elo ?? '—'} ELO</span>
                                   <p className="profile-rank-meta">{t.profileEloLabel}</p>
@@ -3368,7 +3395,7 @@ function App() {
 
                           {profileActiveTab === 'edit' && (
                             <div className="profile-tab-panel">
-                              <div className="profile-edit-section">
+              <div className="profile-edit-section">
                                 <h4 className="panel-subtitle">{t.profileDisplayName}</h4>
                                 <div className="form-row">
                                   <label className="form-label">{t.profileDisplayName}</label>
@@ -3380,86 +3407,86 @@ function App() {
                                     placeholder={user.username ? `@${user.username}` : [user.first_name, user.last_name].filter(Boolean).join(' ')}
                                   />
                                 </div>
-                                <h4 className="panel-subtitle">{t.profileAvatar}</h4>
-                                <div className="form-row">
-                                  <label className="form-label">{t.profileUploadAvatar}</label>
-                                  <input
-                                    type="file"
-                                    accept="image/*"
-                                    className="form-input"
-                                    disabled={avatarUploading}
-                                    onChange={(e) => {
-                                      const f = e.target.files?.[0]
-                                      if (f) uploadAvatar(f)
-                                      e.target.value = ''
-                                    }}
-                                  />
-                                  {avatarUploading && <p className="panel-text small">…</p>}
-                                  {avatarUploadError && (
-                                    <p className="panel-text panel-error profile-avatar-hint">{avatarUploadError}</p>
-                                  )}
-                                </div>
-                                <div className="form-row">
-                                  <label className="form-label">{t.profileAvatarUrlPlaceholder}</label>
-                                  <input
-                                    type="url"
-                                    className="form-input"
-                                    value={myAvatarUrl}
-                                    onChange={(e) => setMyAvatarUrl(e.target.value)}
-                                    placeholder="https://..."
-                                  />
-                                </div>
-                                <h4 className="panel-subtitle">{t.profileCountry}</h4>
-                                <select
-                                  className="form-input profile-country-select"
-                                  value={myCountryCode}
-                                  onChange={(e) => setMyCountryCode(e.target.value)}
-                                >
-                                  <option value="">—</option>
-                                  {COUNTRIES.map((c) => (
-                                    <option key={c.code} value={c.code}>
-                                      {c.flag} {c.name}
-                                    </option>
-                                  ))}
-                                </select>
-                                <button
-                                  type="button"
-                                  className="primary-button"
-                                  disabled={profileSaveLoading}
-                                  onClick={saveProfileAvatarCountry}
-                                >
-                                  {profileSaveLoading ? '…' : t.profileSave}
-                                </button>
+                <h4 className="panel-subtitle">{t.profileAvatar}</h4>
+                <div className="form-row">
+                  <label className="form-label">{t.profileUploadAvatar}</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="form-input"
+                    disabled={avatarUploading}
+                    onChange={(e) => {
+                      const f = e.target.files?.[0]
+                      if (f) uploadAvatar(f)
+                      e.target.value = ''
+                    }}
+                  />
+                  {avatarUploading && <p className="panel-text small">…</p>}
+                  {avatarUploadError && (
+                    <p className="panel-text panel-error profile-avatar-hint">{avatarUploadError}</p>
+                  )}
+                </div>
+                <div className="form-row">
+                  <label className="form-label">{t.profileAvatarUrlPlaceholder}</label>
+                  <input
+                    type="url"
+                    className="form-input"
+                    value={myAvatarUrl}
+                    onChange={(e) => setMyAvatarUrl(e.target.value)}
+                    placeholder="https://..."
+                  />
+                </div>
+                <h4 className="panel-subtitle">{t.profileCountry}</h4>
+                <select
+                  className="form-input profile-country-select"
+                  value={myCountryCode}
+                  onChange={(e) => setMyCountryCode(e.target.value)}
+                >
+                  <option value="">—</option>
+                  {COUNTRIES.map((c) => (
+                    <option key={c.code} value={c.code}>
+                      {c.flag} {c.name}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  className="primary-button"
+                  disabled={profileSaveLoading}
+                  onClick={saveProfileAvatarCountry}
+                >
+                  {profileSaveLoading ? '…' : t.profileSave}
+                </button>
                               </div>
-                            </div>
-                          )}
+              </div>
+            )}
 
                           {profileActiveTab === 'settings' && (
                             <div className="profile-tab-panel">
-                              <div className="profile-telegram">
-                                <h4 className="panel-subtitle">{t.profileTelegramTitle}</h4>
-                                <p className="profile-telegram-status">{t.profileTelegramConnected}</p>
-                                <div className="panel-row">
-                                  <span className="label">{t.profileTelegramUsername}</span>
-                                  <span className="value">
-                                    {user.username ? `@${user.username}` : '—'}
-                                  </span>
-                                </div>
-                                <div className="panel-row">
-                                  <span className="label">{t.profileTelegramId}</span>
-                                  <span className="value profile-telegram-id">{user.id}</span>
-                                </div>
+            <div className="profile-telegram">
+              <h4 className="panel-subtitle">{t.profileTelegramTitle}</h4>
+                  <p className="profile-telegram-status">{t.profileTelegramConnected}</p>
+                  <div className="panel-row">
+                    <span className="label">{t.profileTelegramUsername}</span>
+                    <span className="value">
+                      {user.username ? `@${user.username}` : '—'}
+                    </span>
+                  </div>
+                  <div className="panel-row">
+                    <span className="label">{t.profileTelegramId}</span>
+                    <span className="value profile-telegram-id">{user.id}</span>
+                  </div>
                                 <p className="panel-hint small">{t.profileTelegramDataHint}</p>
-                                <button
-                                  type="button"
-                                  className="profile-logout-btn"
-                                  onClick={() => {
-                                    setStoredWidgetUser(null)
-                                    setWidgetUser(null)
-                                  }}
-                                >
-                                  {t.profileLogout}
-                                </button>
+                    <button
+                      type="button"
+                      className="profile-logout-btn"
+                      onClick={() => {
+                        setStoredWidgetUser(null)
+                        setWidgetUser(null)
+                      }}
+                    >
+                      {t.profileLogout}
+        </button>
                               </div>
                             </div>
                           )}
@@ -3468,38 +3495,38 @@ function App() {
                     </div>
                   </>
                 )}
-              </div>
-            )}
+      </div>
+                  )}
 
             {!user && (
               <div className="profile-telegram">
                 <h4 className="panel-subtitle">{t.profileTelegramTitle}</h4>
-                <p className="panel-text profile-telegram-not">{t.profileTelegramNotConnected}</p>
-                {telegramLoginUrl ? (
-                  <>
-                    <a
-                      href={telegramLoginUrl}
-                      className="telegram-login-fallback primary-button"
-                      rel="noopener noreferrer"
-                    >
+                  <p className="panel-text profile-telegram-not">{t.profileTelegramNotConnected}</p>
+                  {telegramLoginUrl ? (
+                    <>
+                      <a
+                        href={telegramLoginUrl}
+                        className="telegram-login-fallback primary-button"
+                        rel="noopener noreferrer"
+                      >
                       {t.profileTelegramLoginButton}
-                    </a>
-                    <p className="panel-hint profile-telegram-same-tab">{t.profileTelegramSameTab}</p>
-                  </>
-                ) : (
-                  <div ref={widgetContainerRef} className="profile-telegram-widget" />
-                )}
-                <p className="panel-hint profile-telegram-setdomain-one">
-                  {t.profileTelegramSetDomainOne}{' '}
-                  <strong className="profile-telegram-domain">{typeof window !== 'undefined' ? window.location.host : ''}</strong>
-                </p>
-              </div>
+                      </a>
+                      <p className="panel-hint profile-telegram-same-tab">{t.profileTelegramSameTab}</p>
+                    </>
+                  ) : (
+                    <div ref={widgetContainerRef} className="profile-telegram-widget" />
+                  )}
+                  <p className="panel-hint profile-telegram-setdomain-one">
+                    {t.profileTelegramSetDomainOne}{' '}
+                    <strong className="profile-telegram-domain">{typeof window !== 'undefined' ? window.location.host : ''}</strong>
+                  </p>
+            </div>
             )}
 
             {user && (
-              <p className="panel-hint">
-                {t.profileHint}
-              </p>
+            <p className="panel-hint">
+              {t.profileHint}
+            </p>
             )}
           </section>
         )}
@@ -3520,9 +3547,9 @@ function App() {
             )}
 
             {user && playerId && searchStatus === 'idle' && (
-              <button type="button" className="primary-button" onClick={startSearch}>
-                {t.ladderSearchButton}
-              </button>
+                <button type="button" className="primary-button" onClick={startSearch}>
+                  {t.ladderSearchButton}
+                </button>
             )}
 
             {user && searchStatus === 'searching' && (
@@ -3581,14 +3608,14 @@ function App() {
                       onChange={(e) => setChatInput(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && sendChatMessage()}
                     />
-                    <button
-                      type="button"
+                      <button
+                        type="button"
                       className="primary-button lobby-chat-send"
                       disabled={chatSending || !chatInput.trim()}
                       onClick={sendChatMessage}
                     >
                       {chatSending ? '…' : t.ladderChatSend}
-                    </button>
+                      </button>
                   </div>
                 </section>
 
@@ -3598,24 +3625,24 @@ function App() {
                     <div className="lobby-score-row">
                       <div className="lobby-score-field">
                         <label className="lobby-score-label">{t.ladderMyScore}</label>
-                        <input
-                          type="number"
-                          min={0}
+                      <input
+                        type="number"
+                        min={0}
                           className="form-input lobby-score-input"
-                          value={scoreA}
-                          onChange={(e) => setScoreA(e.target.value)}
-                        />
-                      </div>
+                        value={scoreA}
+                        onChange={(e) => setScoreA(e.target.value)}
+                      />
+                    </div>
                       <span className="lobby-score-sep">–</span>
                       <div className="lobby-score-field">
                         <label className="lobby-score-label">{t.ladderOppScore}</label>
-                        <input
-                          type="number"
-                          min={0}
+                      <input
+                        type="number"
+                        min={0}
                           className="form-input lobby-score-input"
-                          value={scoreB}
-                          onChange={(e) => setScoreB(e.target.value)}
-                        />
+                        value={scoreB}
+                        onChange={(e) => setScoreB(e.target.value)}
+                      />
                       </div>
                     </div>
                     {matchMessage && (
