@@ -76,6 +76,11 @@ ALTER TABLE public.tournaments
 COMMENT ON COLUMN public.tournaments.name IS 'Tournament display name';
 COMMENT ON COLUMN public.tournaments.prize_pool IS 'Array of {place: 1, elo_bonus: 50}. Place 1 = winner, 2 = finalist, etc.';
 
+-- 3a) Разрешить админу удалять турниры (через приложение)
+ALTER TABLE public.tournaments ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "tournaments_delete" ON public.tournaments;
+CREATE POLICY "tournaments_delete" ON public.tournaments FOR DELETE TO anon USING (true);
+
 -- 3b) Таблицы для регистраций и матчей (нужны для функции get_tournaments_with_counts и для модуля турниров)
 CREATE TABLE IF NOT EXISTS public.tournament_registrations (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),

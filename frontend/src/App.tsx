@@ -1763,6 +1763,7 @@ function App() {
 
   const fetchTournaments = async () => {
     setTournamentsLoading(true)
+    await supabase.rpc('tournament_tick', { p_tournament_id: null })
     const { data: list, error } = await supabase.rpc('get_tournaments_with_counts')
     if (!error && Array.isArray(list) && list.length > 0) {
       setTournamentsList(list.map((r: any) => ({
@@ -1908,6 +1909,16 @@ function App() {
         next.delete(tournamentId)
         return next
       })
+      fetchTournaments()
+    }
+  }
+
+  const deleteTournament = async (tournamentId: string) => {
+    if (!isAdminUser) return
+    if (!window.confirm('Удалить турнир? Регистрации и матчи будут удалены.')) return
+    const { error } = await supabase.from('tournaments').delete().eq('id', tournamentId)
+    if (!error) {
+      if (selectedTournamentId === tournamentId) setSelectedTournamentId(null)
       fetchTournaments()
     }
   }
@@ -2876,6 +2887,7 @@ function App() {
                         <button type="button" className="strike-btn strike-btn-secondary" onClick={() => tournamentStartBracket(t.id)}>Старт сетки</button>
                       )}
                       <button type="button" className="strike-btn strike-btn-secondary" onClick={() => tournamentTick(t.id)}>Обновить по времени</button>
+                      <button type="button" className="strike-btn" style={{ color: 'var(--error)' }} onClick={() => deleteTournament(t.id)}>Удалить</button>
                     </div>
                           </li>
                         ))}
@@ -3713,7 +3725,9 @@ function App() {
               <div className="tournaments-list">
                 {tournamentsList.map((tr) => {
                   const isRegistered = tournamentRegistrations.has(tr.id)
-                  const canRegister = tr.status === 'registration' && playerId
+                  const now = new Date().getTime()
+                  const regEnd = new Date(tr.registration_end).getTime()
+                  const canRegister = tr.status === 'registration' && playerId && now < regEnd
                   return (
                     <div key={tr.id} className="strike-card tournament-card">
                       <div className="tournament-card-main">
