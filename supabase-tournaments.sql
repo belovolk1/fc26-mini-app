@@ -167,7 +167,8 @@ BEGIN
 
   v_count := array_length(v_players, 1);
   IF v_count IS NULL OR v_count < 2 THEN
-    RETURN jsonb_build_object('ok', false, 'error', 'Need at least 2 registered players');
+    DELETE FROM tournaments WHERE id = p_tournament_id;
+    RETURN jsonb_build_object('ok', false, 'error', 'Tournament deleted: not enough players (need at least 2)', 'deleted', true);
   END IF;
 
   -- Приводим число участников к степени двойки (2, 4, 8, 16, 32, 64, 128): лишние с наименьшим ELO удаляются

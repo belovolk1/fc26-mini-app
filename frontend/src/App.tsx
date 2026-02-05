@@ -192,6 +192,7 @@ const messages: Record<
     tournamentWinner: string
     adminStartBracket: string
     adminDeleteTournamentConfirm: string
+    adminTourTournamentDeletedFewPlayers: string
   }
 > = {
   en: {
@@ -393,6 +394,7 @@ const messages: Record<
     tournamentWinner: 'Winner:',
     adminStartBracket: 'Start bracket',
     adminDeleteTournamentConfirm: 'Delete tournament? Registrations and matches will be removed.',
+    adminTourTournamentDeletedFewPlayers: 'Tournament deleted: only 1 player registered (need at least 2).',
   },
   ro: {
     appTitle: 'FC Area',
@@ -593,6 +595,7 @@ const messages: Record<
     tournamentWinner: 'Câștigător:',
     adminStartBracket: 'Pornire tablou',
     adminDeleteTournamentConfirm: 'Ștergi turneul? Înscrierile și meciurile vor fi șterse.',
+    adminTourTournamentDeletedFewPlayers: 'Turneu șters: doar 1 participant înscris (minim 2).',
   },
   ru: {
     appTitle: 'FC Area',
@@ -793,6 +796,7 @@ const messages: Record<
     tournamentWinner: 'Победитель:',
     adminStartBracket: 'Старт сетки',
     adminDeleteTournamentConfirm: 'Удалить турнир? Регистрации и матчи будут удалены.',
+    adminTourTournamentDeletedFewPlayers: 'Турнир удалён: зарегистрирован только 1 участник (нужно минимум 2).',
   },
 }
 
@@ -2178,11 +2182,17 @@ function App() {
 
   const tournamentStartBracket = async (tournamentId: string) => {
     const { data } = await supabase.rpc('tournament_start_bracket', { p_tournament_id: tournamentId })
-    const res = data as { ok?: boolean; error?: string }
+    const res = data as { ok?: boolean; error?: string; deleted?: boolean }
     if (res?.ok) {
       fetchTournaments(true)
       const { data: matches } = await supabase.from('tournament_matches').select('*').eq('tournament_id', tournamentId).order('round', { ascending: false }).order('match_index')
       if (matches) setMatchesByTournamentId((prev) => ({ ...prev, [tournamentId]: matches as TournamentMatchRow[] }))
+    } else if (res?.deleted) {
+      fetchTournaments(true)
+      if (selectedTournamentId === tournamentId) setSelectedTournamentId(null)
+      setAdminTourResult(t.adminTourTournamentDeletedFewPlayers ?? res?.error ?? 'Tournament deleted: not enough players.')
+    } else if (res?.error) {
+      setAdminTourResult(res.error)
     }
     return res
   }
