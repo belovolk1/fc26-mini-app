@@ -75,6 +75,11 @@ const messages: Record<
     ladderTwoPlayersHint: string
     ladderActiveLobbyBanner: string
     ladderInTournamentBlock: string
+    ladderModeChoose: string
+    ladderModeUltimateTeams: string
+    ladderModeOriginalTeams: string
+    ladderModeUltimateTeamsHint: string
+    ladderModeOriginalTeamsHint: string
     tournamentsHeader: string
     tournamentsIntro: string
     weeklyCupTitle: string
@@ -219,11 +224,11 @@ const messages: Record<
     },
     quickPlayTitle: 'Quick play',
     quickPlayText:
-      'Find an opponent in seconds and play a match within 40 minutes.',
+      'Find an opponent for Ultimate Team (FC 26) or friendly match. Play within 40 minutes and submit the result.',
     tournamentsTitle: 'Tournaments',
-    tournamentsText: 'Leagues, play‑offs and double round tournaments.',
+    tournamentsText: 'Register for cups and leagues. Play‑offs and double round formats.',
     profileTileTitle: 'Profile & stats',
-    profileTileText: 'Match history, ELO, win rate and player info.',
+    profileTileText: 'Your ELO, match history, win rate and achievements.',
     profileHeader: 'Player profile',
     profilePlayerLabel: 'Player',
     profileEloLabel: 'Global ELO rating',
@@ -284,6 +289,11 @@ const messages: Record<
     ladderTwoPlayersHint: 'Two different players must press Search at the same time (e.g. two devices or two accounts).',
     ladderActiveLobbyBanner: 'You have an active lobby — return',
     ladderInTournamentBlock: "You're in an active tournament. Quick matches are unavailable until you're eliminated or the tournament ends.",
+    ladderModeChoose: 'Choose mode',
+    ladderModeUltimateTeams: 'Ultimate Teams',
+    ladderModeOriginalTeams: 'Original Teams',
+    ladderModeUltimateTeamsHint: 'Matches in FC 26 Ultimate Team mode.',
+    ladderModeOriginalTeamsHint: 'Friendly matches in FC 26 (quick match).',
     tournamentsHeader: 'Tournaments',
     tournamentsIntro:
       'Here will be a list of upcoming tournaments, registration and brackets.',
@@ -350,7 +360,7 @@ const messages: Record<
     profileTabSettings: 'Settings',
     guestName: 'Guest',
     homeHeroHeadline: 'COMPETE. CLIMB. DOMINATE.',
-    homeHeroDesc: 'Join the ultimate soccer esports ladder. Prove your skills, earn rank, and win prizes.',
+    homeHeroDesc: 'FC Area is the platform for FC 26 players: find opponents for Ultimate Team and friendly matches, play ladder and tournaments, track ELO and stats.',
     homeJoinNow: 'JOIN NOW',
     homeLearnMore: 'LEARN MORE',
     homePlayNow: 'PLAY NOW',
@@ -429,11 +439,11 @@ const messages: Record<
     },
     quickPlayTitle: 'Joc rapid',
     quickPlayText:
-      'Găsește un adversar în câteva secunde și joacă un meci în 40 de minute.',
+      'Găsește un adversar pentru Ultimate Team (FC 26) sau meci amical. Joacă în 40 de minute și trimite rezultatul.',
     tournamentsTitle: 'Turnee',
-    tournamentsText: 'Ligi, play‑off și turnee double round.',
+    tournamentsText: 'Înscrie-te la cupe și ligi. Formate play‑off și double round.',
     profileTileTitle: 'Profil și statistici',
-    profileTileText: 'Istoric meciuri, ELO, win rate și info jucător.',
+    profileTileText: 'ELO, istoric meciuri, procent victorii și realizări.',
     profileHeader: 'Profil jucător',
     profilePlayerLabel: 'Jucător',
     profileEloLabel: 'Rating ELO global',
@@ -494,6 +504,11 @@ const messages: Record<
     ladderTwoPlayersHint: 'Doi jucători diferiți trebuie să apese Caută în același timp (ex. două dispozitive sau două conturi).',
     ladderActiveLobbyBanner: 'Ai un lobby activ — întoarce-te',
     ladderInTournamentBlock: 'Ești într-un turneu activ. Meciurile rapide sunt indisponibile până când ești eliminat sau turneul se termină.',
+    ladderModeChoose: 'Alege modul',
+    ladderModeUltimateTeams: 'Ultimate Teams',
+    ladderModeOriginalTeams: 'Original Teams',
+    ladderModeUltimateTeamsHint: 'Meciuri în modul Ultimate Team din FC 26.',
+    ladderModeOriginalTeamsHint: 'Meciuri amicale cu echipe originale/implicite.',
     tournamentsHeader: 'Turnee',
     tournamentsIntro:
       'Aici va apărea lista turneelor, înregistrarea și tabloul.',
@@ -560,7 +575,7 @@ const messages: Record<
     profileTabSettings: 'Setări',
     guestName: 'Vizitator',
     homeHeroHeadline: 'CONCURĂ. URCA. DOMINĂ.',
-    homeHeroDesc: 'Alătură-te ladder-ului esports de fotbal. Demonstrează-ți skill-urile, câștigă rang și premii.',
+    homeHeroDesc: 'FC Area este platforma pentru jucătorii FC 26: găsește adversari pentru Ultimate Team și meciuri amicale, joacă ladder și turnee, urmărește ELO și statisticile.',
     homeJoinNow: 'ÎNSCRIE-TE',
     homeLearnMore: 'AFLĂ MAI MULT',
     homePlayNow: 'JOACĂ ACUM',
@@ -639,11 +654,11 @@ const messages: Record<
     },
     quickPlayTitle: 'Быстрая игра',
     quickPlayText:
-      'Найди соперника за пару секунд и сыграй матч в течение 40 минут.',
+      'Найди соперника для Ultimate Team (FC 26) или товарищеского матча. Сыграй в течение 40 минут и отправь результат.',
     tournamentsTitle: 'Турниры',
-    tournamentsText: 'Лиги, плей‑офф и double round турниры.',
+    tournamentsText: 'Регистрируйся на кубки и лиги. Форматы плей‑офф и double round.',
     profileTileTitle: 'Профиль и статистика',
-    profileTileText: 'История матчей, ELO, винрейт и данные игрока.',
+    profileTileText: 'Твой ELO, история матчей, винрейт и достижения.',
     profileHeader: 'Профиль игрока',
     profilePlayerLabel: 'Игрок',
     profileEloLabel: 'Общий рейтинг ELO',
@@ -704,6 +719,11 @@ const messages: Record<
     ladderTwoPlayersHint: 'Два разных игрока должны нажать «Поиск» одновременно (например, с двух устройств или двух аккаунтов).',
     ladderActiveLobbyBanner: 'У вас активное лобби — вернуться',
     ladderInTournamentBlock: 'Вы участвуете в турнире. Быстрые матчи недоступны, пока вы не вылетите или турнир не завершится.',
+    ladderModeChoose: 'Выберите режим',
+    ladderModeUltimateTeams: 'Ultimate Teams',
+    ladderModeOriginalTeams: 'Original Teams',
+    ladderModeUltimateTeamsHint: 'Матчи в режиме Ultimate Team в FC 26.',
+    ladderModeOriginalTeamsHint: 'Товарищеские матчи в FC 26 (быстрый матч).',
     tournamentsHeader: 'Турниры',
     tournamentsIntro:
       'Здесь появится список ближайших турниров, регистрация и сетка.',
@@ -770,7 +790,7 @@ const messages: Record<
     profileTabSettings: 'Настройки',
     guestName: 'Гость',
     homeHeroHeadline: 'СРАЖАЙСЯ. РАСТИ. ДОМИНИРУЙ.',
-    homeHeroDesc: 'Присоединяйся к футбольному esports-рейтингу. Докажи навыки, получай ранг и призы.',
+    homeHeroDesc: 'FC Area — платформа для игроков FC 26: ищи соперников для Ultimate Team и товарищеских матчей, играй в ладдер и турниры, следи за ELO и статистикой.',
     homeJoinNow: 'ПРИСОЕДИНИТЬСЯ',
     homeLearnMore: 'ПОДРОБНЕЕ',
     homePlayNow: 'ИГРАТЬ',
@@ -1082,6 +1102,7 @@ function App() {
   const [loadingProfile, setLoadingProfile] = useState(false)
   type SearchStatus = 'idle' | 'searching' | 'in_lobby'
   const [searchStatus, setSearchStatus] = useState<SearchStatus>('idle')
+  const [ladderGameMode, setLadderGameMode] = useState<'ultimate_teams' | 'original_teams'>('original_teams')
   const [searchStartedAt, setSearchStartedAt] = useState<number | null>(null)
   const [searchElapsed, setSearchElapsed] = useState(0)
   const [profileActiveTab, setProfileActiveTab] = useState<'overview' | 'edit' | 'settings'>('overview')
@@ -1788,14 +1809,15 @@ function App() {
     return () => clearInterval(interval)
   }, [searchStatus, playerId])
 
-  const startSearch = async () => {
+  const startSearch = async (mode?: 'ultimate_teams' | 'original_teams') => {
     if (!user || !playerId) {
       setMatchMessage(t.ladderLoginRequired)
       return
     }
+    const gameMode = mode ?? ladderGameMode
     setMatchMessage(null)
     const { error } = await supabase.from('matchmaking_queue').upsert(
-      { player_id: playerId, created_at: new Date().toISOString() },
+      { player_id: playerId, game_mode: gameMode, created_at: new Date().toISOString() },
       { onConflict: 'player_id' },
     )
     if (error) {
@@ -1814,9 +1836,7 @@ function App() {
       return
     }
     setActiveView('ladder')
-    if (searchStatus === 'idle') {
-      await startSearch()
-    }
+    // Поиск не запускаем автоматически — пользователь выбирает режим (Ultimate Teams / Original Teams) и нажимает «Искать»
   }
 
   const cancelSearch = async () => {
@@ -2944,6 +2964,7 @@ function App() {
           </nav>
         )}
         <div className={`header-right ${showHamburger ? 'header-right--desktop-only' : ''}`}>
+          {user ? (
           <div className="strike-header-user">
             <div className="strike-header-avatar">
               {myAvatarUrl ? (
@@ -2984,6 +3005,19 @@ function App() {
                   : t.ladderLobbyTitle}
             </button>
           </div>
+          ) : (
+          <div className="strike-header-user strike-header-login">
+            {telegramLoginUrl ? (
+              <a href={telegramLoginUrl} className="strike-header-cta strike-btn strike-btn-primary">
+                {t.profileTelegramLoginButton}
+              </a>
+            ) : (
+              <button type="button" className="strike-header-cta strike-btn strike-btn-primary" onClick={() => setActiveView('profile')}>
+                {t.profileTelegramLoginButton}
+              </button>
+            )}
+          </div>
+          )}
           <div className="lang-switch">
             <button
               type="button"
@@ -3076,36 +3110,6 @@ function App() {
                 </button>
               </section>
             )}
-
-            {/* Live strip */}
-            <section className="strike-live-strip">
-              <button type="button" className="strike-live-arrow" aria-label="Scroll left">‹</button>
-              <div className="strike-live-scroll">
-                <span className="strike-live-item">{t.matchesHeader}</span>
-                <span className="strike-live-item">{t.tournamentsTitle}</span>
-                {!tournamentsLoading && tournamentsList.filter((tr) => tr.status === 'registration').length > 0 && (
-                  <span className="strike-live-item">
-                    {t.tournamentStatusRegistration} ({tournamentsList.filter((tr) => tr.status === 'registration').length})
-                  </span>
-                )}
-                {!tournamentsLoading && tournamentsList.filter((tr) => tr.status === 'ongoing').length > 0 && (
-                  <span className="strike-live-item">
-                    {t.tournamentStatusOngoing} ({tournamentsList.filter((tr) => tr.status === 'ongoing').length})
-                  </span>
-                )}
-                {!tournamentsLoading && tournamentsList.filter((tr) => tr.status === 'draft').length > 0 && (
-                  <span className="strike-live-item">
-                    {t.tournamentStatusUpcoming} ({tournamentsList.filter((tr) => tr.status === 'draft').length})
-                  </span>
-                )}
-              </div>
-              <span className="strike-live-countdown">
-                {!tournamentsLoading && (tournamentsList.filter((tr) => tr.status === 'registration').length > 0 || tournamentsList.filter((tr) => tr.status === 'ongoing').length > 0 || tournamentsList.filter((tr) => tr.status === 'draft').length > 0)
-                  ? `${t.tournamentsTitle} ›`
-                  : `${t.homeLiveCountdown}: 8H ›`}
-              </span>
-              <button type="button" className="strike-live-arrow" aria-label="Scroll right">›</button>
-            </section>
 
             {/* Main: 4 cards left + Your Stats right */}
             <section className="strike-main">
@@ -4211,9 +4215,30 @@ function App() {
             )}
 
             {user && playerId && !hasActiveTournamentMatch && searchStatus === 'idle' && (
-                <button type="button" className="primary-button" onClick={startSearch}>
+              <>
+                <p className="form-label ladder-mode-label">{t.ladderModeChoose}</p>
+                <div className="ladder-mode-options">
+                  <button
+                    type="button"
+                    className={`ladder-mode-btn ${ladderGameMode === 'ultimate_teams' ? 'ladder-mode-btn--active' : ''}`}
+                    onClick={() => setLadderGameMode('ultimate_teams')}
+                  >
+                    <span className="ladder-mode-btn-title">{t.ladderModeUltimateTeams}</span>
+                    <span className="ladder-mode-btn-hint">{t.ladderModeUltimateTeamsHint}</span>
+                  </button>
+                  <button
+                    type="button"
+                    className={`ladder-mode-btn ${ladderGameMode === 'original_teams' ? 'ladder-mode-btn--active' : ''}`}
+                    onClick={() => setLadderGameMode('original_teams')}
+                  >
+                    <span className="ladder-mode-btn-title">{t.ladderModeOriginalTeams}</span>
+                    <span className="ladder-mode-btn-hint">{t.ladderModeOriginalTeamsHint}</span>
+                  </button>
+                </div>
+                <button type="button" className="primary-button" onClick={() => startSearch()}>
                   {t.ladderSearchButton}
                 </button>
+              </>
             )}
 
             {user && playerId && !hasActiveTournamentMatch && searchStatus === 'searching' && (

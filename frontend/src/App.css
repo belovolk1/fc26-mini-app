@@ -1127,6 +1127,63 @@
   box-shadow: var(--shadow-sm);
 }
 
+.ladder-mode-label {
+  margin: 0 0 10px;
+  font-weight: 600;
+  font-size: 14px;
+}
+.ladder-mode-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+.ladder-mode-btn {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 14px 16px;
+  border-radius: var(--radius-sm);
+  border: 2px solid var(--border);
+  background: var(--bg-elevated);
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+.ladder-mode-btn:hover {
+  border-color: var(--accent);
+  background: var(--bg-card);
+}
+.ladder-mode-btn--active {
+  border-color: var(--accent);
+  background: rgba(244, 117, 33, 0.1);
+}
+.app.strike-theme .ladder-mode-btn {
+  border-color: var(--strike-border);
+  background: var(--strike-elevated);
+  color: var(--strike-text);
+}
+.app.strike-theme .ladder-mode-btn:hover {
+  border-color: var(--strike-orange);
+}
+.app.strike-theme .ladder-mode-btn--active {
+  border-color: var(--strike-orange);
+  background: var(--strike-orange-soft);
+}
+.ladder-mode-btn-title {
+  display: block;
+  font-weight: 700;
+  font-size: 15px;
+  margin-bottom: 4px;
+}
+.ladder-mode-btn-hint {
+  display: block;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.app.strike-theme .ladder-mode-btn-hint {
+  color: var(--strike-muted);
+}
+
 .lobby-header-badge {
   display: inline-block;
   padding: 6px 14px;
@@ -3734,6 +3791,13 @@
   align-items: center;
   gap: 12px;
   margin-right: 16px;
+}
+.strike-header-login {
+  margin-right: 0;
+}
+.strike-header-login .strike-header-cta {
+  text-decoration: none;
+  white-space: nowrap;
 }
 .strike-header-avatar {
   width: 36px;
