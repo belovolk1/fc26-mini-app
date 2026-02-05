@@ -274,8 +274,12 @@ let lastPollAt = null
 let lastPendingCount = 0
 
 const server = http.createServer((req, res) => {
-  if (req.url === '/health' && req.method === 'GET') {
+  if (req.url === '/health' && (req.method === 'GET' || req.method === 'HEAD')) {
     res.writeHead(200, { 'Content-Type': 'application/json' })
+    if (req.method === 'HEAD') {
+      res.end()
+      return
+    }
     res.end(JSON.stringify({
       ok: true,
       service: 'fc-area-telegram-bot',
