@@ -42,7 +42,7 @@ bot.onText(/\/start/, async (msg) => {
 
     if (fetchError) {
       console.error('Ошибка при проверке пользователя:', fetchError)
-      await bot.sendMessage(chatId, '❌ Ошибка при подключении к базе данных. Попробуйте позже.')
+      await bot.sendMessage(chatId, '❌ Database connection error. Please try again later.')
       return
     }
 
@@ -63,11 +63,11 @@ bot.onText(/\/start/, async (msg) => {
 
       await bot.sendMessage(
         chatId,
-        `✅ Добро пожаловать обратно, ${firstName || username || 'игрок'}!\n\n` +
-        `Ваш профиль уже подключён к Telegram.\n` +
-        `Username: ${username || 'не указан'}\n` +
+        `✅ Welcome back, ${firstName || username || 'player'}!\n\n` +
+        `Your profile is already linked to Telegram.\n` +
+        `Username: ${username || 'not set'}\n` +
         `Telegram ID: ${chatId}\n\n` +
-        `Теперь вы будете получать уведомления от администраторов.`
+        `You will receive notifications from administrators.`
       )
     } else {
       // Новый пользователь - создаём запись
@@ -88,8 +88,8 @@ bot.onText(/\/start/, async (msg) => {
         console.error('Ошибка при создании пользователя:', insertError)
         await bot.sendMessage(
           chatId,
-          '❌ Ошибка при создании профиля. Возможно, вы уже зарегистрированы через веб-сайт.\n\n' +
-          'Попробуйте войти на сайте через Telegram, а затем снова напишите /start здесь.'
+          '❌ Error creating profile. You may already be registered via the website.\n\n' +
+          'Try logging in on the site with Telegram, then send /start here again.'
         )
         return
       }
@@ -98,18 +98,18 @@ bot.onText(/\/start/, async (msg) => {
 
       await bot.sendMessage(
         chatId,
-        `🎉 Добро пожаловать, ${firstName || username || 'игрок'}!\n\n` +
-        `Ваш профиль создан и подключён к Telegram.\n` +
-        `Username: ${username || 'не указан'}\n` +
+        `🎉 Welcome, ${firstName || username || 'player'}!\n\n` +
+        `Your profile has been created and linked to Telegram.\n` +
+        `Username: ${username || 'not set'}\n` +
         `Telegram ID: ${chatId}\n` +
-        `Начальный ELO: 1200\n\n` +
-        `Теперь вы будете получать уведомления от администраторов.\n\n` +
-        `Заходите на сайт: https://www.fcarea.com`
+        `Starting ELO: 1200\n\n` +
+        `You will receive notifications from administrators.\n\n` +
+        `Visit the site: https://www.fcarea.com`
       )
     }
   } catch (error) {
     console.error('Неожиданная ошибка:', error)
-    await bot.sendMessage(chatId, '❌ Произошла ошибка. Попробуйте позже или обратитесь к администратору.')
+    await bot.sendMessage(chatId, '❌ Something went wrong. Please try again later or contact an administrator.')
   }
 })
 
@@ -123,8 +123,8 @@ bot.on('message', async (msg) => {
   const chatId = msg.chat.id
   await bot.sendMessage(
     chatId,
-    '👋 Привет! Я бот для FC Area.\n\n' +
-    'Используйте команду /start для подключения вашего профиля к Telegram.'
+    '👋 Hi! I\'m the FC Area bot.\n\n' +
+    'Use /start to link your profile to Telegram.'
   )
 })
 
@@ -204,7 +204,13 @@ async function processTournamentNotifications() {
     for (const row of rows) {
       let telegramIds = []
       let message = ''
-      if (row.type === 'tournament_started') {
+      if (row.type === 'tournament_created') {
+        const { data: tour } = await supabase.from('tournaments').select('name').eq('id', row.tournament_id).single()
+        const { data: players } = await supabase.from('players').select('telegram_id').not('telegram_id', 'is', null)
+        telegramIds = (players || []).map((p) => p.telegram_id).filter(Boolean)
+        const name = tour?.name || 'Tournament'
+        message = `🎉 New tournament «${name}» has been created!\n\nOpen the app to register.`
+      } else if (row.type === 'tournament_started') {
         const { data: tour } = await supabase.from('tournaments').select('name').eq('id', row.tournament_id).single()
         const { data: regs } = await supabase.from('tournament_registrations').select('player_id').eq('tournament_id', row.tournament_id)
         if (!regs?.length) {
@@ -214,8 +220,8 @@ async function processTournamentNotifications() {
         const playerIds = regs.map((r) => r.player_id)
         const { data: players } = await supabase.from('players').select('telegram_id').in('id', playerIds).not('telegram_id', 'is', null)
         telegramIds = (players || []).map((p) => p.telegram_id).filter(Boolean)
-        const name = tour?.name || 'Турнир'
-        message = `🏆 Турнир «${name}» начался!\n\nСетка доступна в приложении — зайдите и проверьте свой матч.`
+        const name = tour?.name || 'Tournament'
+        message = `🏆 Tournament «${name}» has started!\n\nBracket is available in the app — check your match.`
       } else if (row.type === 'round_reminder' && row.match_id) {
         const { data: match } = await supabase.from('tournament_matches').select('player_a_id, player_b_id').eq('id', row.match_id).single()
         if (!match || (!match.player_a_id && !match.player_b_id)) {
@@ -226,8 +232,8 @@ async function processTournamentNotifications() {
         const { data: players } = await supabase.from('players').select('telegram_id').in('id', ids).not('telegram_id', 'is', null)
         telegramIds = (players || []).map((p) => p.telegram_id).filter(Boolean)
         const { data: tour } = await supabase.from('tournaments').select('name').eq('id', row.tournament_id).single()
-        const name = tour?.name || 'Турнир'
-        message = `⏰ Через ${ROUND_REMINDER_MINUTES} минут начинается ваш матч в турнире «${name}».\n\nЗайдите в приложение и отметьте готовность к игре.`
+        const name = tour?.name || 'Tournament'
+        message = `⏰ Your match in tournament «${name}» starts in ${ROUND_REMINDER_MINUTES} minutes.\n\nOpen the app and confirm you're ready to play.`
       }
       for (const chatId of telegramIds) {
         try {

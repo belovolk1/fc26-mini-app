@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "dev": "node index.js"
+    "dev": "node index.js",
+    "check-notifications": "node scripts/check-notifications.js"
   },
   "dependencies": {
     "node-telegram-bot-api": "^0.66.0",
