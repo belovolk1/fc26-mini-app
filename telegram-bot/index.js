@@ -1,6 +1,9 @@
 require('dotenv').config()
+const http = require('http')
 const TelegramBot = require('node-telegram-bot-api')
 const { createClient } = require('@supabase/supabase-js')
+
+const PORT = Number(process.env.PORT) || 3000
 
 const token = process.env.TELEGRAM_BOT_TOKEN
 const supabaseUrl = process.env.SUPABASE_URL
@@ -196,9 +199,17 @@ async function processTournamentNotifications() {
       .is('sent_at', null)
       .order('created_at', { ascending: true })
     if (error) {
-      if (error.code === '42P01') return // table does not exist
+      if (error.code === '42P01') {
+        console.error('Таблица tournament_telegram_notifications не найдена. Выполни supabase-tournament-telegram-notifications.sql в Supabase.')
+        return
+      }
       console.error('Ошибка выборки уведомлений:', error.message)
       return
+    }
+    lastPollAt = new Date().toISOString()
+    lastPendingCount = rows?.length ?? 0
+    if (rows?.length) {
+      console.log('📤 Обработка уведомлений:', rows.length, 'в очереди')
     }
     if (!rows?.length) return
     for (const row of rows) {
@@ -235,14 +246,17 @@ async function processTournamentNotifications() {
         const name = tour?.name || 'Tournament'
         message = `⏰ Your match in tournament «${name}» starts in ${ROUND_REMINDER_MINUTES} minutes.\n\nOpen the app and confirm you're ready to play.`
       }
+      let sent = 0
       for (const chatId of telegramIds) {
         try {
           await bot.sendMessage(String(chatId), message)
+          sent++
           await new Promise((r) => setTimeout(r, 80))
         } catch (err) {
           console.error('Не удалось отправить уведомление в', chatId, err.message)
         }
       }
+      console.log('✅ Отправлено:', row.type, '→', sent, 'получателей')
       await supabase.from('tournament_telegram_notifications').update({ sent_at: new Date().toISOString() }).eq('id', row.id)
     }
   } catch (e) {
@@ -251,6 +265,35 @@ async function processTournamentNotifications() {
 }
 
 setInterval(processTournamentNotifications, NOTIFICATION_POLL_INTERVAL_MS)
-setTimeout(processTournamentNotifications, 15000) // первый запуск через 15 сек после старта бота
+setTimeout(processTournamentNotifications, 5000) // первый запуск через 5 сек
 
-console.log('✅ Бот успешно запущен! Ожидаю сообщений. Уведомления турниров: каждые', NOTIFICATION_POLL_INTERVAL_MS / 1000, 'сек.')
+console.log('✅ Бот успешно запущен! Уведомления турниров: каждые', NOTIFICATION_POLL_INTERVAL_MS / 1000, 'сек.')
+
+// HTTP‑сервер для Render: сервис должен слушать PORT, иначе Render считает его мёртвым
+let lastPollAt = null
+let lastPendingCount = 0
+
+const server = http.createServer((req, res) => {
+  if (req.url === '/health' && req.method === 'GET') {
+    res.writeHead(200, { 'Content-Type': 'application/json' })
+    res.end(JSON.stringify({
+      ok: true,
+      service: 'fc-area-telegram-bot',
+      lastPollAt: lastPollAt || null,
+      lastPendingCount,
+      uptime: process.uptime(),
+    }))
+    return
+  }
+  if (req.url === '/' && req.method === 'GET') {
+    res.writeHead(200, { 'Content-Type': 'text/plain' })
+    res.end('FC Area Telegram Bot is running. Use /health for status.')
+    return
+  }
+  res.writeHead(404)
+  res.end()
+})
+
+server.listen(PORT, () => {
+  console.log('🌐 HTTP server listening on port', PORT, '(Render health check)')
+})
