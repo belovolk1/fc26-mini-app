@@ -2470,12 +2470,10 @@ function App() {
                       const isPlayerB = m.player_b_id === pid
                       const isInMatch = isPlayerA || isPlayerB
                       const needsReady = isInMatch && ((isPlayerA && !m.player_a_ready_at) || (isPlayerB && !m.player_b_ready_at))
-                      const canSubmit = isInMatch && (m.status === 'both_ready' || m.status === 'score_submitted') && m.score_submitted_by !== pid
                       const canConfirm = isInMatch && m.status === 'score_submitted' && m.score_submitted_by !== pid
                       const finished = ['confirmed', 'finished', 'auto_win_a', 'auto_win_b', 'auto_no_show'].includes(m.status)
                       const inp = scoreInputs[m.id] ?? { a: String(m.score_a ?? ''), b: String(m.score_b ?? '') }
                       const readyLabel = m.status === 'ready_a' ? `${t.bracketReadyLabel} ${getPlayerName(m.player_a_id)}` : m.status === 'ready_b' ? `${t.bracketReadyLabel} ${getPlayerName(m.player_b_id)}` : m.status === 'both_ready' ? t.bracketBothReady : m.status
-                      const stepLabel = isInMatch && !finished && (needsReady ? t.bracketStep1 : canConfirm ? t.bracketStep3 : (m.status === 'both_ready' || m.status === 'score_submitted') ? t.bracketStep2 : null)
                       const matchStatusClass = finished ? 'bracket-match-card--confirmed' : m.status === 'score_submitted' ? 'bracket-match-card--score-submitted' : m.status === 'both_ready' ? 'bracket-match-card--both-ready' : m.status === 'ready_a' || m.status === 'ready_b' ? 'bracket-match-card--ready' : 'bracket-match-card--scheduled'
                       return (
                         <div key={m.id} className={`bracket-match-card ${matchStatusClass}`}>
