@@ -224,7 +224,7 @@ const messages: Record<
     },
     quickPlayTitle: 'Quick play',
     quickPlayText:
-      'Find an opponent for Ultimate Team (FC 26) or friendly match. Play within 40 minutes and submit the result.',
+      'Find an opponent for Ultimate Team (FC 26) or Original Teams. Play within 40 minutes and submit the result.',
     tournamentsTitle: 'Tournaments',
     tournamentsText: 'Register for cups and leagues. Play‑offs and double round formats.',
     profileTileTitle: 'Profile & stats',
@@ -293,7 +293,7 @@ const messages: Record<
     ladderModeUltimateTeams: 'Ultimate Teams',
     ladderModeOriginalTeams: 'Original Teams',
     ladderModeUltimateTeamsHint: 'Matches in FC 26 Ultimate Team mode.',
-    ladderModeOriginalTeamsHint: 'Friendly matches in FC 26 (quick match).',
+    ladderModeOriginalTeamsHint: 'Ranked matches in FC 26 with original teams (no custom squads).',
     tournamentsHeader: 'Tournaments',
     tournamentsIntro:
       'Here will be a list of upcoming tournaments, registration and brackets.',
@@ -360,7 +360,7 @@ const messages: Record<
     profileTabSettings: 'Settings',
     guestName: 'Guest',
     homeHeroHeadline: 'COMPETE. CLIMB. DOMINATE.',
-    homeHeroDesc: 'FC Area is the platform for FC 26 players: find opponents for Ultimate Team and friendly matches, play ladder and tournaments, track ELO and stats.',
+    homeHeroDesc: 'FC Area is the platform for FC 26 players: find opponents for Ultimate Team and Original Teams, play ladder and tournaments, track ELO and stats.',
     homeJoinNow: 'JOIN NOW',
     homeLearnMore: 'LEARN MORE',
     homePlayNow: 'PLAY NOW',
@@ -439,7 +439,7 @@ const messages: Record<
     },
     quickPlayTitle: 'Joc rapid',
     quickPlayText:
-      'Găsește un adversar pentru Ultimate Team (FC 26) sau meci amical. Joacă în 40 de minute și trimite rezultatul.',
+      'Găsește un adversar pentru Ultimate Team (FC 26) sau Original Teams. Joacă în 40 de minute și trimite rezultatul.',
     tournamentsTitle: 'Turnee',
     tournamentsText: 'Înscrie-te la cupe și ligi. Formate play‑off și double round.',
     profileTileTitle: 'Profil și statistici',
@@ -508,7 +508,7 @@ const messages: Record<
     ladderModeUltimateTeams: 'Ultimate Teams',
     ladderModeOriginalTeams: 'Original Teams',
     ladderModeUltimateTeamsHint: 'Meciuri în modul Ultimate Team din FC 26.',
-    ladderModeOriginalTeamsHint: 'Meciuri amicale cu echipe originale/implicite.',
+    ladderModeOriginalTeamsHint: 'Meciuri ranked în FC 26 cu echipe originale (fără lot personalizat).',
     tournamentsHeader: 'Turnee',
     tournamentsIntro:
       'Aici va apărea lista turneelor, înregistrarea și tabloul.',
@@ -575,7 +575,7 @@ const messages: Record<
     profileTabSettings: 'Setări',
     guestName: 'Vizitator',
     homeHeroHeadline: 'CONCURĂ. URCA. DOMINĂ.',
-    homeHeroDesc: 'FC Area este platforma pentru jucătorii FC 26: găsește adversari pentru Ultimate Team și meciuri amicale, joacă ladder și turnee, urmărește ELO și statisticile.',
+    homeHeroDesc: 'FC Area este platforma pentru jucătorii FC 26: găsește adversari pentru Ultimate Team și Original Teams, joacă ladder și turnee, urmărește ELO și statisticile.',
     homeJoinNow: 'ÎNSCRIE-TE',
     homeLearnMore: 'AFLĂ MAI MULT',
     homePlayNow: 'JOACĂ ACUM',
@@ -654,7 +654,7 @@ const messages: Record<
     },
     quickPlayTitle: 'Быстрая игра',
     quickPlayText:
-      'Найди соперника для Ultimate Team (FC 26) или товарищеского матча. Сыграй в течение 40 минут и отправь результат.',
+      'Найди соперника для Ultimate Team (FC 26) или Original Teams. Сыграй в течение 40 минут и отправь результат.',
     tournamentsTitle: 'Турниры',
     tournamentsText: 'Регистрируйся на кубки и лиги. Форматы плей‑офф и double round.',
     profileTileTitle: 'Профиль и статистика',
@@ -723,7 +723,7 @@ const messages: Record<
     ladderModeUltimateTeams: 'Ultimate Teams',
     ladderModeOriginalTeams: 'Original Teams',
     ladderModeUltimateTeamsHint: 'Матчи в режиме Ultimate Team в FC 26.',
-    ladderModeOriginalTeamsHint: 'Товарищеские матчи в FC 26 (быстрый матч).',
+    ladderModeOriginalTeamsHint: 'Рейтинговые матчи в FC 26 с оригинальными составами (без своего состава).',
     tournamentsHeader: 'Турниры',
     tournamentsIntro:
       'Здесь появится список ближайших турниров, регистрация и сетка.',
@@ -790,7 +790,7 @@ const messages: Record<
     profileTabSettings: 'Настройки',
     guestName: 'Гость',
     homeHeroHeadline: 'СРАЖАЙСЯ. РАСТИ. ДОМИНИРУЙ.',
-    homeHeroDesc: 'FC Area — платформа для игроков FC 26: ищи соперников для Ultimate Team и товарищеских матчей, играй в ладдер и турниры, следи за ELO и статистикой.',
+    homeHeroDesc: 'FC Area — платформа для игроков FC 26: ищи соперников для Ultimate Team и Original Teams, играй в ладдер и турниры, следи за ELO и статистикой.',
     homeJoinNow: 'ПРИСОЕДИНИТЬСЯ',
     homeLearnMore: 'ПОДРОБНЕЕ',
     homePlayNow: 'ИГРАТЬ',
@@ -885,6 +885,26 @@ type TelegramUser = {
 }
 
 const TG_REDIRECT_KEY = 'tg_redirect'
+
+/** Пользователь из Telegram Mini App (когда открыто внутри Telegram). */
+function getTelegramWebAppUser(): TelegramUser | null {
+  try {
+    const w = (window as any).Telegram?.WebApp
+    const u = w?.initDataUnsafe?.user
+    if (!u || typeof u.id !== 'number') return null
+    const first = u.first_name ?? u.firstName
+    if (typeof first !== 'string') return null
+    return {
+      id: u.id,
+      first_name: String(first).trim(),
+      last_name: (u.last_name ?? u.lastName)?.trim() || undefined,
+      username: (u.username ?? '')?.trim() || undefined,
+      language_code: (u.language_code ?? u.languageCode)?.trim() || undefined,
+    }
+  } catch {
+    return null
+  }
+}
 
 /** Парсит данные пользователя после редиректа из Telegram. Не удаляет из sessionStorage — очистка в useEffect. */
 function parseWidgetRedirect(): TelegramUser | null {
@@ -1162,34 +1182,74 @@ function App() {
   const chatMessagesScrollRef = useRef<HTMLDivElement>(null)
   const chatMessagesEndRef = useRef<HTMLDivElement>(null)
   
-  // Парсим редирект один раз при загрузке (до первого рендера)
+  // Парсим редирект и/или пользователя из Telegram WebApp один раз при загрузке
   const parsedRedirectRef = useRef<TelegramUser | null>(null)
+  const hadRedirectParamsRef = useRef(false)
   if (parsedRedirectRef.current === null) {
-    const parsed = parseWidgetRedirect()
-    if (parsed) {
+    const fromRedirect = parseWidgetRedirect()
+    if (fromRedirect) {
+      hadRedirectParamsRef.current = true
       try {
-        localStorage.setItem(WIDGET_USER_KEY, JSON.stringify(parsed))
+        localStorage.setItem(WIDGET_USER_KEY, JSON.stringify(fromRedirect))
       } catch (_) {}
-      parsedRedirectRef.current = parsed
+      parsedRedirectRef.current = fromRedirect
+    } else {
+      const fromWebApp = getTelegramWebAppUser()
+      if (fromWebApp) {
+        try {
+          localStorage.setItem(WIDGET_USER_KEY, JSON.stringify(fromWebApp))
+        } catch (_) {}
+        parsedRedirectRef.current = fromWebApp
+      }
     }
   }
-  
+
   const [widgetUser, setWidgetUser] = useState<TelegramUser | null>(() => {
     return parsedRedirectRef.current || getStoredWidgetUser()
   })
 
-  // Если был редирект из Telegram — очищаем URL и переключаемся на профиль
+  // Если был редирект из Telegram (OAuth) — обновляем state, очищаем URL и переключаемся на профиль
   useEffect(() => {
     if (parsedRedirectRef.current) {
       setWidgetUser(parsedRedirectRef.current)
+      if (hadRedirectParamsRef.current) {
+        setActiveView('profile')
+        try {
+          sessionStorage.removeItem(TG_REDIRECT_KEY)
+        } catch (_) {}
+        window.history.replaceState(null, '', window.location.pathname)
+      }
+      parsedRedirectRef.current = null
+    }
+  }, [])
+
+  // Повторная попытка определить пользователя после монтирования (браузер/десктоп/мобильный: hash или sessionStorage могли подгрузиться позже)
+  useEffect(() => {
+    if (widgetUser) return
+    const fromRedirect = parseWidgetRedirect()
+    if (fromRedirect) {
+      try {
+        localStorage.setItem(WIDGET_USER_KEY, JSON.stringify(fromRedirect))
+      } catch (_) {}
+      setWidgetUser(fromRedirect)
       setActiveView('profile')
       try {
         sessionStorage.removeItem(TG_REDIRECT_KEY)
       } catch (_) {}
       window.history.replaceState(null, '', window.location.pathname)
-      parsedRedirectRef.current = null
+      return
     }
-  }, [])
+    const fromWebApp = getTelegramWebAppUser()
+    if (fromWebApp) {
+      try {
+        localStorage.setItem(WIDGET_USER_KEY, JSON.stringify(fromWebApp))
+      } catch (_) {}
+      setWidgetUser(fromWebApp)
+    } else {
+      const stored = getStoredWidgetUser()
+      if (stored) setWidgetUser(stored)
+    }
+  }, [widgetUser])
 
   // Прямая ссылка на вход через Telegram (fallback, если виджет не загружается). Bot ID — из токена BotFather (часть до двоеточия).
   const telegramBotId = import.meta.env.VITE_TELEGRAM_BOT_ID as string | undefined

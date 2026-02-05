@@ -16,7 +16,13 @@
       (function() {
         var q = window.location.search.slice(1), h = window.location.hash.slice(1);
         var params = q || h || '';
-        if (params && (params.indexOf('id=') !== -1 || params.indexOf('user_id=') !== -1)) {
+        var isTelegramAuth = params && (
+          params.indexOf('id=') !== -1 ||
+          params.indexOf('user_id=') !== -1 ||
+          params.indexOf('tgAuthResult=') !== -1 ||
+          params.indexOf('auth_date=') !== -1
+        );
+        if (isTelegramAuth) {
           try { sessionStorage.setItem('tg_redirect', params); } catch (e) {}
         }
       })();
