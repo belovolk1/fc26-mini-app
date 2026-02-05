@@ -158,6 +158,40 @@ const messages: Record<
     footerTerms: string
     footerPrivacy: string
     footerContact: string
+    bracketRound1: string
+    bracketRound2: string
+    bracketRound3: string
+    bracketRound4: string
+    bracketRound5: string
+    bracketRound6: string
+    bracketRoundNum: string
+    bracketHintNoGrid: string
+    bracketHintSlots: string
+    bracketReadyLabel: string
+    bracketBothReady: string
+    bracketReadyPlay: string
+    bracketMatchResult: string
+    bracketScoreHintConfirm: string
+    bracketScoreHintEnter: string
+    bracketScoreWaitingConfirm: string
+    bracketScoreLabelMy: string
+    bracketScoreLabelOpp: string
+    bracketSubmitScore: string
+    bracketConfirmResult: string
+    bracketEnterScore: string
+    tournamentStatusRegistration: string
+    tournamentStatusOngoing: string
+    tournamentStatusFinished: string
+    tournamentRegUntil: string
+    tournamentStart: string
+    tournamentParticipants: string
+    tournamentRegister: string
+    tournamentUnregister: string
+    tournamentBracket: string
+    tournamentHideBracket: string
+    tournamentWinner: string
+    adminStartBracket: string
+    adminDeleteTournamentConfirm: string
   }
 > = {
   en: {
@@ -325,6 +359,40 @@ const messages: Record<
     footerTerms: 'Terms of Service',
     footerPrivacy: 'Privacy Policy',
     footerContact: 'Contact',
+    bracketRound1: 'Final',
+    bracketRound2: 'Semi-final',
+    bracketRound3: 'Quarter-final',
+    bracketRound4: '1/8',
+    bracketRound5: '1/16',
+    bracketRound6: '1/32',
+    bracketRoundNum: 'Round {n}',
+    bracketHintNoGrid: 'Bracket is created after registration ends (min 2 participants). If registration has ended — run «Start bracket» in admin.',
+    bracketHintSlots: 'Final and semi-final slots are filled automatically after results are confirmed in previous rounds.',
+    bracketReadyLabel: 'Ready:',
+    bracketBothReady: 'Both ready',
+    bracketReadyPlay: 'Ready to play',
+    bracketMatchResult: 'Match result',
+    bracketScoreHintConfirm: 'Opponent entered the score. Confirm the result if correct.',
+    bracketScoreHintEnter: 'Enter the score and press «Submit score». Opponent must confirm the result.',
+    bracketScoreWaitingConfirm: 'Waiting for opponent to confirm.',
+    bracketScoreLabelMy: 'Your goals',
+    bracketScoreLabelOpp: 'Opponent goals',
+    bracketSubmitScore: 'Submit score',
+    bracketConfirmResult: 'Confirm result',
+    bracketEnterScore: 'Enter score',
+    tournamentStatusRegistration: 'Registration open',
+    tournamentStatusOngoing: 'Tournament in progress',
+    tournamentStatusFinished: 'Finished',
+    tournamentRegUntil: 'Reg. until',
+    tournamentStart: 'Start',
+    tournamentParticipants: 'participants',
+    tournamentRegister: 'Register',
+    tournamentUnregister: 'Cancel registration',
+    tournamentBracket: 'Bracket',
+    tournamentHideBracket: 'Hide bracket',
+    tournamentWinner: 'Winner:',
+    adminStartBracket: 'Start bracket',
+    adminDeleteTournamentConfirm: 'Delete tournament? Registrations and matches will be removed.',
   },
   ro: {
     appTitle: 'FC Area',
@@ -491,6 +559,40 @@ const messages: Record<
     footerTerms: 'Termeni și condiții',
     footerPrivacy: 'Confidențialitate',
     footerContact: 'Contact',
+    bracketRound1: 'Finală',
+    bracketRound2: 'Semi-finală',
+    bracketRound3: 'Sferturi',
+    bracketRound4: '1/8',
+    bracketRound5: '1/16',
+    bracketRound6: '1/32',
+    bracketRoundNum: 'Runda {n}',
+    bracketHintNoGrid: 'Tabloul se creează după încheierea înscrierii (minim 2 participanți). Dacă înscrierea s-a încheiat — rulează «Pornire tablou» în admin.',
+    bracketHintSlots: 'Sloturile pentru finală și semi-finală se completează automat după confirmarea rezultatelor în runde anterioare.',
+    bracketReadyLabel: 'Gata:',
+    bracketBothReady: 'Amândoi gata',
+    bracketReadyPlay: 'Gata de joc',
+    bracketMatchResult: 'Rezultat meci',
+    bracketScoreHintConfirm: 'Adversarul a introdus scorul. Confirmă rezultatul dacă e corect.',
+    bracketScoreHintEnter: 'Introdu scorul și apasă «Trimite scorul». Adversarul trebuie să confirme rezultatul.',
+    bracketScoreWaitingConfirm: 'Se așteaptă confirmarea adversarului.',
+    bracketScoreLabelMy: 'Golurile tale',
+    bracketScoreLabelOpp: 'Golurile adversarului',
+    bracketSubmitScore: 'Trimite scorul',
+    bracketConfirmResult: 'Confirmă rezultatul',
+    bracketEnterScore: 'Introdu scorul',
+    tournamentStatusRegistration: 'Înscriere deschisă',
+    tournamentStatusOngoing: 'Turneu în desfășurare',
+    tournamentStatusFinished: 'Încheiat',
+    tournamentRegUntil: 'Înscriere până la',
+    tournamentStart: 'Start',
+    tournamentParticipants: 'participanți',
+    tournamentRegister: 'Înscriere',
+    tournamentUnregister: 'Anulează înscrierea',
+    tournamentBracket: 'Tablou',
+    tournamentHideBracket: 'Ascunde tabloul',
+    tournamentWinner: 'Câștigător:',
+    adminStartBracket: 'Pornire tablou',
+    adminDeleteTournamentConfirm: 'Ștergi turneul? Înscrierile și meciurile vor fi șterse.',
   },
   ru: {
     appTitle: 'FC Area',
@@ -657,6 +759,40 @@ const messages: Record<
     footerTerms: 'Условия использования',
     footerPrivacy: 'Конфиденциальность',
     footerContact: 'Контакты',
+    bracketRound1: 'Финал',
+    bracketRound2: '1/2 финала',
+    bracketRound3: '1/4 финала',
+    bracketRound4: '1/8 финала',
+    bracketRound5: '1/16',
+    bracketRound6: '1/32',
+    bracketRoundNum: 'Раунд {n}',
+    bracketHintNoGrid: 'Сетка создаётся после окончания регистрации (нужно минимум 2 участника). Если регистрация уже закончилась — запустите «Старт сетки» в админке.',
+    bracketHintSlots: 'Слоты финала и полуфинала заполняются автоматически после подтверждения результатов в предыдущих раундах.',
+    bracketReadyLabel: 'Готов:',
+    bracketBothReady: 'Оба готовы',
+    bracketReadyPlay: 'Готов играть',
+    bracketMatchResult: 'Результат матча',
+    bracketScoreHintConfirm: 'Соперник ввёл счёт. Подтвердите результат, если он верный.',
+    bracketScoreHintEnter: 'Введите счёт и нажмите «Отправить счёт». Соперник должен подтвердить результат.',
+    bracketScoreWaitingConfirm: 'Ожидаем подтверждения соперника.',
+    bracketScoreLabelMy: 'Ваши голы',
+    bracketScoreLabelOpp: 'Голы соперника',
+    bracketSubmitScore: 'Отправить счёт',
+    bracketConfirmResult: 'Подтвердить результат',
+    bracketEnterScore: 'Введите счёт',
+    tournamentStatusRegistration: 'Регистрация открыта',
+    tournamentStatusOngoing: 'Идёт турнир',
+    tournamentStatusFinished: 'Завершён',
+    tournamentRegUntil: 'Рег. до',
+    tournamentStart: 'Старт',
+    tournamentParticipants: 'участников',
+    tournamentRegister: 'Регистрация',
+    tournamentUnregister: 'Отменить регистрацию',
+    tournamentBracket: 'Сетка',
+    tournamentHideBracket: 'Скрыть сетку',
+    tournamentWinner: 'Победитель:',
+    adminStartBracket: 'Старт сетки',
+    adminDeleteTournamentConfirm: 'Удалить турнир? Регистрации и матчи будут удалены.',
   },
 }
 
@@ -879,7 +1015,26 @@ const IconEloDownSvg = () => (
 
 function App() {
   const [activeView, setActiveView] = useState<View>('home')
-  const [lang, setLang] = useState<Lang>('en')
+  const LANG_STORAGE_KEY = 'fc_area_lang'
+  const getStoredLang = (): Lang | null => {
+    try {
+      const s = localStorage.getItem(LANG_STORAGE_KEY)
+      if (s === 'en' || s === 'ro' || s === 'ru') return s
+    } catch (_) {}
+    return null
+  }
+  const [lang, setLang] = useState<Lang>(() => getStoredLang() ?? 'en')
+  const langSavedOnce = useRef(false)
+
+  useEffect(() => {
+    if (!langSavedOnce.current) {
+      langSavedOnce.current = true
+      return
+    }
+    try {
+      localStorage.setItem(LANG_STORAGE_KEY, lang)
+    } catch (_) {}
+  }, [lang])
   const [playerId, setPlayerId] = useState<string | null>(null)
   const [profileLoadError, setProfileLoadError] = useState<string | null>(null)
   const [elo, setElo] = useState<number | null>(null)
@@ -1013,8 +1168,9 @@ function App() {
 
   const user = widgetUser
 
-  // авто-выбор языка по Telegram, если ещё не меняли вручную
+  // авто-выбор языка по Telegram только если пользователь ещё не сохранял выбор
   useEffect(() => {
+    if (getStoredLang() != null) return
     const code = user?.language_code?.toLowerCase()
     if (!code) return
 
@@ -1022,7 +1178,7 @@ function App() {
     if (code.startsWith('ru')) detected = 'ru'
     else if (code.startsWith('ro') || code === 'mo') detected = 'ro'
 
-    setLang((prev) => prev || detected)
+    setLang(detected)
   }, [user])
 
   const t = messages[lang]
@@ -2001,7 +2157,7 @@ function App() {
 
   const deleteTournament = async (tournamentId: string) => {
     if (!isAdminUser) return
-    if (!window.confirm('Удалить турнир? Регистрации и матчи будут удалены.')) return
+    if (!window.confirm(t.adminDeleteTournamentConfirm)) return
     setAdminTourResult(null)
     const { error } = await supabase.from('tournaments').delete().eq('id', tournamentId)
     if (error) {
@@ -2036,19 +2192,45 @@ function App() {
     matches: TournamentMatchRow[]
     playerId: string | null
     leaderboard: LeaderboardRow[]
+    lang: Lang
     onRefresh: () => void | Promise<void>
     onMatchUpdated?: (updated: TournamentMatchRow) => void
   }) {
-    const { matches, playerId: pid, leaderboard, onMatchUpdated } = props
+    const { matches, playerId: pid, leaderboard, lang: bracketLang, onMatchUpdated } = props
     const [matchMessage, setMatchMessage] = useState<string | null>(null)
     const [savingMatchId, setSavingMatchId] = useState<string | null>(null)
     const [scoreInputs, setScoreInputs] = useState<Record<string, { a: string; b: string }>>({})
+    const [bracketPlayerNames, setBracketPlayerNames] = useState<Record<string, string>>({})
 
     const getPlayerName = (id: string | null) => {
       if (!id) return '—'
+      if (bracketPlayerNames[id]) return bracketPlayerNames[id]
       const r = leaderboard.find((x) => x.player_id === id)
       return r?.display_name || id.slice(0, 8)
     }
+
+    useEffect(() => {
+      const ids = new Set<string>()
+      matches.forEach((m) => {
+        if (m.player_a_id) ids.add(m.player_a_id)
+        if (m.player_b_id) ids.add(m.player_b_id)
+      })
+      if (ids.size === 0) {
+        setBracketPlayerNames({})
+        return
+      }
+      supabase
+        .from('players')
+        .select('id, display_name')
+        .in('id', Array.from(ids))
+        .then(({ data }) => {
+          const map: Record<string, string> = {}
+          ;(data || []).forEach((p: { id: string; display_name: string | null }) => {
+            map[p.id] = p.display_name || p.id.slice(0, 8)
+          })
+          setBracketPlayerNames(map)
+        })
+    }, [matches])
 
     const rounds = useMemo(() => {
       const byRound: Record<number, TournamentMatchRow[]> = {}
@@ -2060,7 +2242,7 @@ function App() {
       return byRound
     }, [matches])
 
-    const roundNames: Record<number, string> = { 1: 'Финал', 2: '1/2 финала', 3: '1/4 финала', 4: '1/8 финала', 5: '1/16', 6: '1/32' }
+    const roundNames: Record<number, string> = { 1: t.bracketRound1, 2: t.bracketRound2, 3: t.bracketRound3, 4: t.bracketRound4, 5: t.bracketRound5, 6: t.bracketRound6 }
 
     const markReady = async (m: TournamentMatchRow) => {
       if (!pid) return
@@ -2080,7 +2262,7 @@ function App() {
       const a = parseInt(inp.a, 10)
       const b = parseInt(inp.b, 10)
       if (Number.isNaN(a) || Number.isNaN(b)) {
-        setMatchMessage('Введите счёт')
+        setMatchMessage(t.bracketEnterScore)
         return
       }
       setSavingMatchId(m.id)
@@ -2111,16 +2293,23 @@ function App() {
       <div className="tournament-bracket">
         {matchMessage && <p className="panel-text small">{matchMessage}</p>}
         {noMatchesYet && (
-          <p className="panel-text small tournament-bracket-hint">Сетка создаётся после окончания регистрации (нужно минимум 2 участника). Если регистрация уже закончилась — запустите «Старт сетки» в админке.</p>
+          <p className="panel-text small tournament-bracket-hint">{t.bracketHintNoGrid}</p>
         )}
         {hasEmptySlots && !noMatchesYet && (
-          <p className="panel-text small tournament-bracket-hint">Слоты финала и полуфинала заполняются автоматически после подтверждения результатов в предыдущих раундах.</p>
+          <p className="panel-text small tournament-bracket-hint">{t.bracketHintSlots}</p>
         )}
-        {[1, 2, 3, 4, 5, 6].filter((r) => rounds[r]?.length).map((roundNum) => (
+        <div className="bracket-rounds-container">
+        {[1, 2, 3, 4, 5, 6].filter((r) => rounds[r]?.length).map((roundNum) => {
+          const raw = (rounds[roundNum] || []).filter((m) => m.player_a_id != null || m.player_b_id != null)
+          const roundMatches = raw
+            .filter((m, i, arr) => arr.findIndex((x) => x.id === m.id) === i)
+            .filter((m, i, arr) => arr.findIndex((x) => x.round === m.round && x.match_index === m.match_index) === i)
+          if (roundMatches.length === 0) return null
+          return (
           <div key={roundNum} className="bracket-round">
-            <h4 className="bracket-round-title">{roundNames[roundNum] || `Раунд ${roundNum}`}</h4>
+            <h4 className="bracket-round-title">{roundNames[roundNum] || t.bracketRoundNum.replace('{n}', String(roundNum))}</h4>
             <div className="bracket-matches">
-              {(rounds[roundNum] || []).map((m) => {
+              {roundMatches.map((m) => {
                 const isPlayerA = m.player_a_id === pid
                 const isPlayerB = m.player_b_id === pid
                 const isInMatch = isPlayerA || isPlayerB
@@ -2129,6 +2318,7 @@ function App() {
                 const canConfirm = isInMatch && m.status === 'score_submitted' && m.score_submitted_by !== pid
                 const finished = ['confirmed', 'finished', 'auto_win_a', 'auto_win_b', 'auto_no_show'].includes(m.status)
                 const inp = scoreInputs[m.id] ?? { a: String(m.score_a ?? ''), b: String(m.score_b ?? '') }
+                const readyLabel = m.status === 'ready_a' ? `${t.bracketReadyLabel} ${getPlayerName(m.player_a_id)}` : m.status === 'ready_b' ? `${t.bracketReadyLabel} ${getPlayerName(m.player_b_id)}` : m.status === 'both_ready' ? t.bracketBothReady : m.status
                 return (
                   <div key={m.id} className="bracket-match strike-card">
                     <div className="bracket-match-players">
@@ -2140,32 +2330,40 @@ function App() {
                       {m.score_a != null && m.score_b != null ? `${m.score_a} : ${m.score_b}` : '—'}
                     </div>
                     <div className="bracket-match-meta panel-text small">
-                      {new Date(m.scheduled_start).toLocaleString()} – {new Date(m.scheduled_end).toLocaleString()} · {m.status}
+                      {new Date(m.scheduled_start).toLocaleString(bracketLang === 'ru' ? 'ru-RU' : bracketLang === 'ro' ? 'ro-RO' : 'en-US', { hour12: bracketLang === 'en' })} – {new Date(m.scheduled_end).toLocaleString(bracketLang === 'ru' ? 'ru-RU' : bracketLang === 'ro' ? 'ro-RO' : 'en-US', { hour12: bracketLang === 'en' })} · {readyLabel}
                     </div>
                     {isInMatch && !finished && (
                       <div className="bracket-match-actions">
                         {needsReady && (
                           <button type="button" className="strike-btn strike-btn-primary" disabled={savingMatchId === m.id} onClick={() => markReady(m)}>
-                            Готов играть
+                            {t.bracketReadyPlay}
                           </button>
                         )}
                         {(m.status === 'both_ready' || m.status === 'score_submitted') && (
                           <div className="bracket-match-score-entry">
-                            <div className="bracket-match-score-entry-title">Результат матча</div>
+                            <div className="bracket-match-score-entry-title">{t.bracketMatchResult}</div>
                             <p className="bracket-match-score-entry-hint">
                               {m.status === 'score_submitted' && canConfirm
-                                ? 'Соперник ввёл счёт. Подтвердите результат, если он верный.'
-                                : 'Введите счёт и нажмите «Отправить счёт». Соперник должен подтвердить результат.'}
+                                ? t.bracketScoreHintConfirm
+                                : m.status === 'score_submitted' && m.score_submitted_by === pid
+                                  ? t.bracketScoreWaitingConfirm
+                                  : t.bracketScoreHintEnter}
                             </p>
-                            <div className="bracket-match-score-entry-row">
-                              <label className="bracket-score-label">Ваши голы</label>
-                              <input type="number" min={0} className="form-input bracket-score-input" value={isPlayerA ? inp.a : inp.b} onChange={(e) => setScoreInputs((prev) => ({ ...prev, [m.id]: { ...prev[m.id], a: isPlayerA ? e.target.value : prev[m.id]?.a ?? '', b: isPlayerB ? e.target.value : prev[m.id]?.b ?? '' } }))} />
-                              <span className="bracket-score-sep">–</span>
-                              <label className="bracket-score-label">Голы соперника</label>
-                              <input type="number" min={0} className="form-input bracket-score-input" value={isPlayerA ? inp.b : inp.a} onChange={(e) => setScoreInputs((prev) => ({ ...prev, [m.id]: { ...prev[m.id], a: isPlayerB ? e.target.value : prev[m.id]?.a ?? '', b: isPlayerA ? e.target.value : prev[m.id]?.b ?? '' } }))} />
-                              {canSubmit && <button type="button" className="strike-btn strike-btn-secondary" disabled={savingMatchId === m.id} onClick={() => submitScore(m)}>Отправить счёт</button>}
-                              {canConfirm && <button type="button" className="strike-btn strike-btn-primary" disabled={savingMatchId === m.id} onClick={() => confirmScore(m)}>Подтвердить результат</button>}
-                            </div>
+                            {m.status === 'score_submitted' ? (
+                              <div className="bracket-match-score-entry-row">
+                                <span className="bracket-match-score-display">{m.score_a ?? 0} : {m.score_b ?? 0}</span>
+                                {canConfirm && <button type="button" className="strike-btn strike-btn-primary" disabled={savingMatchId === m.id} onClick={() => confirmScore(m)}>{t.bracketConfirmResult}</button>}
+                              </div>
+                            ) : (
+                              <div className="bracket-match-score-entry-row">
+                                <label className="bracket-score-label">{t.bracketScoreLabelMy}</label>
+                                <input type="number" min={0} className="form-input bracket-score-input" value={isPlayerA ? inp.a : inp.b} onChange={(e) => setScoreInputs((prev) => ({ ...prev, [m.id]: { ...prev[m.id], a: isPlayerA ? e.target.value : prev[m.id]?.a ?? '', b: isPlayerB ? e.target.value : prev[m.id]?.b ?? '' } }))} />
+                                <span className="bracket-score-sep">–</span>
+                                <label className="bracket-score-label">{t.bracketScoreLabelOpp}</label>
+                                <input type="number" min={0} className="form-input bracket-score-input" value={isPlayerA ? inp.b : inp.a} onChange={(e) => setScoreInputs((prev) => ({ ...prev, [m.id]: { ...prev[m.id], a: isPlayerB ? e.target.value : prev[m.id]?.a ?? '', b: isPlayerA ? e.target.value : prev[m.id]?.b ?? '' } }))} />
+                                {canSubmit && <button type="button" className="strike-btn strike-btn-secondary" disabled={savingMatchId === m.id} onClick={() => submitScore(m)}>{t.bracketSubmitScore}</button>}
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
@@ -2175,7 +2373,9 @@ function App() {
               })}
             </div>
           </div>
-        ))}
+          )
+        })}
+        </div>
       </div>
     )
   }
@@ -2218,11 +2418,11 @@ function App() {
     const canRegister = tr.status === 'registration' && playerId && now >= regStart && now < regEnd
     const statusLabel =
       tr.status === 'registration'
-        ? 'Регистрация открыта'
+        ? t.tournamentStatusRegistration
         : tr.status === 'ongoing'
-          ? 'Идёт турнир'
+          ? t.tournamentStatusOngoing
           : tr.status === 'finished'
-            ? 'Завершён'
+            ? t.tournamentStatusFinished
             : tr.status
     const dateTimeStr = (d: string) => new Date(d).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
     const matches = matchesByTournamentId[tr.id] ?? []
@@ -2241,19 +2441,19 @@ function App() {
               <p className="tournament-card-v2-meta">
                 <span className="tournament-card-v2-status">{statusLabel}</span>
                 <span className="tournament-card-v2-dot">·</span>
-                <span>{tr.registrations_count} участников</span>
+                <span>{tr.registrations_count} {t.tournamentParticipants}</span>
                 <span className="tournament-card-v2-dot">·</span>
-                <span>Рег. до <time dateTime={tr.registration_end}>{dateTimeStr(tr.registration_end)}</time></span>
+                <span>{t.tournamentRegUntil} <time dateTime={tr.registration_end}>{dateTimeStr(tr.registration_end)}</time></span>
                 <span className="tournament-card-v2-dot">·</span>
-                <span>Старт <time dateTime={tr.tournament_start}>{dateTimeStr(tr.tournament_start)}</time></span>
+                <span>{t.tournamentStart} <time dateTime={tr.tournament_start}>{dateTimeStr(tr.tournament_start)}</time></span>
               </p>
             </header>
             <div className="tournament-card-v2-actions">
               {canRegister && !isRegistered && (
-                <button type="button" className="strike-btn strike-btn-primary" onClick={() => tournamentRegister(tr.id)}>Регистрация</button>
+                <button type="button" className="strike-btn strike-btn-primary" onClick={() => tournamentRegister(tr.id)}>{t.tournamentRegister}</button>
               )}
               {canRegister && isRegistered && (
-                <button type="button" className="strike-btn strike-btn-secondary" onClick={() => tournamentUnregister(tr.id)}>Отменить регистрацию</button>
+                <button type="button" className="strike-btn strike-btn-secondary" onClick={() => tournamentUnregister(tr.id)}>{t.tournamentUnregister}</button>
               )}
               {(tr.status === 'ongoing' || tr.status === 'finished') && (
                 <button
@@ -2261,7 +2461,7 @@ function App() {
                   className="strike-btn strike-btn-secondary"
                   onClick={() => setSelectedTournamentId(selectedTournamentId === tr.id ? null : tr.id)}
                 >
-                  {selectedTournamentId === tr.id ? 'Скрыть сетку' : 'Сетка'}
+                  {selectedTournamentId === tr.id ? t.tournamentHideBracket : t.tournamentBracket}
                 </button>
               )}
             </div>
@@ -2269,7 +2469,7 @@ function App() {
               <div className="tournament-card-v2-results">
                 {winnerName && (
                   <p className="tournament-card-v2-winner">
-                    <span className="tournament-card-v2-winner-label">Победитель:</span>{' '}
+                    <span className="tournament-card-v2-winner-label">{t.tournamentWinner}</span>{' '}
                     <strong className="tournament-card-v2-winner-name">{winnerName}</strong>
                   </p>
                 )}
@@ -2297,6 +2497,7 @@ function App() {
             matches={matchesByTournamentId[tr.id] ?? []}
             playerId={playerId}
             leaderboard={leaderboard}
+            lang={lang}
             onRefresh={async () => {
               fetchTournaments(true)
               const { data } = await supabase.from('tournament_matches').select('*').eq('tournament_id', tr.id).order('round', { ascending: false }).order('match_index')
@@ -3123,19 +3324,19 @@ function App() {
             {!tournamentsLoading && tournamentsList.length === 0 && <p className="panel-text small">Турниров пока нет.</p>}
             {!tournamentsLoading && tournamentsList.length > 0 && (
               <ul className="admin-news-list">
-                {tournamentsList.map((t) => (
-                  <li key={t.id} className="admin-news-item">
+                {tournamentsList.map((tour) => (
+                  <li key={tour.id} className="admin-news-item">
                     <div>
-                      <strong>{t.name}</strong>
-                      <span className="panel-text small"> — {t.status}</span>
-                      <p className="panel-text small">Рег.: {new Date(t.registration_start).toLocaleString()} – {new Date(t.registration_end).toLocaleString()} | Участников: {t.registrations_count}</p>
+                      <strong>{tour.name}</strong>
+                      <span className="panel-text small"> — {tour.status}</span>
+                      <p className="panel-text small">Рег.: {new Date(tour.registration_start).toLocaleString()} – {new Date(tour.registration_end).toLocaleString()} | {t.tournamentParticipants}: {tour.registrations_count}</p>
                     </div>
                     <div className="admin-actions" style={{ flexDirection: 'row', gap: 8 }}>
-                      {t.status === 'registration' && (
-                        <button type="button" className="strike-btn strike-btn-secondary" onClick={() => tournamentStartBracket(t.id)}>Старт сетки</button>
+                      {tour.status === 'registration' && (
+                        <button type="button" className="strike-btn strike-btn-secondary" onClick={() => tournamentStartBracket(tour.id)}>{t.adminStartBracket}</button>
                       )}
-                      <button type="button" className="strike-btn strike-btn-secondary" onClick={() => tournamentTick(t.id)}>Обновить по времени</button>
-                      <button type="button" className="strike-btn" style={{ color: 'var(--error)' }} onClick={() => deleteTournament(t.id)}>Удалить</button>
+                      <button type="button" className="strike-btn strike-btn-secondary" onClick={() => tournamentTick(tour.id)}>Обновить по времени</button>
+                      <button type="button" className="strike-btn" style={{ color: 'var(--error)' }} onClick={() => deleteTournament(tour.id)}>Удалить</button>
                     </div>
                           </li>
                         ))}

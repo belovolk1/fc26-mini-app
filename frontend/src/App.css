@@ -1948,8 +1948,34 @@
   padding-top: 20px;
   border-top: 1px solid var(--strike-border);
 }
+.bracket-rounds-container {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  gap: 24px;
+  overflow-x: auto;
+  padding-bottom: 12px;
+  -webkit-overflow-scrolling: touch;
+}
 .bracket-round {
-  margin-bottom: 24px;
+  flex: 0 0 auto;
+  min-width: 280px;
+  max-width: 340px;
+  margin-bottom: 0;
+}
+@media (max-width: 640px) {
+  .bracket-rounds-container {
+    flex-direction: column;
+    overflow-x: visible;
+  }
+  .bracket-round {
+    min-width: 100%;
+    max-width: none;
+    margin-bottom: 20px;
+  }
+  .bracket-round:last-child {
+    margin-bottom: 0;
+  }
 }
 .bracket-round-title {
   margin: 0 0 12px;
@@ -1958,6 +1984,8 @@
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--strike-muted);
+  position: sticky;
+  left: 0;
 }
 .bracket-matches {
   display: flex;
@@ -2019,6 +2047,11 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 8px;
+}
+.bracket-match-score-display {
+  font-weight: 700;
+  font-size: 1.1rem;
+  margin-right: 8px;
 }
 .bracket-score-label {
   font-size: 0.8rem;
@@ -3540,7 +3573,7 @@
   --strike-orange-glow: rgba(255, 107, 0, 0.4);
   --strike-orange-soft: rgba(255, 107, 0, 0.15);
   /* Типографика */
-  --strike-font: 'Orbitron', sans-serif;
+  --strike-font: 'Oswald', sans-serif;
   --strike-font-body: 'Rajdhani', system-ui, sans-serif;
   /* Дизайн-язык: точные значения как на фото */
   --strike-radius: 10px;

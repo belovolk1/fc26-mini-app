@@ -20,6 +20,13 @@ CREATE INDEX IF NOT EXISTS tournament_telegram_notifications_pending
   ON public.tournament_telegram_notifications(created_at)
   WHERE sent_at IS NULL;
 
+-- Обновить CHECK типа, если таблица была создана без 'tournament_created'
+ALTER TABLE public.tournament_telegram_notifications
+  DROP CONSTRAINT IF EXISTS tournament_telegram_notifications_type_check;
+ALTER TABLE public.tournament_telegram_notifications
+  ADD CONSTRAINT tournament_telegram_notifications_type_check
+  CHECK (type IN ('tournament_created', 'tournament_started', 'round_reminder'));
+
 COMMENT ON TABLE public.tournament_telegram_notifications IS 'Очередь уведомлений в Telegram: старт турнира (всем участникам), напоминание перед раундом (участникам матча). Обрабатывается ботом.';
 
 -- При создании турнира — уведомление «турнир создан» (получат все, у кого есть telegram_id)
