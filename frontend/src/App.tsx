@@ -74,6 +74,7 @@ const messages: Record<
     ladderProfileNotReady: string
     ladderTwoPlayersHint: string
     ladderActiveLobbyBanner: string
+    ladderInTournamentBlock: string
     tournamentsHeader: string
     tournamentsIntro: string
     weeklyCupTitle: string
@@ -81,6 +82,8 @@ const messages: Record<
     doubleLeagueTitle: string
     doubleLeagueSubtitle: string
     tournamentsHint: string
+    tournamentsPageCreate: string
+    tournamentsPageFilter: string
     navHome: string
     navPlay: string
     navTournaments: string
@@ -140,6 +143,7 @@ const messages: Record<
     homeJoinNow: string
     homeLearnMore: string
     homePlayNow: string
+    homeInTournament: string
     homeViewEvents: string
     homeViewStats: string
     homeViewLadder: string
@@ -169,6 +173,9 @@ const messages: Record<
     bracketHintSlots: string
     bracketReadyLabel: string
     bracketBothReady: string
+    bracketStep1: string
+    bracketStep2: string
+    bracketStep3: string
     bracketReadyPlay: string
     bracketMatchResult: string
     bracketScoreHintConfirm: string
@@ -188,6 +195,7 @@ const messages: Record<
     tournamentRegister: string
     tournamentUnregister: string
     tournamentBracket: string
+    bracketViewTitle: string
     tournamentHideBracket: string
     tournamentWinner: string
     adminStartBracket: string
@@ -274,6 +282,7 @@ const messages: Record<
     ladderProfileNotReady: 'Profile not ready. Open the Profile tab and wait for it to load, or log in again.',
     ladderTwoPlayersHint: 'Two different players must press Search at the same time (e.g. two devices or two accounts).',
     ladderActiveLobbyBanner: 'You have an active lobby — return',
+    ladderInTournamentBlock: "You're in an active tournament. Quick matches are unavailable until you're eliminated or the tournament ends.",
     tournamentsHeader: 'Tournaments',
     tournamentsIntro:
       'Here will be a list of upcoming tournaments, registration and brackets.',
@@ -283,6 +292,8 @@ const messages: Record<
     doubleLeagueSubtitle: 'format: double round robin',
     tournamentsHint:
       'Tournament data will later be stored in Supabase tables and managed via admin panel.',
+    tournamentsPageCreate: 'Create Tournament',
+    tournamentsPageFilter: 'Filter',
     navHome: 'Home',
     navPlay: 'Play',
     navTournaments: 'Tournaments',
@@ -342,6 +353,7 @@ const messages: Record<
     homeJoinNow: 'JOIN NOW',
     homeLearnMore: 'LEARN MORE',
     homePlayNow: 'PLAY NOW',
+    homeInTournament: 'IN TOURNAMENT',
     homeViewEvents: 'VIEW EVENTS',
     homeViewStats: 'VIEW STATS',
     homeViewLadder: 'VIEW LADDER',
@@ -371,7 +383,10 @@ const messages: Record<
     bracketHintSlots: 'Final and semi-final slots are filled automatically after results are confirmed in previous rounds.',
     bracketReadyLabel: 'Ready:',
     bracketBothReady: 'Both ready',
-    bracketReadyPlay: 'Ready to play',
+    bracketStep1: 'Step 1/3: Ready to play',
+    bracketStep2: 'Step 2/3: Enter result',
+    bracketStep3: 'Step 3/3: Confirm result',
+    bracketReadyPlay: '✔ Ready to play',
     bracketMatchResult: 'Match result',
     bracketScoreHintConfirm: 'Opponent entered the score. Confirm the result if correct.',
     bracketScoreHintEnter: 'Enter the score and press «Submit score». Opponent must confirm the result.',
@@ -390,6 +405,7 @@ const messages: Record<
     tournamentRegister: 'Register',
     tournamentUnregister: 'Cancel registration',
     tournamentBracket: 'Bracket',
+    bracketViewTitle: 'Tournament Bracket',
     tournamentHideBracket: 'Hide bracket',
     tournamentWinner: 'Winner:',
     adminStartBracket: 'Start bracket',
@@ -475,6 +491,7 @@ const messages: Record<
     ladderProfileNotReady: 'Profilul nu e gata. Deschide tab-ul Profil și așteaptă încărcarea sau autentifică-te din nou.',
     ladderTwoPlayersHint: 'Doi jucători diferiți trebuie să apese Caută în același timp (ex. două dispozitive sau două conturi).',
     ladderActiveLobbyBanner: 'Ai un lobby activ — întoarce-te',
+    ladderInTournamentBlock: 'Ești într-un turneu activ. Meciurile rapide sunt indisponibile până când ești eliminat sau turneul se termină.',
     tournamentsHeader: 'Turnee',
     tournamentsIntro:
       'Aici va apărea lista turneelor, înregistrarea și tabloul.',
@@ -484,6 +501,8 @@ const messages: Record<
     doubleLeagueSubtitle: 'format: double round robin',
     tournamentsHint:
       'Datele turneelor vor fi stocate în tabele Supabase și administrate din panoul de admin.',
+    tournamentsPageCreate: 'Create Tournament',
+    tournamentsPageFilter: 'Filter',
     navHome: 'Acasă',
     navPlay: 'Joacă',
     navTournaments: 'Turnee',
@@ -543,6 +562,7 @@ const messages: Record<
     homeJoinNow: 'ÎNSCRIE-TE',
     homeLearnMore: 'AFLĂ MAI MULT',
     homePlayNow: 'JOACĂ ACUM',
+    homeInTournament: 'ÎN TURNEU',
     homeViewEvents: 'VEZI EVENIMENTE',
     homeViewStats: 'VEZI STATISTICI',
     homeViewLadder: 'VEZI CLASAMENT',
@@ -572,7 +592,10 @@ const messages: Record<
     bracketHintSlots: 'Sloturile pentru finală și semi-finală se completează automat după confirmarea rezultatelor în runde anterioare.',
     bracketReadyLabel: 'Gata:',
     bracketBothReady: 'Amândoi gata',
-    bracketReadyPlay: 'Gata de joc',
+    bracketStep1: 'Pasul 1/3: Gata de joc',
+    bracketStep2: 'Pasul 2/3: Introdu rezultatul',
+    bracketStep3: 'Pasul 3/3: Confirmă rezultatul',
+    bracketReadyPlay: '✔ Gata de joc',
     bracketMatchResult: 'Rezultat meci',
     bracketScoreHintConfirm: 'Adversarul a introdus scorul. Confirmă rezultatul dacă e corect.',
     bracketScoreHintEnter: 'Introdu scorul și apasă «Trimite scorul». Adversarul trebuie să confirme rezultatul.',
@@ -591,6 +614,7 @@ const messages: Record<
     tournamentRegister: 'Înscriere',
     tournamentUnregister: 'Anulează înscrierea',
     tournamentBracket: 'Tablou',
+    bracketViewTitle: 'Tournament Bracket',
     tournamentHideBracket: 'Ascunde tabloul',
     tournamentWinner: 'Câștigător:',
     adminStartBracket: 'Pornire tablou',
@@ -676,6 +700,7 @@ const messages: Record<
     ladderProfileNotReady: 'Профиль не загружен. Откройте вкладку «Профиль» и дождитесь загрузки или войдите снова.',
     ladderTwoPlayersHint: 'Два разных игрока должны нажать «Поиск» одновременно (например, с двух устройств или двух аккаунтов).',
     ladderActiveLobbyBanner: 'У вас активное лобби — вернуться',
+    ladderInTournamentBlock: 'Вы участвуете в турнире. Быстрые матчи недоступны, пока вы не вылетите или турнир не завершится.',
     tournamentsHeader: 'Турниры',
     tournamentsIntro:
       'Здесь появится список ближайших турниров, регистрация и сетка.',
@@ -685,6 +710,8 @@ const messages: Record<
     doubleLeagueSubtitle: 'формат: double round robin',
     tournamentsHint:
       'Турнирные данные позже будем хранить в Supabase и управлять через админку.',
+    tournamentsPageCreate: 'Create Tournament',
+    tournamentsPageFilter: 'Filter',
     navHome: 'Главная',
     navPlay: 'Игра',
     navTournaments: 'Турниры',
@@ -744,6 +771,7 @@ const messages: Record<
     homeJoinNow: 'ПРИСОЕДИНИТЬСЯ',
     homeLearnMore: 'ПОДРОБНЕЕ',
     homePlayNow: 'ИГРАТЬ',
+    homeInTournament: 'УЧАСТВУЮ В ТУРНИРЕ',
     homeViewEvents: 'СОБЫТИЯ',
     homeViewStats: 'СТАТИСТИКА',
     homeViewLadder: 'РЕЙТИНГ',
@@ -773,7 +801,10 @@ const messages: Record<
     bracketHintSlots: 'Слоты финала и полуфинала заполняются автоматически после подтверждения результатов в предыдущих раундах.',
     bracketReadyLabel: 'Готов:',
     bracketBothReady: 'Оба готовы',
-    bracketReadyPlay: 'Готов играть',
+    bracketStep1: 'Шаг 1/3: Готов играть',
+    bracketStep2: 'Шаг 2/3: Ввести результат',
+    bracketStep3: 'Шаг 3/3: Подтвердить результат',
+    bracketReadyPlay: '✔ Готов играть',
     bracketMatchResult: 'Результат матча',
     bracketScoreHintConfirm: 'Соперник ввёл счёт. Подтвердите результат, если он верный.',
     bracketScoreHintEnter: 'Введите счёт и нажмите «Отправить счёт». Соперник должен подтвердить результат.',
@@ -792,6 +823,7 @@ const messages: Record<
     tournamentRegister: 'Регистрация',
     tournamentUnregister: 'Отменить регистрацию',
     tournamentBracket: 'Сетка',
+    bracketViewTitle: 'Турнирная сетка',
     tournamentHideBracket: 'Скрыть сетку',
     tournamentWinner: 'Победитель:',
     adminStartBracket: 'Старт сетки',
@@ -1236,10 +1268,12 @@ function App() {
 
   const [tournamentsList, setTournamentsList] = useState<TournamentRow[]>([])
   const [tournamentsLoading, setTournamentsLoading] = useState(false)
+  const [tournamentsStatusTab, setTournamentsStatusTab] = useState<'registration' | 'ongoing' | 'finished'>('registration')
   const [selectedTournamentId, setSelectedTournamentId] = useState<string | null>(null)
   const [matchesByTournamentId, setMatchesByTournamentId] = useState<Record<string, TournamentMatchRow[]>>({})
   const [tournamentRegistrations, setTournamentRegistrations] = useState<Set<string>>(new Set())
   const [myActiveTournamentRegistrations, setMyActiveTournamentRegistrations] = useState<{ id: string; name: string; status: string }[]>([])
+  const [hasActiveTournamentMatch, setHasActiveTournamentMatch] = useState(false)
   const [adminTourName, setAdminTourName] = useState('')
   const [adminTourRegStart, setAdminTourRegStart] = useState('')
   const [adminTourRegEnd, setAdminTourRegEnd] = useState('')
@@ -1771,6 +1805,10 @@ function App() {
   }
 
   const handlePlayNowClick = async () => {
+    if (hasActiveTournamentMatch) {
+      setActiveView('tournaments')
+      return
+    }
     setActiveView('ladder')
     if (searchStatus === 'idle') {
       await startSearch()
@@ -1985,6 +2023,16 @@ function App() {
     if (activeView === 'tournaments' || activeView === 'admin') fetchTournaments(true)
   }, [activeView, playerId])
 
+  // Если вкладки «Регистрация» и «Идёт турнир» пустые — автоматом открывать «Завершён»
+  useEffect(() => {
+    if (tournamentsLoading) return
+    const countReg = tournamentsList.filter((t) => t.status === 'registration').length
+    const countOngoing = tournamentsList.filter((t) => t.status === 'ongoing').length
+    if (countReg === 0 && countOngoing === 0) {
+      setTournamentsStatusTab('finished')
+    }
+  }, [tournamentsLoading, tournamentsList])
+
   // Участие в турнирах (registration/ongoing) — показывать вне страницы турниров
   useEffect(() => {
     if (!playerId) {
@@ -2007,6 +2055,55 @@ function App() {
         setMyActiveTournamentRegistrations(list)
       })
   }, [playerId])
+
+  // Есть ли у пользователя незавершённый матч в идущем турнире (не вылетел)
+  useEffect(() => {
+    if (!playerId) {
+      setHasActiveTournamentMatch(false)
+      return
+    }
+    const ongoingIds = myActiveTournamentRegistrations.filter((r) => r.status === 'ongoing').map((r) => r.id)
+    if (ongoingIds.length === 0) {
+      setHasActiveTournamentMatch(false)
+      return
+    }
+    supabase
+      .from('tournament_matches')
+      .select('id')
+      .in('tournament_id', ongoingIds)
+      .or(`player_a_id.eq.${playerId},player_b_id.eq.${playerId}`)
+      .is('winner_id', null)
+      .limit(1)
+      .then(({ data }) => {
+        setHasActiveTournamentMatch(!!(data && data.length > 0))
+      })
+  }, [playerId, myActiveTournamentRegistrations])
+
+  // При изменении матчей турнира перепроверять hasActiveTournamentMatch (например, после вылета)
+  useEffect(() => {
+    if (!playerId) return
+    const ch = supabase
+      .channel('tournament-matches-for-ladder')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'tournament_matches' }, () => {
+        const ongoingIds = myActiveTournamentRegistrations.filter((r) => r.status === 'ongoing').map((r) => r.id)
+        if (ongoingIds.length === 0) {
+          setHasActiveTournamentMatch(false)
+          return
+        }
+        supabase
+          .from('tournament_matches')
+          .select('id')
+          .in('tournament_id', ongoingIds)
+          .or(`player_a_id.eq.${playerId},player_b_id.eq.${playerId}`)
+          .is('winner_id', null)
+          .limit(1)
+          .then(({ data }) => setHasActiveTournamentMatch(!!(data && data.length > 0)))
+      })
+      .subscribe()
+    return () => {
+      supabase.removeChannel(ch)
+    }
+  }, [playerId, myActiveTournamentRegistrations])
 
   useEffect(() => {
     if (activeView !== 'tournaments') return
@@ -2211,6 +2308,7 @@ function App() {
     const [savingMatchId, setSavingMatchId] = useState<string | null>(null)
     const [scoreInputs, setScoreInputs] = useState<Record<string, { a: string; b: string }>>({})
     const [bracketPlayerNames, setBracketPlayerNames] = useState<Record<string, string>>({})
+    const [matchResultModalId, setMatchResultModalId] = useState<string | null>(null)
 
     const getPlayerName = (id: string | null) => {
       if (!id) return '—'
@@ -2299,93 +2397,188 @@ function App() {
 
     const hasEmptySlots = matches.some((m) => m.player_a_id == null && m.player_b_id == null)
     const noMatchesYet = matches.length === 0
+    const roundNumbers = [1, 2, 3, 4, 5, 6].filter((r) => rounds[r]?.length)
+    const [activeRoundTab, setActiveRoundTab] = useState<number>(1)
+    const activeRound = roundNumbers.includes(activeRoundTab) ? activeRoundTab : (roundNumbers[0] ?? 1)
+
     return (
-      <div className="tournament-bracket">
-        {matchMessage && <p className="panel-text small">{matchMessage}</p>}
-        {noMatchesYet && (
-          <p className="panel-text small tournament-bracket-hint">{t.bracketHintNoGrid}</p>
-        )}
-        {hasEmptySlots && !noMatchesYet && (
-          <p className="panel-text small tournament-bracket-hint">{t.bracketHintSlots}</p>
-        )}
-        <div className="bracket-rounds-container">
-        {[1, 2, 3, 4, 5, 6].filter((r) => rounds[r]?.length).map((roundNum) => {
-          const raw = (rounds[roundNum] || []).filter((m) => m.player_a_id != null || m.player_b_id != null)
-          const roundMatches = raw
-            .filter((m, i, arr) => arr.findIndex((x) => x.id === m.id) === i)
-            .filter((m, i, arr) => arr.findIndex((x) => x.round === m.round && x.match_index === m.match_index) === i)
-          if (roundMatches.length === 0) return null
-          return (
-          <div key={roundNum} className="bracket-round">
-            <h4 className="bracket-round-title">{roundNames[roundNum] || t.bracketRoundNum.replace('{n}', String(roundNum))}</h4>
-            <div className="bracket-matches">
-              {roundMatches.map((m) => {
-                const isPlayerA = m.player_a_id === pid
-                const isPlayerB = m.player_b_id === pid
-                const isInMatch = isPlayerA || isPlayerB
-                const needsReady = isInMatch && ((isPlayerA && !m.player_a_ready_at) || (isPlayerB && !m.player_b_ready_at))
-                const canSubmit = isInMatch && (m.status === 'both_ready' || m.status === 'score_submitted') && m.score_submitted_by !== pid
-                const canConfirm = isInMatch && m.status === 'score_submitted' && m.score_submitted_by !== pid
-                const finished = ['confirmed', 'finished', 'auto_win_a', 'auto_win_b', 'auto_no_show'].includes(m.status)
-                const inp = scoreInputs[m.id] ?? { a: String(m.score_a ?? ''), b: String(m.score_b ?? '') }
-                const readyLabel = m.status === 'ready_a' ? `${t.bracketReadyLabel} ${getPlayerName(m.player_a_id)}` : m.status === 'ready_b' ? `${t.bracketReadyLabel} ${getPlayerName(m.player_b_id)}` : m.status === 'both_ready' ? t.bracketBothReady : m.status
-                return (
-                  <div key={m.id} className="bracket-match strike-card">
-                    <div className="bracket-match-players">
-                      <span className={m.winner_id === m.player_a_id ? 'bracket-winner' : ''}>{getPlayerName(m.player_a_id)}</span>
-                      <span className="bracket-vs"> – </span>
-                      <span className={m.winner_id === m.player_b_id ? 'bracket-winner' : ''}>{getPlayerName(m.player_b_id)}</span>
-                    </div>
-                    <div className="bracket-match-score">
-                      {m.score_a != null && m.score_b != null ? `${m.score_a} : ${m.score_b}` : '—'}
-                    </div>
-                    <div className="bracket-match-meta panel-text small">
-                      {new Date(m.scheduled_start).toLocaleString(bracketLang === 'ru' ? 'ru-RU' : bracketLang === 'ro' ? 'ro-RO' : 'en-US', { hour12: bracketLang === 'en' })} – {new Date(m.scheduled_end).toLocaleString(bracketLang === 'ru' ? 'ru-RU' : bracketLang === 'ro' ? 'ro-RO' : 'en-US', { hour12: bracketLang === 'en' })} · {readyLabel}
-                    </div>
-                    {isInMatch && !finished && (
-                      <div className="bracket-match-actions">
-                        {needsReady && (
-                          <button type="button" className="strike-btn strike-btn-primary" disabled={savingMatchId === m.id} onClick={() => markReady(m)}>
-                            {t.bracketReadyPlay}
-                          </button>
-                        )}
-                        {(m.status === 'both_ready' || m.status === 'score_submitted') && (
-                          <div className="bracket-match-score-entry">
-                            <div className="bracket-match-score-entry-title">{t.bracketMatchResult}</div>
-                            <p className="bracket-match-score-entry-hint">
-                              {m.status === 'score_submitted' && canConfirm
-                                ? t.bracketScoreHintConfirm
-                                : m.status === 'score_submitted' && m.score_submitted_by === pid
-                                  ? t.bracketScoreWaitingConfirm
-                                  : t.bracketScoreHintEnter}
-                            </p>
-                            {m.status === 'score_submitted' ? (
-                              <div className="bracket-match-score-entry-row">
-                                <span className="bracket-match-score-display">{m.score_a ?? 0} : {m.score_b ?? 0}</span>
-                                {canConfirm && <button type="button" className="strike-btn strike-btn-primary" disabled={savingMatchId === m.id} onClick={() => confirmScore(m)}>{t.bracketConfirmResult}</button>}
-                              </div>
-                            ) : (
-                              <div className="bracket-match-score-entry-row">
-                                <label className="bracket-score-label">{t.bracketScoreLabelMy}</label>
-                                <input type="number" min={0} className="form-input bracket-score-input" value={isPlayerA ? inp.a : inp.b} onChange={(e) => setScoreInputs((prev) => ({ ...prev, [m.id]: { ...prev[m.id], a: isPlayerA ? e.target.value : prev[m.id]?.a ?? '', b: isPlayerB ? e.target.value : prev[m.id]?.b ?? '' } }))} />
-                                <span className="bracket-score-sep">–</span>
-                                <label className="bracket-score-label">{t.bracketScoreLabelOpp}</label>
-                                <input type="number" min={0} className="form-input bracket-score-input" value={isPlayerA ? inp.b : inp.a} onChange={(e) => setScoreInputs((prev) => ({ ...prev, [m.id]: { ...prev[m.id], a: isPlayerB ? e.target.value : prev[m.id]?.a ?? '', b: isPlayerA ? e.target.value : prev[m.id]?.b ?? '' } }))} />
-                                {canSubmit && <button type="button" className="strike-btn strike-btn-secondary" disabled={savingMatchId === m.id} onClick={() => submitScore(m)}>{t.bracketSubmitScore}</button>}
-                              </div>
-                            )}
+      <div className="bracket-view">
+        <header className="bracket-view-header">
+          <h3 className="bracket-view-title">{t.bracketViewTitle.toUpperCase()}</h3>
+          {roundNumbers.length > 0 && (
+            <nav className="bracket-round-tabs" aria-label="Rounds">
+              {roundNumbers.map((r) => (
+                <button
+                  key={r}
+                  type="button"
+                  className={`bracket-round-tab ${activeRound === r ? 'bracket-round-tab--active' : ''}`}
+                  onClick={() => setActiveRoundTab(r)}
+                >
+                  {(roundNames[r] || t.bracketRoundNum.replace('{n}', String(r))).toUpperCase()}
+                </button>
+              ))}
+            </nav>
+          )}
+        </header>
+        <div className="tournament-bracket">
+          {matchMessage && <p className="bracket-view-message">{matchMessage}</p>}
+          {noMatchesYet && (
+            <p className="bracket-view-hint">{t.bracketHintNoGrid}</p>
+          )}
+          {hasEmptySlots && !noMatchesYet && (
+            <p className="bracket-view-hint">{t.bracketHintSlots}</p>
+          )}
+          <div className="bracket-rounds-container">
+            {roundNumbers.map((roundNum) => {
+              const raw = (rounds[roundNum] || []).filter((m) => m.player_a_id != null || m.player_b_id != null)
+              const roundMatches = raw
+                .filter((m, i, arr) => arr.findIndex((x) => x.id === m.id) === i)
+                .filter((m, i, arr) => arr.findIndex((x) => x.round === m.round && x.match_index === m.match_index) === i)
+              if (roundMatches.length === 0) return null
+              const isActiveRound = activeRound === roundNum
+              if (!isActiveRound) return null
+              return (
+                <div key={roundNum} className="bracket-round bracket-round--active" data-round={roundNum}>
+                  <h4 className="bracket-round-title">{roundNames[roundNum] || t.bracketRoundNum.replace('{n}', String(roundNum))}</h4>
+                  <div className="bracket-matches">
+                    {roundMatches.map((m) => {
+                      const isPlayerA = m.player_a_id === pid
+                      const isPlayerB = m.player_b_id === pid
+                      const isInMatch = isPlayerA || isPlayerB
+                      const needsReady = isInMatch && ((isPlayerA && !m.player_a_ready_at) || (isPlayerB && !m.player_b_ready_at))
+                      const canSubmit = isInMatch && (m.status === 'both_ready' || m.status === 'score_submitted') && m.score_submitted_by !== pid
+                      const canConfirm = isInMatch && m.status === 'score_submitted' && m.score_submitted_by !== pid
+                      const finished = ['confirmed', 'finished', 'auto_win_a', 'auto_win_b', 'auto_no_show'].includes(m.status)
+                      const inp = scoreInputs[m.id] ?? { a: String(m.score_a ?? ''), b: String(m.score_b ?? '') }
+                      const readyLabel = m.status === 'ready_a' ? `${t.bracketReadyLabel} ${getPlayerName(m.player_a_id)}` : m.status === 'ready_b' ? `${t.bracketReadyLabel} ${getPlayerName(m.player_b_id)}` : m.status === 'both_ready' ? t.bracketBothReady : m.status
+                      const stepLabel = isInMatch && !finished && (needsReady ? t.bracketStep1 : canConfirm ? t.bracketStep3 : (m.status === 'both_ready' || m.status === 'score_submitted') ? t.bracketStep2 : null)
+                      const matchStatusClass = finished ? 'bracket-match-card--confirmed' : m.status === 'score_submitted' ? 'bracket-match-card--score-submitted' : m.status === 'both_ready' ? 'bracket-match-card--both-ready' : m.status === 'ready_a' || m.status === 'ready_b' ? 'bracket-match-card--ready' : 'bracket-match-card--scheduled'
+                      return (
+                        <div key={m.id} className={`bracket-match-card ${matchStatusClass}`}>
+                          <div className="bracket-match-card-row bracket-match-card-players">
+                            <span className={m.winner_id === m.player_a_id ? 'bracket-match-card-winner' : ''}>{getPlayerName(m.player_a_id)}</span>
+                            <span className="bracket-match-card-vs"> – </span>
+                            <span className={m.winner_id === m.player_b_id ? 'bracket-match-card-winner' : ''}>{getPlayerName(m.player_b_id)}</span>
                           </div>
-                        )}
-                      </div>
-                    )}
+                          <div className="bracket-match-card-score">
+                            {m.score_a != null && m.score_b != null ? `${m.score_a} : ${m.score_b}` : '—'}
+                          </div>
+                          <p className="bracket-match-card-meta">
+                            {new Date(m.scheduled_start).toLocaleString(bracketLang === 'ru' ? 'ru-RU' : bracketLang === 'ro' ? 'ro-RO' : 'en-US', { hour12: bracketLang === 'en' })} – {new Date(m.scheduled_end).toLocaleString(bracketLang === 'ru' ? 'ru-RU' : bracketLang === 'ro' ? 'ro-RO' : 'en-US', { hour12: bracketLang === 'en' })} – {readyLabel}
+                          </p>
+                          {isInMatch && !finished && (
+                            <div className="bracket-match-card-actions">
+                              {needsReady && (
+                                <>
+                                  <div className="bracket-match-card-step">{t.bracketStep1}</div>
+                                  <button type="button" className="bracket-match-card-btn bracket-match-card-btn--primary" disabled={savingMatchId === m.id} onClick={() => markReady(m)}>
+                                    {t.bracketReadyPlay}
+                                  </button>
+                                </>
+                              )}
+                              {!needsReady && (m.status === 'both_ready' || m.status === 'score_submitted') && (
+                                <>
+                                  <div className="bracket-match-card-step">{canConfirm ? t.bracketStep3 : t.bracketStep2}</div>
+                                  <div className="bracket-match-card-result-block">
+                                    <div className="bracket-match-card-result-title">{t.bracketMatchResult}</div>
+                                    <p className="bracket-match-card-result-hint">
+                                      {m.status === 'score_submitted' && canConfirm
+                                        ? t.bracketScoreHintConfirm
+                                        : m.status === 'score_submitted' && m.score_submitted_by === pid
+                                          ? t.bracketScoreWaitingConfirm
+                                          : t.bracketScoreHintEnter}
+                                    </p>
+                                    {m.status === 'score_submitted' && canConfirm ? (
+                                      <div className="bracket-match-card-result-row">
+                                        <span className="bracket-match-card-score-display">{m.score_a ?? 0} : {m.score_b ?? 0}</span>
+                                        <button type="button" className="bracket-match-card-btn bracket-match-card-btn--primary" disabled={savingMatchId === m.id} onClick={() => confirmScore(m)}>{t.bracketConfirmResult}</button>
+                                      </div>
+                                    ) : m.status === 'score_submitted' && m.score_submitted_by === pid ? (
+                                      <div className="bracket-match-card-result-row">
+                                        <span className="bracket-match-card-score-display">{m.score_a ?? 0} : {m.score_b ?? 0}</span>
+                                        <span className="bracket-match-card-waiting">{t.bracketScoreWaitingConfirm}</span>
+                                      </div>
+                                    ) : (
+                                      <div className="bracket-match-card-result-row bracket-match-card-result-fields">
+                                        <label className="bracket-match-card-label">{t.bracketScoreLabelMy}</label>
+                                        <input type="number" min={0} className="bracket-match-card-input" value={isPlayerA ? inp.a : inp.b} onChange={(e) => setScoreInputs((prev) => ({ ...prev, [m.id]: { ...prev[m.id], a: isPlayerA ? e.target.value : prev[m.id]?.a ?? '', b: isPlayerB ? e.target.value : prev[m.id]?.b ?? '' } }))} />
+                                        <span className="bracket-match-card-sep">–</span>
+                                        <label className="bracket-match-card-label">{t.bracketScoreLabelOpp}</label>
+                                        <input type="number" min={0} className="bracket-match-card-input" value={isPlayerA ? inp.b : inp.a} onChange={(e) => setScoreInputs((prev) => ({ ...prev, [m.id]: { ...prev[m.id], a: isPlayerB ? e.target.value : prev[m.id]?.a ?? '', b: isPlayerA ? e.target.value : prev[m.id]?.b ?? '' } }))} />
+                                      </div>
+                                    )}
+                                    {m.status === 'both_ready' && (
+                                      <div className="bracket-match-card-result-buttons">
+                                        <button type="button" className="bracket-match-card-btn bracket-match-card-btn--secondary" disabled={savingMatchId === m.id} onClick={() => submitScore(m)}>{t.bracketSubmitScore}</button>
+                                        <button type="button" className="bracket-match-card-btn bracket-match-card-btn--primary bracket-match-card-btn--disabled" disabled aria-hidden="true">{t.bracketConfirmResult}</button>
+                                      </div>
+                                    )}
+                                    <button type="button" className="bracket-match-card-open-modal" onClick={() => setMatchResultModalId(m.id)} aria-label={t.bracketEnterScore} title={t.bracketEnterScore}>
+                                      ⋯
+                                    </button>
+                                  </div>
+                                </>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })}
                   </div>
-                )
-              })}
-            </div>
+                </div>
+              )
+            })}
           </div>
-          )
-        })}
         </div>
+        {matchResultModalId && (() => {
+          const m = matches.find((x) => x.id === matchResultModalId)
+          if (!m || !pid) return null
+          const isPlayerA = m.player_a_id === pid
+          const isPlayerB = m.player_b_id === pid
+          const isInMatch = isPlayerA || isPlayerB
+          const canConfirm = isInMatch && m.status === 'score_submitted' && m.score_submitted_by !== pid
+          const finished = ['confirmed', 'finished', 'auto_win_a', 'auto_win_b', 'auto_no_show'].includes(m.status)
+          const inp = scoreInputs[m.id] ?? { a: String(m.score_a ?? ''), b: String(m.score_b ?? '') }
+          const dateTimeStr = `${new Date(m.scheduled_start).toLocaleDateString(bracketLang === 'ru' ? 'ru-RU' : bracketLang === 'ro' ? 'ro-RO' : 'en-US', { day: 'numeric', month: 'short', year: 'numeric' })}, ${new Date(m.scheduled_start).toLocaleTimeString(bracketLang === 'ru' ? 'ru-RU' : bracketLang === 'ro' ? 'ro-RO' : 'en-US', { hour: '2-digit', minute: '2-digit', hour12: bracketLang === 'en' })}–${new Date(m.scheduled_end).toLocaleTimeString(bracketLang === 'ru' ? 'ru-RU' : bracketLang === 'ro' ? 'ro-RO' : 'en-US', { hour: '2-digit', minute: '2-digit', hour12: bracketLang === 'en' })}`
+          return (
+            <div className="bracket-match-modal-backdrop" onClick={() => setMatchResultModalId(null)} role="presentation">
+              <div className="bracket-match-modal" onClick={(e) => e.stopPropagation()}>
+                <h4 className="bracket-match-modal-title">{getPlayerName(m.player_a_id)} – {getPlayerName(m.player_b_id)}</h4>
+                <div className="bracket-match-modal-score">{m.score_a != null && m.score_b != null ? `${m.score_a} : ${m.score_b}` : '—'}</div>
+                <p className="bracket-match-modal-meta">{dateTimeStr} – {finished ? 'Confirmed' : m.status === 'score_submitted' ? 'Pending confirm' : 'Both ready'}</p>
+                <div className="bracket-match-modal-result">
+                  <div className="bracket-match-card-result-title">{t.bracketMatchResult}</div>
+                  <p className="bracket-match-card-result-hint">
+                    {m.status === 'score_submitted' && canConfirm ? t.bracketScoreHintConfirm : m.status === 'score_submitted' && m.score_submitted_by === pid ? t.bracketScoreWaitingConfirm : t.bracketScoreHintEnter}
+                  </p>
+                  {m.status === 'score_submitted' && canConfirm ? (
+                    <div className="bracket-match-card-result-row">
+                      <span className="bracket-match-card-score-display">{m.score_a ?? 0} : {m.score_b ?? 0}</span>
+                      <button type="button" className="bracket-match-card-btn bracket-match-card-btn--primary" disabled={savingMatchId === m.id} onClick={() => { confirmScore(m); setMatchResultModalId(null); }}>{t.bracketConfirmResult}</button>
+                    </div>
+                  ) : m.status === 'score_submitted' && m.score_submitted_by === pid ? (
+                    <p className="bracket-match-card-result-hint">{t.bracketScoreWaitingConfirm}</p>
+                  ) : (
+                    <>
+                      <div className="bracket-match-card-result-row bracket-match-card-result-fields">
+                        <label className="bracket-match-card-label">{t.bracketScoreLabelMy}</label>
+                        <input type="number" min={0} className="bracket-match-card-input" value={isPlayerA ? inp.a : inp.b} onChange={(e) => setScoreInputs((prev) => ({ ...prev, [m.id]: { ...prev[m.id], a: isPlayerA ? e.target.value : prev[m.id]?.a ?? '', b: isPlayerB ? e.target.value : prev[m.id]?.b ?? '' } }))} />
+                        <span className="bracket-match-card-sep">–</span>
+                        <label className="bracket-match-card-label">{t.bracketScoreLabelOpp}</label>
+                        <input type="number" min={0} className="bracket-match-card-input" value={isPlayerA ? inp.b : inp.a} onChange={(e) => setScoreInputs((prev) => ({ ...prev, [m.id]: { ...prev[m.id], a: isPlayerB ? e.target.value : prev[m.id]?.a ?? '', b: isPlayerA ? e.target.value : prev[m.id]?.b ?? '' } }))} />
+                      </div>
+                      <div className="bracket-match-card-result-buttons">
+                        <button type="button" className="bracket-match-card-btn bracket-match-card-btn--secondary" disabled={savingMatchId === m.id} onClick={async () => { await submitScore(m); setMatchResultModalId(null); }}>{t.bracketSubmitScore}</button>
+                        <button type="button" className="bracket-match-card-btn bracket-match-card-btn--primary bracket-match-card-btn--disabled" disabled aria-hidden="true">{t.bracketConfirmResult}</button>
+                      </div>
+                    </>
+                  )}
+                </div>
+                <button type="button" className="bracket-match-modal-close" onClick={() => setMatchResultModalId(null)} aria-label="Close">×</button>
+              </div>
+            </div>
+          )
+        })()}
       </div>
     )
   }
@@ -2443,84 +2636,62 @@ function App() {
     const prizePool = Array.isArray(tr.prize_pool) ? tr.prize_pool : []
     return (
       <div key={tr.id} className="tournament-card-wrapper">
-        <article className={`tournament-card-v2 strike-card tournament-card-strike tournament-card-status-${tr.status}`}>
-          <div className="tournament-card-v2-bar" aria-hidden="true" />
-          <div className="tournament-card-v2-body">
-            <header className="tournament-card-v2-header">
-              <h3 className="tournament-card-v2-title">{tr.name}</h3>
-              <p className="tournament-card-v2-meta">
-                <span className="tournament-card-v2-status">{statusLabel}</span>
-                <span className="tournament-card-v2-dot">·</span>
-                <span>{tr.registrations_count} {t.tournamentParticipants}</span>
-                <span className="tournament-card-v2-dot">·</span>
-                <span>{t.tournamentRegUntil} <time dateTime={tr.registration_end}>{dateTimeStr(tr.registration_end)}</time></span>
-                <span className="tournament-card-v2-dot">·</span>
-                <span>{t.tournamentStart} <time dateTime={tr.tournament_start}>{dateTimeStr(tr.tournament_start)}</time></span>
-              </p>
-            </header>
-            <div className="tournament-card-v2-actions">
+        <article className={`tournament-card-ref tournament-card-ref--${tr.status}`}>
+          <div className="tournament-card-ref-bar" aria-hidden="true" />
+          <div className="tournament-card-ref-body">
+            <h3 className="tournament-card-ref-title">{tr.name}</h3>
+            <p className="tournament-card-ref-meta">
+              {statusLabel} – {tr.registrations_count} {t.tournamentParticipants} – {t.tournamentRegUntil} <time dateTime={tr.registration_end}>{dateTimeStr(tr.registration_end)}</time> – {t.tournamentStart} <time dateTime={tr.tournament_start}>{dateTimeStr(tr.tournament_start)}</time>
+            </p>
+            {tr.status === 'finished' && (winnerName || prizePool.length > 0) && (
+              <div className="tournament-card-ref-results">
+                {winnerName && (
+                  <p className="tournament-card-ref-winner">
+                    {t.tournamentWinner} <strong className="tournament-card-ref-winner-name">{winnerName}</strong>
+                  </p>
+                )}
+                {prizePool.length > 0 && standings.length > 0 && (
+                  <ul className="tournament-card-ref-prizes">
+                    {prizePool.map((prize) => {
+                      const pId = standings[prize.place - 1]
+                      const name = pId ? getTournamentPlayerName(pId) : '—'
+                      const elo = prize.elo_bonus ?? 0
+                      return (
+                        <li key={prize.place} className="tournament-card-ref-prize-item">
+                          {prize.place}. {name} <em>+{elo} ELO</em>
+                        </li>
+                      )
+                    })}
+                  </ul>
+                )}
+              </div>
+            )}
+            <div className="tournament-card-ref-actions">
               {canRegister && !isRegistered && (
-                <button type="button" className="strike-btn strike-btn-primary" onClick={() => tournamentRegister(tr.id)}>{t.tournamentRegister}</button>
+                <button type="button" className="tournament-card-ref-btn tournament-card-ref-btn--primary tournament-card-ref-btn--register" onClick={() => tournamentRegister(tr.id)}>
+                  <span className="tournament-card-ref-btn-icon" aria-hidden="true">👤</span>
+                  {t.tournamentRegister}
+                </button>
               )}
               {canRegister && isRegistered && (
-                <button type="button" className="strike-btn strike-btn-secondary" onClick={() => tournamentUnregister(tr.id)}>{t.tournamentUnregister}</button>
+                <button type="button" className="tournament-card-ref-btn tournament-card-ref-btn--secondary" onClick={() => tournamentUnregister(tr.id)}>
+                  <span className="tournament-card-ref-btn-icon" aria-hidden="true">🕐</span>
+                  {t.tournamentUnregister}
+                </button>
               )}
               {(tr.status === 'ongoing' || tr.status === 'finished') && (
                 <button
                   type="button"
-                  className="strike-btn strike-btn-secondary"
-                  onClick={() => setSelectedTournamentId(selectedTournamentId === tr.id ? null : tr.id)}
+                  className="tournament-card-ref-btn tournament-card-ref-btn--secondary"
+                  onClick={() => setSelectedTournamentId(tr.id)}
                 >
-                  {selectedTournamentId === tr.id ? t.tournamentHideBracket : t.tournamentBracket}
+                  <span className="tournament-card-ref-btn-icon tournament-card-ref-btn-icon--bracket" aria-hidden="true">⊂⊃</span>
+                  {t.tournamentBracket}
                 </button>
               )}
             </div>
-            {tr.status === 'finished' && (winnerName || prizePool.length > 0) && (
-              <div className="tournament-card-v2-results">
-                {winnerName && (
-                  <p className="tournament-card-v2-winner">
-                    <span className="tournament-card-v2-winner-label">{t.tournamentWinner}</span>{' '}
-                    <strong className="tournament-card-v2-winner-name">{winnerName}</strong>
-                  </p>
-                )}
-                {prizePool.length > 0 && standings.length > 0 && (
-                  <div className="tournament-card-v2-prizes">
-                    {prizePool.map((prize) => {
-                      const playerId = standings[prize.place - 1]
-                      const name = playerId ? getTournamentPlayerName(playerId) : '—'
-                      const elo = prize.elo_bonus ?? 0
-                      return (
-                        <span key={prize.place} className="tournament-card-v2-prize-item">
-                          {prize.place}. {name} <em>+{elo}</em>
-                        </span>
-                      )
-                    })}
-                  </div>
-                )}
-              </div>
-            )}
           </div>
         </article>
-        {selectedTournamentId === tr.id && (tr.status === 'ongoing' || tr.status === 'finished') && (
-          <TournamentBracketBlock
-            tournament={tr}
-            matches={matchesByTournamentId[tr.id] ?? []}
-            playerId={playerId}
-            leaderboard={leaderboard}
-            lang={lang}
-            onRefresh={async () => {
-              fetchTournaments(true)
-              const { data } = await supabase.from('tournament_matches').select('*').eq('tournament_id', tr.id).order('round', { ascending: false }).order('match_index')
-              if (data) setMatchesByTournamentId((prev) => ({ ...prev, [tr.id]: data as TournamentMatchRow[] }))
-            }}
-            onMatchUpdated={(updated) => {
-              setMatchesByTournamentId((prev) => ({
-                ...prev,
-                [tr.id]: (prev[tr.id] ?? []).map((match) => (match.id === updated.id ? updated : match)),
-              }))
-            }}
-          />
-        )}
       </div>
     )
   }
@@ -2803,7 +2974,7 @@ function App() {
               }
             >
               {searchStatus === 'idle'
-                ? t.homePlayNow
+                ? (hasActiveTournamentMatch ? t.homeInTournament : t.homePlayNow)
                 : searchStatus === 'searching'
                   ? t.ladderSearching
                   : t.ladderLobbyTitle}
@@ -2916,11 +3087,11 @@ function App() {
             {/* Main: 4 cards left + Your Stats right */}
             <section className="strike-main">
               <div className="strike-cards">
-                <button type="button" className="strike-card strike-card-primary" onClick={() => setActiveView('ladder')}>
+                <button type="button" className="strike-card strike-card-primary" onClick={() => setActiveView(hasActiveTournamentMatch ? 'tournaments' : 'ladder')}>
                   <div className="strike-card-icon">⚡</div>
                   <h3 className="strike-card-title">{t.quickPlayTitle}</h3>
                   <p className="strike-card-text">{t.quickPlayText}</p>
-                  <span className="strike-card-btn strike-btn strike-btn-primary">{t.homePlayNow}</span>
+                  <span className="strike-card-btn strike-btn strike-btn-primary">{hasActiveTournamentMatch ? t.homeInTournament : t.homePlayNow}</span>
             </button>
                 <button type="button" className="strike-card" onClick={() => setActiveView('tournaments')}>
                   <div className="strike-card-icon">🏆</div>
@@ -4017,13 +4188,22 @@ function App() {
               </p>
             )}
 
-            {user && playerId && searchStatus === 'idle' && (
+            {user && playerId && hasActiveTournamentMatch && (
+              <>
+                <p className="panel-text panel-error">{t.ladderInTournamentBlock}</p>
+                <button type="button" className="strike-btn strike-btn-primary" onClick={() => setActiveView('tournaments')}>
+                  {t.navTournaments}
+                </button>
+              </>
+            )}
+
+            {user && playerId && !hasActiveTournamentMatch && searchStatus === 'idle' && (
                 <button type="button" className="primary-button" onClick={startSearch}>
                   {t.ladderSearchButton}
                 </button>
             )}
 
-            {user && searchStatus === 'searching' && (
+            {user && playerId && !hasActiveTournamentMatch && searchStatus === 'searching' && (
               <>
                 <p className="panel-text">
                   {t.ladderSearching}
@@ -4040,7 +4220,7 @@ function App() {
               </>
             )}
 
-            {user && searchStatus === 'in_lobby' && currentMatch && (
+            {user && playerId && !hasActiveTournamentMatch && searchStatus === 'in_lobby' && currentMatch && (
               <div className="lobby-page">
                 <header className="lobby-header">
                   <span className="lobby-header-badge">{t.ladderLobbyTitle}</span>
@@ -4176,27 +4356,83 @@ function App() {
 
         {activeView === 'tournaments' && (
           <section className="tournaments-page">
-            <div className="tournaments-page-hero">
-              <h1 className="tournaments-page-title">{t.tournamentsHeader.toUpperCase()}</h1>
-              <div className="tournaments-page-accent" />
-              <p className="tournaments-page-subtitle">{t.tournamentsIntro}</p>
-            </div>
+            <header className="tournaments-page-header">
+              <div className="tournaments-page-header-actions">
+                {isAdminUser && (
+                  <button type="button" className="tournaments-page-create-btn" onClick={() => setActiveView('admin')}>
+                    {t.tournamentsPageCreate}
+                  </button>
+                )}
+              </div>
+            </header>
 
             {tournamentsLoading && <p className="panel-text small tournaments-page-loading">{t.profileLoading}</p>}
             {!tournamentsLoading && tournamentsList.length === 0 && (
               <p className="panel-text small tournaments-page-empty">Турниров пока нет.</p>
             )}
             {!tournamentsLoading && tournamentsList.length > 0 && (
-              <div className="tournaments-page-list-wrap" key="tournaments-list">
-                <div className="tournaments-page-cards" key="tournaments-cards">
-                  {tournamentsList.map((tr) => renderTournamentCard(tr, false))}
+              <>
+                <nav className="tournaments-tabs" aria-label={t.tournamentsHeader}>
+                  {(['registration', 'ongoing', 'finished'] as const).map((status) => {
+                    const label = status === 'registration' ? t.tournamentStatusRegistration : status === 'ongoing' ? t.tournamentStatusOngoing : t.tournamentStatusFinished
+                    const count = tournamentsList.filter((tr) => tr.status === status).length
+                    return (
+                      <button
+                        key={status}
+                        type="button"
+                        className={`nav-btn tournaments-tab ${tournamentsStatusTab === status ? 'active' : ''}`}
+                        onClick={() => setTournamentsStatusTab(status)}
+                      >
+                        {label}
+                        {count > 0 && <span className="tournaments-tab-count"> {count}</span>}
+                      </button>
+                    )
+                  })}
+                </nav>
+                <div className="tournaments-page-list-wrap" key="tournaments-list">
+                  <div className="tournaments-section">
+                    <div className="tournaments-page-cards">
+                      {tournamentsList.filter((tr) => tr.status === tournamentsStatusTab).map((tr) => renderTournamentCard(tr, false))}
+                    </div>
+                  </div>
                 </div>
-                <p className="tournaments-page-footer-hint">
-                  <span className="tournaments-page-footer-icon" aria-hidden="true" />
-                  {t.tournamentsHint}
-                </p>
-              </div>
+              </>
             )}
+
+            {selectedTournamentId && (() => {
+              const tr = tournamentsList.find((t) => t.id === selectedTournamentId)
+              if (!tr || (tr.status !== 'ongoing' && tr.status !== 'finished')) return null
+              return (
+                <div className="bracket-modal-backdrop" onClick={() => setSelectedTournamentId(null)} role="presentation">
+                  <div className="bracket-modal-panel" onClick={(e) => e.stopPropagation()}>
+                    <div className="bracket-modal-header">
+                      <h2 className="bracket-modal-title">{tr.name} — {t.bracketViewTitle}</h2>
+                      <button type="button" className="bracket-modal-close" onClick={() => setSelectedTournamentId(null)} aria-label="Close">×</button>
+                    </div>
+                    <div className="bracket-modal-body">
+                      <TournamentBracketBlock
+                        tournament={tr}
+                        matches={matchesByTournamentId[tr.id] ?? []}
+                        playerId={playerId}
+                        leaderboard={leaderboard}
+                        lang={lang}
+                        onRefresh={async () => {
+                          fetchTournaments(true)
+                          const { data } = await supabase.from('tournament_matches').select('*').eq('tournament_id', tr.id).order('round', { ascending: false }).order('match_index')
+                          if (data) setMatchesByTournamentId((prev) => ({ ...prev, [tr.id]: data as TournamentMatchRow[] }))
+                        }}
+                        onMatchUpdated={(updated) => {
+                          setMatchesByTournamentId((prev) => ({
+                            ...prev,
+                            [tr.id]: (prev[tr.id] ?? []).map((match) => (match.id === updated.id ? updated : match)),
+                          }))
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )
+            })()}
           </section>
         )}
       </main>

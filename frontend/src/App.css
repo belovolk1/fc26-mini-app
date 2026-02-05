@@ -1978,24 +1978,72 @@
   }
 }
 .bracket-round-title {
-  margin: 0 0 12px;
-  font-size: 14px;
-  font-weight: 700;
+  margin: 0 0 14px;
+  padding-bottom: 8px;
+  font-size: 13px;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.12em;
   color: var(--strike-muted);
+  border-bottom: 2px solid var(--strike-border);
   position: sticky;
   left: 0;
+}
+.app.strike-theme .bracket-round-title {
+  color: var(--strike-muted);
+  border-bottom-color: var(--strike-border);
 }
 .bracket-matches {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
-.bracket-match {
-  padding: 14px 18px;
+/* Карточка матча в сетке: приоритет над .strike-card */
+.tournament-bracket .bracket-match.strike-card {
+  position: relative;
+  padding: 18px 20px 18px 26px;
   margin: 0;
+  border-radius: var(--strike-radius, 10px);
+  border: 1px solid var(--strike-border, rgba(255,255,255,0.15));
+  border-left: 5px solid #64748b;
+  background: rgba(0, 0, 0, 0.25);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
+.app.strike-theme .tournament-bracket .bracket-match.strike-card {
+  background: var(--strike-bg-secondary);
+  border-color: var(--strike-border);
+}
+.tournament-bracket .bracket-match--scheduled.strike-card { border-left-color: #64748b; }
+.tournament-bracket .bracket-match--ready.strike-card,
+.tournament-bracket .bracket-match--both-ready.strike-card { border-left-color: #f59e0b; }
+.tournament-bracket .bracket-match--score-submitted.strike-card { border-left-color: #3b82f6; }
+.tournament-bracket .bracket-match--confirmed.strike-card { border-left-color: #22c55e; }
+.app.strike-theme .tournament-bracket .bracket-match--ready.strike-card,
+.app.strike-theme .tournament-bracket .bracket-match--both-ready.strike-card { border-left-color: var(--strike-orange); }
+.tournament-bracket .bracket-match.strike-card:hover {
+  transform: none;
+  border-left-width: 5px;
+}
+.bracket-match {
+  position: relative;
+  padding: 18px 20px 18px 26px;
+  margin: 0;
+  border-radius: var(--strike-radius, 10px);
+  border: 1px solid var(--strike-border, rgba(255,255,255,0.12));
+  border-left: 5px solid #64748b;
+  background: var(--strike-bg-secondary, rgba(0, 0, 0, 0.2));
+}
+.bracket-match--scheduled { border-left-color: #64748b; }
+.bracket-match--ready { border-left-color: #f59e0b; }
+.bracket-match--both-ready { border-left-color: #f59e0b; }
+.bracket-match--score-submitted { border-left-color: #3b82f6; }
+.bracket-match--confirmed { border-left-color: #22c55e; }
+.app.strike-theme .bracket-match {
+  background: var(--strike-bg-secondary);
+  border-color: var(--strike-border);
+}
+.app.strike-theme .bracket-match--ready,
+.app.strike-theme .bracket-match--both-ready { border-left-color: var(--strike-orange); }
 .bracket-match-players {
   font-weight: 600;
   margin-bottom: 4px;
@@ -2008,12 +2056,33 @@
   margin: 0 4px;
 }
 .bracket-match-score {
-  font-size: 18px;
-  font-weight: 700;
-  margin: 4px 0;
+  font-size: 22px;
+  font-weight: 800;
+  margin: 8px 0 6px;
+  letter-spacing: 0.02em;
+}
+.app.strike-theme .bracket-match-score {
+  color: var(--strike-text);
 }
 .bracket-match-meta {
-  margin: 6px 0 10px;
+  margin: 0 0 12px;
+  font-size: 12px;
+  color: var(--strike-muted, #94a3b8);
+}
+.bracket-step-label {
+  width: 100%;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #ff6b00;
+  margin-bottom: 10px;
+  padding: 6px 0 0;
+  border-top: 1px solid rgba(255,107,0,0.25);
+}
+.app.strike-theme .bracket-step-label {
+  color: var(--strike-orange);
+  border-top-color: rgba(255,107,0,0.3);
 }
 .bracket-match-actions {
   display: flex;
@@ -4157,6 +4226,674 @@
   background: var(--strike-bg);
   color: var(--strike-muted);
 }
+
+/* ========== Дизайн по референсу (фото): карточки турниров + сетка ========== */
+/* Цвета референса test-strike: #15151A, #1E1E24, #222228, #2A2A32, #ff6b00, #a0a0a8 */
+.app.strike-theme .tournaments-page {
+  background: #15151A;
+  min-height: 60vh;
+}
+/* Шапка страницы турниров: Create Tournament справа */
+.tournaments-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 16px;
+  padding: 20px 24px 16px;
+  flex-wrap: wrap;
+}
+.tournaments-page-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.tournaments-page-create-btn {
+  padding: 10px 18px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-family: var(--strike-font);
+  background: linear-gradient(180deg, #e65c00 0%, #ff6b00 50%, #cc5200 100%);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(255,107,0,0.4), inset 0 1px 0 rgba(255,255,255,0.2);
+}
+.tournaments-page-create-btn:hover {
+  box-shadow: 0 6px 20px rgba(255,107,0,0.4);
+}
+.app.strike-theme .tournaments-page-hero {
+  padding: 16px 24px 24px;
+  text-align: center;
+}
+.tournaments-page-hero .tournaments-page-accent {
+  display: none;
+}
+.app.strike-theme .tournaments-page-hero .tournaments-page-subtitle {
+  font-size: 14px;
+  color: #a0a0a8;
+  max-width: 100%;
+  margin: 0;
+}
+.app.strike-theme .tournaments-page-loading,
+.app.strike-theme .tournaments-page-empty {
+  color: #a0a0a8;
+  padding: 24px 24px;
+}
+.app.strike-theme .tournaments-page-footer-hint {
+  color: #a0a0a8;
+  font-size: 13px;
+  margin-top: 28px;
+}
+
+/* Табы страницы турниров */
+.tournaments-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 20px;
+  padding: 0 0 4px;
+}
+.tournaments-tabs .nav-btn {
+  padding: 10px 18px;
+  border-radius: var(--radius-sm);
+  border: 2px solid transparent;
+  font-size: 15px;
+  font-weight: 600;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.app.strike-theme .tournaments-tabs .nav-btn {
+  font-family: var(--strike-font);
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--strike-muted);
+}
+.tournaments-tabs .nav-btn:hover {
+  color: var(--text);
+  background: var(--bg-elevated);
+}
+.app.strike-theme .tournaments-tabs .nav-btn:hover {
+  color: #fff;
+  background: rgba(255,255,255,0.08);
+}
+.tournaments-tabs .nav-btn.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+.app.strike-theme .tournaments-tabs .nav-btn.active {
+  color: var(--strike-orange);
+  background: rgba(255,107,0,0.2);
+  border-color: var(--strike-orange);
+}
+.tournaments-tab-count {
+  opacity: 0.9;
+  font-weight: 700;
+}
+
+/* Модальное окно сетки турнира */
+.bracket-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0,0,0,0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  overflow: auto;
+}
+.bracket-modal-panel {
+  width: 100%;
+  max-width: 640px;
+  max-height: calc(100vh - 32px);
+  display: flex;
+  flex-direction: column;
+  background: var(--strike-card);
+  border: var(--strike-border-w, 1px) solid var(--strike-border);
+  border-radius: var(--strike-radius, 12px);
+  box-shadow: var(--strike-shadow, 0 4px 12px rgba(0,0,0,0.3));
+}
+.bracket-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--strike-border);
+  flex-shrink: 0;
+}
+.bracket-modal-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--strike-text);
+  font-family: var(--strike-font);
+}
+.bracket-modal-close {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  font-size: 24px;
+  line-height: 1;
+  color: var(--strike-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  border-radius: var(--strike-radius-sm, 8px);
+}
+.bracket-modal-close:hover {
+  color: var(--strike-text);
+  background: var(--strike-border-subtle);
+}
+.bracket-modal-body {
+  padding: 16px 20px 24px;
+  overflow-y: auto;
+  min-height: 0;
+}
+.bracket-modal-body .bracket-view {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+
+.tournaments-section {
+  margin-bottom: 32px;
+}
+.tournaments-section-title {
+  margin: 0 0 16px;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--strike-muted);
+  font-family: var(--strike-font);
+}
+.app.strike-theme .tournaments-section-title {
+  color: #a0a0a8;
+}
+.app.strike-theme .tournaments-page-cards {
+  gap: 20px;
+}
+
+/* Карточка турнира — стилистика как на главной (strike-card) */
+.tournament-card-ref {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--strike-radius, 12px);
+  background: var(--strike-card);
+  border: var(--strike-border-w, 1px) solid var(--strike-border);
+  box-shadow: var(--strike-shadow-sm, 0 2px 8px rgba(0,0,0,0.25));
+  margin-bottom: 16px;
+}
+.tournament-card-ref-bar {
+  height: 6px;
+  width: 100%;
+  flex-shrink: 0;
+}
+.tournament-card-ref--registration .tournament-card-ref-bar {
+  background: linear-gradient(90deg, #22c55e, #4ade80);
+}
+.tournament-card-ref--ongoing .tournament-card-ref-bar {
+  background: linear-gradient(90deg, var(--strike-orange), var(--strike-orange-bright, #ff8533));
+}
+.tournament-card-ref--finished .tournament-card-ref-bar {
+  background: var(--strike-border);
+}
+.tournament-card-ref-body {
+  padding: 20px 20px 22px;
+}
+.tournament-card-ref-title {
+  margin: 0 0 10px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--strike-text);
+  font-family: var(--strike-font);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.tournament-card-ref-meta {
+  margin: 0 0 16px;
+  font-size: 13px;
+  color: var(--strike-muted);
+  line-height: 1.5;
+  font-family: var(--strike-font-body);
+}
+.tournament-card-ref-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.tournament-card-ref-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  border-radius: 8px;
+  cursor: pointer;
+  border: none;
+  transition: opacity 0.2s, transform 0.2s;
+  font-family: var(--strike-font);
+}
+.tournament-card-ref-btn-icon {
+  font-size: 1em;
+  line-height: 1;
+  opacity: 0.9;
+}
+.tournament-card-ref-btn-icon--bracket {
+  font-size: 1.1em;
+  font-weight: 700;
+}
+.tournament-card-ref-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+/* Регистрация открыта — зелёная кнопка Register */
+.tournament-card-ref-btn--primary.tournament-card-ref-btn--register,
+.tournament-card-ref--registration .tournament-card-ref-btn--primary {
+  background: linear-gradient(180deg, #1a9e3e 0%, #22c55e 50%, #16a34a 100%);
+  color: #fff;
+  box-shadow: 0 2px 12px rgba(34,197,94,0.3), inset 0 1px 0 rgba(255,255,255,0.2);
+}
+.tournament-card-ref--registration .tournament-card-ref-btn--primary:hover:not(:disabled) {
+  box-shadow: 0 4px 16px rgba(34,197,94,0.4);
+  transform: translateY(-1px);
+}
+/* Идёт турнир / Завершён — кнопки в стиле главной */
+.tournament-card-ref--ongoing .tournament-card-ref-btn--secondary,
+.tournament-card-ref--finished .tournament-card-ref-btn--secondary {
+  background: var(--strike-elevated);
+  color: var(--strike-text);
+  border: 1px solid var(--strike-border);
+}
+.tournament-card-ref--ongoing .tournament-card-ref-btn--secondary:hover:not(:disabled),
+.tournament-card-ref--finished .tournament-card-ref-btn--secondary:hover:not(:disabled) {
+  background: var(--strike-border-subtle);
+}
+.tournament-card-ref-btn--secondary {
+  background: var(--strike-elevated);
+  color: var(--strike-text);
+  border: 1px solid var(--strike-border);
+}
+.tournament-card-ref-btn--secondary:hover:not(:disabled) {
+  background: var(--strike-border-subtle);
+}
+.tournament-card-ref-results {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--strike-border);
+}
+.tournament-card-ref-winner {
+  margin: 0 0 10px;
+  font-size: 14px;
+  color: var(--strike-muted);
+  font-family: var(--strike-font-body);
+}
+.tournament-card-ref-winner-name {
+  color: var(--strike-orange);
+  font-weight: 700;
+  font-family: var(--strike-font);
+}
+.tournament-card-ref-prizes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 13px;
+  color: var(--strike-text);
+  font-family: var(--strike-font-body);
+}
+.tournament-card-ref-prize-item {
+  margin-bottom: 4px;
+}
+.tournament-card-ref-prize-item em {
+  font-style: normal;
+  font-weight: 700;
+  color: #22c55e;
+  margin-left: 4px;
+}
+
+/* Bracket — стилистика как на главной (strike) */
+.bracket-view {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid var(--strike-border);
+}
+.bracket-view-header {
+  margin-bottom: 20px;
+}
+.bracket-view-title {
+  margin: 0 0 16px;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--strike-muted);
+  font-family: var(--strike-font);
+}
+.bracket-round-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.bracket-round-tab {
+  padding: 8px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--strike-muted);
+  background: var(--strike-elevated);
+  border: 1px solid var(--strike-border);
+  border-radius: var(--strike-radius-sm, 8px);
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+  font-family: var(--strike-font);
+}
+.bracket-round-tab:hover {
+  border-color: var(--strike-orange);
+  color: var(--strike-text);
+}
+.bracket-round-tab--active {
+  color: var(--strike-orange);
+  border-color: var(--strike-orange);
+  background: var(--strike-orange-soft);
+}
+.bracket-view-message,
+.bracket-view-hint {
+  margin: 0 0 14px;
+  font-size: 13px;
+  color: var(--strike-muted);
+  padding: 14px 18px;
+  background: var(--strike-elevated);
+  border: 1px solid var(--strike-border);
+  border-radius: var(--strike-radius-sm, 8px);
+  font-family: var(--strike-font-body);
+}
+.tournament-bracket .bracket-rounds-container {
+  display: block;
+}
+.bracket-round-title {
+  margin: 0 0 12px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--strike-muted);
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--strike-border);
+  font-family: var(--strike-font);
+}
+.bracket-matches {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Карточка матча — как strike-card на главной */
+.bracket-match-card {
+  position: relative;
+  padding: 20px 20px 20px 24px;
+  border-radius: var(--strike-radius, 12px);
+  background: var(--strike-card);
+  border: var(--strike-border-w, 1px) solid var(--strike-border);
+  box-shadow: var(--strike-shadow-sm);
+  border-left: 5px solid var(--strike-border);
+}
+.bracket-match-card--scheduled { border-left-color: var(--strike-muted); }
+.bracket-match-card--ready,
+.bracket-match-card--both-ready { border-left-color: var(--strike-orange); }
+.bracket-match-card--score-submitted { border-left-color: #3b82f6; }
+.bracket-match-card--confirmed { border-left-color: #22c55e; }
+.bracket-match-card-players {
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.04em;
+  color: var(--strike-text);
+  margin: 0 0 8px;
+  font-family: var(--strike-font);
+}
+.bracket-match-card-winner {
+  color: var(--strike-orange);
+}
+.bracket-match-card-vs {
+  color: var(--strike-muted);
+  margin: 0 4px;
+  font-weight: 600;
+}
+.bracket-match-card-score {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--strike-text);
+  margin: 10px 0 8px;
+  font-family: var(--strike-font);
+  letter-spacing: 0.02em;
+}
+.bracket-match-card-meta {
+  margin: 0 0 14px;
+  font-size: 12px;
+  color: var(--strike-muted);
+  font-family: var(--strike-font-body);
+}
+.bracket-match-card-step {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--strike-orange);
+  margin-bottom: 10px;
+  padding-top: 12px;
+  border-top: 1px solid var(--strike-orange-soft);
+  font-family: var(--strike-font);
+}
+.bracket-match-card-actions {
+  margin-top: 4px;
+}
+.bracket-match-card-btn {
+  padding: 10px 20px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-radius: 8px;
+  cursor: pointer;
+  border: none;
+  margin-right: 8px;
+  margin-bottom: 8px;
+  transition: box-shadow 0.2s, transform 0.2s;
+  font-family: var(--strike-font);
+}
+.bracket-match-card-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.bracket-match-card-btn--primary {
+  background: linear-gradient(180deg, var(--strike-orange-bright, #ff8533) 0%, var(--strike-orange) 50%, #cc5200 100%);
+  color: #fff;
+  box-shadow: 0 4px 16px var(--strike-orange-glow), inset 0 1px 0 rgba(255,255,255,0.2);
+}
+.bracket-match-card-btn--primary:hover:not(:disabled) {
+  box-shadow: 0 6px 20px var(--strike-orange-glow);
+  transform: translateY(-1px);
+}
+.bracket-match-card-btn--secondary {
+  background: var(--strike-elevated);
+  color: var(--strike-text);
+  border: 1px solid var(--strike-border);
+}
+.bracket-match-card-btn--secondary:hover:not(:disabled) {
+  background: var(--strike-orange-soft);
+}
+.bracket-match-card-result-block {
+  margin-top: 14px;
+  padding: 16px;
+  background: var(--strike-border-subtle);
+  border: 1px solid var(--strike-border);
+  border-radius: var(--strike-radius-sm, 8px);
+}
+.bracket-match-card-result-title {
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--strike-text);
+  margin: 0 0 8px;
+  font-family: var(--strike-font);
+}
+.bracket-match-card-result-hint {
+  font-size: 13px;
+  color: var(--strike-muted);
+  margin: 0 0 12px;
+  font-family: var(--strike-font-body);
+}
+.bracket-match-card-result-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+.bracket-match-card-result-row.bracket-match-card-result-fields {
+  margin-bottom: 12px;
+}
+.bracket-match-card-result-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 4px;
+}
+.bracket-match-card-waiting {
+  font-size: 13px;
+  color: var(--strike-muted);
+  font-family: var(--strike-font-body);
+}
+.bracket-match-card-btn--disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.bracket-match-card-score-display {
+  font-weight: 800;
+  font-size: 18px;
+  margin-right: 12px;
+  color: var(--strike-text);
+  font-family: var(--strike-font);
+}
+.bracket-match-card-label {
+  font-size: 12px;
+  color: var(--strike-muted);
+  font-family: var(--strike-font-body);
+}
+.bracket-match-card-input {
+  width: 56px;
+  text-align: center;
+  padding: 8px 10px;
+  border-radius: var(--strike-radius-sm, 8px);
+  border: 1px solid var(--strike-border);
+  background: var(--strike-elevated);
+  color: var(--strike-text);
+  font-size: 14px;
+  font-family: var(--strike-font-body);
+}
+.bracket-match-card-sep {
+  font-weight: 700;
+  margin: 0 4px;
+  color: var(--strike-muted);
+}
+.bracket-match-card-open-modal {
+  margin-top: 10px;
+  padding: 6px 12px;
+  font-size: 14px;
+  color: var(--strike-muted);
+  background: transparent;
+  border: 1px solid var(--strike-border);
+  border-radius: var(--strike-radius-sm, 6px);
+  cursor: pointer;
+}
+.bracket-match-card-open-modal:hover {
+  color: var(--strike-orange);
+  border-color: var(--strike-orange);
+}
+.bracket-match-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0,0,0,0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.bracket-match-modal {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  padding: 24px 24px 28px;
+  background: var(--strike-card);
+  border: var(--strike-border-w, 1px) solid var(--strike-border);
+  border-radius: var(--strike-radius, 12px);
+  box-shadow: var(--strike-shadow);
+}
+.bracket-match-modal-title {
+  margin: 0 0 12px;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--strike-text);
+  font-family: var(--strike-font);
+}
+.bracket-match-modal-score {
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--strike-text);
+  margin: 0 0 8px;
+  font-family: var(--strike-font);
+}
+.bracket-match-modal-meta {
+  margin: 0 0 20px;
+  font-size: 13px;
+  color: var(--strike-muted);
+  font-family: var(--strike-font-body);
+}
+.bracket-match-modal-result {
+  padding-top: 16px;
+  border-top: 1px solid var(--strike-border);
+}
+.bracket-match-modal-result .bracket-match-card-result-title {
+  margin-bottom: 8px;
+}
+.bracket-match-modal-result .bracket-match-card-result-buttons {
+  margin-top: 12px;
+}
+.bracket-match-modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  font-size: 24px;
+  line-height: 1;
+  color: var(--strike-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+.bracket-match-modal-close:hover {
+  color: var(--strike-text);
+}
+
 .strike-live-arrow {
   background: none;
   border: none;
