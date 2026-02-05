@@ -189,6 +189,7 @@ const messages: Record<
     tournamentStatusRegistration: string
     tournamentStatusOngoing: string
     tournamentStatusFinished: string
+    tournamentStatusUpcoming: string
     tournamentRegUntil: string
     tournamentStart: string
     tournamentParticipants: string
@@ -399,6 +400,7 @@ const messages: Record<
     tournamentStatusRegistration: 'Registration open',
     tournamentStatusOngoing: 'Tournament in progress',
     tournamentStatusFinished: 'Finished',
+    tournamentStatusUpcoming: 'Coming soon',
     tournamentRegUntil: 'Reg. until',
     tournamentStart: 'Start',
     tournamentParticipants: 'participants',
@@ -608,6 +610,7 @@ const messages: Record<
     tournamentStatusRegistration: 'Înscriere deschisă',
     tournamentStatusOngoing: 'Turneu în desfășurare',
     tournamentStatusFinished: 'Încheiat',
+    tournamentStatusUpcoming: 'În curând',
     tournamentRegUntil: 'Înscriere până la',
     tournamentStart: 'Start',
     tournamentParticipants: 'participanți',
@@ -817,6 +820,7 @@ const messages: Record<
     tournamentStatusRegistration: 'Регистрация открыта',
     tournamentStatusOngoing: 'Идёт турнир',
     tournamentStatusFinished: 'Завершён',
+    tournamentStatusUpcoming: 'Скоро',
     tournamentRegUntil: 'Рег. до',
     tournamentStart: 'Старт',
     tournamentParticipants: 'участников',
@@ -2020,7 +2024,7 @@ function App() {
   }
 
   useEffect(() => {
-    if (activeView === 'tournaments' || activeView === 'admin') fetchTournaments(true)
+    if (activeView === 'home' || activeView === 'tournaments' || activeView === 'admin') fetchTournaments(true)
   }, [activeView, playerId])
 
   // Если вкладки «Регистрация» и «Идёт турнир» пустые — автоматом открывать «Завершён»
@@ -3079,8 +3083,27 @@ function App() {
               <div className="strike-live-scroll">
                 <span className="strike-live-item">{t.matchesHeader}</span>
                 <span className="strike-live-item">{t.tournamentsTitle}</span>
+                {!tournamentsLoading && tournamentsList.filter((tr) => tr.status === 'registration').length > 0 && (
+                  <span className="strike-live-item">
+                    {t.tournamentStatusRegistration} ({tournamentsList.filter((tr) => tr.status === 'registration').length})
+                  </span>
+                )}
+                {!tournamentsLoading && tournamentsList.filter((tr) => tr.status === 'ongoing').length > 0 && (
+                  <span className="strike-live-item">
+                    {t.tournamentStatusOngoing} ({tournamentsList.filter((tr) => tr.status === 'ongoing').length})
+                  </span>
+                )}
+                {!tournamentsLoading && tournamentsList.filter((tr) => tr.status === 'draft').length > 0 && (
+                  <span className="strike-live-item">
+                    {t.tournamentStatusUpcoming} ({tournamentsList.filter((tr) => tr.status === 'draft').length})
+                  </span>
+                )}
               </div>
-              <span className="strike-live-countdown">{t.homeLiveCountdown}: 8H ›</span>
+              <span className="strike-live-countdown">
+                {!tournamentsLoading && (tournamentsList.filter((tr) => tr.status === 'registration').length > 0 || tournamentsList.filter((tr) => tr.status === 'ongoing').length > 0 || tournamentsList.filter((tr) => tr.status === 'draft').length > 0)
+                  ? `${t.tournamentsTitle} ›`
+                  : `${t.homeLiveCountdown}: 8H ›`}
+              </span>
               <button type="button" className="strike-live-arrow" aria-label="Scroll right">›</button>
             </section>
 
@@ -4067,16 +4090,6 @@ function App() {
                   {avatarUploadError && (
                     <p className="panel-text panel-error profile-avatar-hint">{avatarUploadError}</p>
                   )}
-                </div>
-                <div className="form-row">
-                  <label className="form-label">{t.profileAvatarUrlPlaceholder}</label>
-                  <input
-                    type="url"
-                    className="form-input"
-                    value={myAvatarUrl}
-                    onChange={(e) => setMyAvatarUrl(e.target.value)}
-                    placeholder="https://..."
-                  />
                 </div>
                 <h4 className="panel-subtitle">{t.profileCountry}</h4>
                 <select

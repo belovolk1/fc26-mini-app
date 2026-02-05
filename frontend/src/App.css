@@ -3642,8 +3642,8 @@
   --strike-orange-glow: rgba(255, 107, 0, 0.4);
   --strike-orange-soft: rgba(255, 107, 0, 0.15);
   /* Типографика */
-  --strike-font: 'Oswald', sans-serif;
-  --strike-font-body: 'Rajdhani', system-ui, sans-serif;
+  --strike-font: 'Outfit', sans-serif;
+  --strike-font-body: 'Plus Jakarta Sans', system-ui, sans-serif;
   /* Дизайн-язык: точные значения как на фото */
   --strike-radius: 10px;
   --strike-radius-sm: 8px;
@@ -3657,6 +3657,7 @@
   --strike-shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.25);
   --strike-inset: inset 0 1px 0 rgba(255, 255, 255, 0.1);
   --strike-btn-glow: 0 6px 20px var(--strike-orange-glow);
+  font-family: var(--strike-font-body);
   position: relative;
   min-height: 100vh;
   background: var(--strike-bg) !important;
@@ -3692,7 +3693,7 @@
   }
 }
 .app.strike-theme .nav-btn.active {
-  color: var(--strike-orange);
+  color: #fff;
 }
 .app.strike-theme .strike-header .app-title {
   font-family: var(--strike-font);
