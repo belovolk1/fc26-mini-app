@@ -25,7 +25,11 @@ CREATE POLICY "report_telegram_notifications insert anon" ON public.report_teleg
 CREATE POLICY "report_telegram_notifications insert auth" ON public.report_telegram_notifications FOR INSERT TO authenticated WITH CHECK (true);
 CREATE POLICY "report_telegram_notifications select service" ON public.report_telegram_notifications FOR SELECT TO service_role USING (true);
 
--- Обновить функцию (search_path и явный SECURITY DEFINER)
+-- Одна жалоба на один матч от одного пользователя
+CREATE UNIQUE INDEX IF NOT EXISTS match_reports_one_per_match_reporter
+  ON public.match_reports (match_type, match_id, reporter_player_id);
+
+-- Обновить функцию: 1 заявка на 1 матч; SECURITY INVOKER для RLS
 CREATE OR REPLACE FUNCTION public.create_match_report(
   p_match_type text,
   p_match_id text,
@@ -35,13 +39,16 @@ CREATE OR REPLACE FUNCTION public.create_match_report(
 )
 RETURNS uuid
 LANGUAGE plpgsql
-SECURITY DEFINER
+SECURITY INVOKER
 SET search_path = public
 AS $$
 DECLARE
   v_report_id uuid;
 BEGIN
   IF p_match_type NOT IN ('ladder', 'tournament') OR nullif(trim(p_message), '') IS NULL THEN
+    RETURN NULL;
+  END IF;
+  IF EXISTS (SELECT 1 FROM public.match_reports WHERE match_type = p_match_type AND match_id = p_match_id AND reporter_player_id = p_reporter_player_id) THEN
     RETURN NULL;
   END IF;
   INSERT INTO public.match_reports (match_type, match_id, reporter_player_id, message, screenshot_url)
@@ -51,3 +58,7 @@ BEGIN
   RETURN v_report_id;
 END;
 $$;
+
+-- Права на вызов для anon и authenticated
+GRANT EXECUTE ON FUNCTION public.create_match_report(text, text, uuid, text, text) TO anon;
+GRANT EXECUTE ON FUNCTION public.create_match_report(text, text, uuid, text, text) TO authenticated;

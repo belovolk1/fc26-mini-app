@@ -22,6 +22,8 @@ create table if not exists public.match_reports (
 
 create index if not exists match_reports_status on public.match_reports(status);
 create index if not exists match_reports_created on public.match_reports(created_at desc);
+-- Одна жалоба на один матч от одного пользователя
+create unique index if not exists match_reports_one_per_match_reporter on public.match_reports (match_type, match_id, reporter_player_id);
 
 -- 3) Уведомления игрокам о решении по жалобе
 create table if not exists public.report_resolution_notifications (
@@ -120,7 +122,7 @@ exception when others then return SQLERRM;
 end;
 $$;
 
--- 6) Создать жалобу (матч не подтверждается). SECURITY DEFINER — выполняется от владельца функции (обходит RLS).
+-- 6) Создать жалобу. SECURITY INVOKER — вставка от вызывающего (anon/authenticated), RLS политики разрешают.
 create or replace function public.create_match_report(
   p_match_type text,
   p_match_id text,
@@ -130,13 +132,16 @@ create or replace function public.create_match_report(
 )
 returns uuid
 language plpgsql
-security definer
+security invoker
 set search_path = public
 as $$
 declare
   v_report_id uuid;
 begin
   if p_match_type not in ('ladder', 'tournament') or nullif(trim(p_message), '') is null then
+    return null;
+  end if;
+  if exists (select 1 from public.match_reports where match_type = p_match_type and match_id = p_match_id and reporter_player_id = p_reporter_player_id) then
     return null;
   end if;
   insert into public.match_reports (match_type, match_id, reporter_player_id, message, screenshot_url)
@@ -271,6 +276,7 @@ $$;
 
 grant execute on function public.admin_confirm_match_result(text) to anon;
 grant execute on function public.create_match_report(text, text, uuid, text, text) to anon;
+grant execute on function public.create_match_report(text, text, uuid, text, text) to authenticated;
 grant execute on function public.resolve_match_report(uuid, text, text) to anon;
 grant execute on function public.get_match_reports_admin() to anon;
 grant execute on function public.get_my_report_resolutions(uuid) to anon;

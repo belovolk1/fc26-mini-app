@@ -226,6 +226,7 @@ const messages: Record<
     reportScreenshotOptional: string
     reportSubmit: string
     reportSent: string
+    reportAlreadySubmitted: string
     reportError: string
     adminReportsTitle: string
     adminReportResolveCounted: string
@@ -485,6 +486,7 @@ const messages: Record<
     reportScreenshotOptional: 'Screenshot (optional)',
     reportSubmit: 'Submit report',
     reportSent: 'Report sent. The match will not be counted until an admin decides.',
+    reportAlreadySubmitted: 'You have already submitted a report for this match.',
     reportError: 'Failed to send report.',
     adminReportsTitle: 'Reports',
     adminReportResolveCounted: 'Count match',
@@ -743,6 +745,7 @@ const messages: Record<
     reportScreenshotOptional: 'Captură de ecran (opțional)',
     reportSubmit: 'Trimite raportul',
     reportSent: 'Raport trimis. Meciul nu va fi contorizat până ce un admin decide.',
+    reportAlreadySubmitted: 'Ai trimis deja un raport pentru acest meci.',
     reportError: 'Nu s-a putut trimite raportul.',
     adminReportsTitle: 'Rapoarte',
     adminReportResolveCounted: 'Contorizează meciul',
@@ -1001,6 +1004,7 @@ const messages: Record<
     reportScreenshotOptional: 'Скриншот (по желанию)',
     reportSubmit: 'Отправить жалобу',
     reportSent: 'Жалоба отправлена. Матч не будет засчитан до решения админа.',
+    reportAlreadySubmitted: 'Вы уже отправляли жалобу на этот матч.',
     reportError: 'Не удалось отправить жалобу.',
     adminReportsTitle: 'Жалобы',
     adminReportResolveCounted: 'Засчитать матч',
@@ -1817,6 +1821,8 @@ function App() {
           score_a: pending.score_a ?? undefined,
           score_b: pending.score_b ?? undefined,
           score_submitted_by: pending.score_submitted_by ?? undefined,
+          player_a_accepted_at: pending.player_a_accepted_at ?? undefined,
+          player_b_accepted_at: pending.player_b_accepted_at ?? undefined,
         })
         const oppId = pending.player_a_id === playerId ? pending.player_b_id : pending.player_a_id
         const { data: opp } = await supabase.from('players').select('display_name, username, first_name, last_name').eq('id', oppId).single()
@@ -1824,9 +1830,9 @@ function App() {
           ? (opp.display_name?.trim() || (opp.username ? `@${opp.username}` : null) || [opp.first_name, opp.last_name].filter(Boolean).join(' ') || t.guestName)
           : t.guestName
         setOpponentName(name)
-        setSearchStatus('in_lobby')
         setSearchStartedAt(null)
         setSearchElapsed(0)
+        setSearchStatus(!!(pending.player_a_accepted_at && pending.player_b_accepted_at) ? 'in_lobby' : 'matched')
       }
     }
     void check()
@@ -1869,6 +1875,12 @@ function App() {
     }
     return false
   }
+
+  // При загрузке страницы (playerId появился): восстановить активное лобби/матч, чтобы после F5 не терять табличку
+  useEffect(() => {
+    if (!playerId) return
+    void fetchPendingMatch()
+  }, [playerId])
 
   // Realtime: подписка на новые матчи (мгновенный переход в лобби)
   useEffect(() => {
@@ -3435,7 +3447,7 @@ function App() {
       const { data: urlData } = supabase.storage.from('reports').getPublicUrl(path)
       screenshotUrl = urlData?.publicUrl ?? null
     }
-    const { error } = await supabase.rpc('create_match_report', {
+    const { data: reportId, error } = await supabase.rpc('create_match_report', {
       p_match_type: reportMatchType,
       p_match_id: reportMatchId,
       p_reporter_player_id: playerId,
@@ -3445,6 +3457,10 @@ function App() {
     setReportSending(false)
     if (error) {
       setReportToast(t.reportError + (error.message ? ' ' + error.message : ''))
+      return
+    }
+    if (reportId == null) {
+      setReportToast(t.reportAlreadySubmitted)
       return
     }
     setReportToast(t.reportSent)
