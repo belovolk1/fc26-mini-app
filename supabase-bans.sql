@@ -15,7 +15,8 @@ create table if not exists public.user_bans (
 comment on column public.user_bans.expires_at is 'NULL = бессрочный бан';
 comment on column public.user_bans.revoked_at is 'не NULL = бан снят досрочно';
 
-create index if not exists user_bans_player_active on public.user_bans (player_id) where revoked_at is null and (expires_at is null or expires_at > now());
+-- Предикат только по revoked_at (now() в предикате недопустим — не immutable)
+create index if not exists user_bans_player_active on public.user_bans (player_id) where revoked_at is null;
 
 alter table public.user_bans enable row level security;
 create policy "user_bans anon select" on public.user_bans for select to anon using (true);

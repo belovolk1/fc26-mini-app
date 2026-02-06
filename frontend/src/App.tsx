@@ -1565,7 +1565,7 @@ function App() {
   const [adminSending, setAdminSending] = useState(false)
   const [adminResult, setAdminResult] = useState<string | null>(null)
 
-  type NewsRow = { id: string; title: string; body: string; image_url: string | null; created_at: string; pinned_order: number | null }
+  type NewsRow = { id: string; title: string; body: string; image_url: string | null; created_at: string; pinned_order?: number | null }
   type TournamentRow = {
     id: string
     name: string
@@ -1635,7 +1635,7 @@ function App() {
       setNewsDetailLoading(true)
       supabase
         .from('news')
-        .select('id, title, body, image_url, created_at, pinned_order')
+        .select('id, title, body, image_url, created_at')
         .eq('id', id)
         .single()
         .then(({ data, error }) => {
@@ -2334,18 +2334,29 @@ function App() {
   const fetchNews = () => {
     setNewsLoading(true)
     setNewsError(null)
+    const selectWithPinned = 'id, title, body, image_url, created_at, pinned_order'
+    const selectBase = 'id, title, body, image_url, created_at'
     supabase
       .from('news')
-      .select('id, title, body, image_url, created_at, pinned_order')
+      .select(selectWithPinned)
       .order('created_at', { ascending: false })
       .limit(50)
       .then(({ data, error }) => {
-        setNewsLoading(false)
         if (error) {
-          setNewsError(error.message || 'Ошибка загрузки новостей')
-          setNewsList([])
+          // 400 часто из-за отсутствия колонки pinned_order — повтор без неё
+          supabase.from('news').select(selectBase).order('created_at', { ascending: false }).limit(50)
+            .then(({ data: data2, error: err2 }) => {
+              setNewsLoading(false)
+              if (err2) {
+                setNewsError(err2.message || 'Ошибка загрузки новостей')
+                setNewsList([])
+                return
+              }
+              setNewsList((Array.isArray(data2) ? data2 : []).map((r: Record<string, unknown>) => ({ ...r, pinned_order: null } as NewsRow)))
+            })
           return
         }
+        setNewsLoading(false)
         setNewsList(Array.isArray(data) ? (data as NewsRow[]) : [])
       })
   }
@@ -2538,7 +2549,7 @@ function App() {
   const fetchTournaments = async (silent?: boolean) => {
     if (!silent) setTournamentsLoading(true)
     try {
-      await supabase.rpc('tournament_tick', { p_tournament_id: null })
+      await supabase.rpc('tournament_tick', {})
     } catch {
       /* RPC может отсутствовать (404) */
     }
@@ -2683,7 +2694,7 @@ function App() {
   useEffect(() => {
     if (activeView !== 'tournaments') return
     const runTick = async () => {
-      await supabase.rpc('tournament_tick', { p_tournament_id: null })
+      await supabase.rpc('tournament_tick', {})
       fetchTournaments(true)
       if (selectedTournamentId) {
         const { data } = await supabase.from('tournament_matches').select('*').eq('tournament_id', selectedTournamentId).order('round', { ascending: false }).order('match_index')
