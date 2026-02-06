@@ -1376,6 +1376,8 @@ function App() {
   const [banSending, setBanSending] = useState(false)
   type PlayerOption = { id: string; display_name: string | null; username: string | null }
   const [playersForBan, setPlayersForBan] = useState<PlayerOption[]>([])
+  type AdminTabId = 'broadcast' | 'reports' | 'bans' | 'violations' | 'news' | 'tournaments'
+  const [adminTab, setAdminTab] = useState<AdminTabId>('broadcast')
   const [allMatches, setAllMatches] = useState<Array<{ match_id: number; player_a_name: string; player_b_name: string; score_a: number; score_b: number; result: string; played_at: string | null; elo_delta_a: number | null; elo_delta_b: number | null }>>([])
   const [allMatchesLoading, setAllMatchesLoading] = useState(false)
   type PlayerWarningRow = { id: string; message: string; created_at: string }
@@ -1562,6 +1564,8 @@ function App() {
   const [adminTargetUsername, setAdminTargetUsername] = useState('')
   const [adminSending, setAdminSending] = useState(false)
   const [adminResult, setAdminResult] = useState<string | null>(null)
+  type AdminTabId = 'broadcast' | 'reports' | 'bans' | 'violations' | 'news' | 'tournaments'
+  const [adminTab, setAdminTab] = useState<AdminTabId>('broadcast')
 
   type NewsRow = { id: string; title: string; body: string; image_url: string | null; created_at: string; pinned_order: number | null }
   type TournamentRow = {
@@ -1596,6 +1600,7 @@ function App() {
   }
   const [newsList, setNewsList] = useState<NewsRow[]>([])
   const [newsLoading, setNewsLoading] = useState(false)
+  const [newsError, setNewsError] = useState<string | null>(null)
   const [newsTitle, setNewsTitle] = useState('')
   const [newsBody, setNewsBody] = useState('')
   const [newsImageFile, setNewsImageFile] = useState<File | null>(null)
@@ -2330,14 +2335,20 @@ function App() {
 
   const fetchNews = () => {
     setNewsLoading(true)
+    setNewsError(null)
     supabase
       .from('news')
       .select('id, title, body, image_url, created_at, pinned_order')
       .order('created_at', { ascending: false })
+      .limit(50)
       .then(({ data, error }) => {
         setNewsLoading(false)
-        if (!error && Array.isArray(data)) setNewsList(data as NewsRow[])
-        else setNewsList([])
+        if (error) {
+          setNewsError(error.message || 'Ошибка загрузки новостей')
+          setNewsList([])
+          return
+        }
+        setNewsList(Array.isArray(data) ? (data as NewsRow[]) : [])
       })
   }
 
@@ -2376,6 +2387,20 @@ function App() {
       })
     }
   }, [activeView, isAdminUser])
+
+  useEffect(() => {
+    const q = banPlayerSearch.trim()
+    if (q.length === 0) {
+      setPlayersForBan([])
+      return
+    }
+    const t = setTimeout(() => {
+      supabase.rpc('get_players_for_admin', { p_search: q }).then(({ data }) => {
+        setPlayersForBan(Array.isArray(data) ? (data as PlayerOption[]) : [])
+      })
+    }, 300)
+    return () => clearTimeout(t)
+  }, [banPlayerSearch])
 
   const markWarningRead = (warningId: string) => {
     if (!playerId) return
@@ -3398,11 +3423,11 @@ function App() {
       screenshotUrl = urlData?.publicUrl ?? null
     }
     const { error } = await supabase.rpc('create_match_report', {
-      match_type: reportMatchType,
-      match_id: reportMatchId,
-      reporter_player_id: playerId,
-      message: reportMessage.trim(),
-      screenshot_url: screenshotUrl,
+      p_match_type: reportMatchType,
+      p_match_id: reportMatchId,
+      p_reporter_player_id: playerId,
+      p_message: reportMessage.trim(),
+      p_screenshot_url: screenshotUrl,
     })
     setReportSending(false)
     if (error) {
@@ -3849,7 +3874,8 @@ function App() {
                 <h3 className="strike-section-title">{t.homeLatestNews}</h3>
                 <div className="strike-news-grid">
                   {newsLoading && <p className="panel-text small strike-news-loading">{t.ratingLoading}</p>}
-                  {!newsLoading && newsList.length === 0 && (
+                  {newsError && <p className="panel-text small strike-news-error" role="alert">{newsError}</p>}
+                  {!newsLoading && !newsError && newsList.length === 0 && (
                     <article className="strike-news-card">
                       <div className="strike-news-thumb" />
                       <h4 className="strike-news-card-title">{t.homeNewsTitle1}</h4>
@@ -3857,7 +3883,7 @@ function App() {
                       <span className="strike-news-date">—</span>
                     </article>
                   )}
-                  {!newsLoading && homeNewsSorted.map((n) => (
+                  {!newsLoading && !newsError && homeNewsSorted.map((n) => (
                     <article
                       key={n.id}
                       className="strike-news-card strike-news-card--clickable"
@@ -3997,6 +4023,27 @@ function App() {
 
         {activeView === 'admin' && isAdminUser && (
           <section className="panel admin-panel">
+            <div className="admin-tabs" role="tablist">
+              {(['broadcast', 'reports', 'bans', 'violations', 'news', 'tournaments'] as const).map((tab) => (
+                <button
+                  key={tab}
+                  type="button"
+                  role="tab"
+                  aria-selected={adminTab === tab}
+                  className={`admin-tab ${adminTab === tab ? 'admin-tab--active' : ''}`}
+                  onClick={() => setAdminTab(tab)}
+                >
+                  {tab === 'broadcast' && 'Broadcast'}
+                  {tab === 'reports' && t.adminReportsTitle}
+                  {tab === 'bans' && t.adminBansTitle}
+                  {tab === 'violations' && 'Нарушения'}
+                  {tab === 'news' && 'Новости'}
+                  {tab === 'tournaments' && 'Турниры'}
+                </button>
+              ))}
+            </div>
+            {adminTab === 'broadcast' && (
+            <>
             <h3 className="panel-title">Telegram admin broadcast</h3>
             <p className="panel-text small">
               Отправка сообщений игрокам в Telegram. Используется Bot API, убедись, что все игроки запускали бота.
@@ -4041,7 +4088,11 @@ function App() {
                 {adminSending ? 'Отправляем…' : 'Отправить'}
                 </button>
                         </div>
+            </>
+            )}
 
+            {adminTab === 'reports' && (
+            <>
             <h3 className="panel-title admin-news-title">{t.adminReportsTitle}</h3>
             <p className="panel-text small">Жалобы на матчи (ладдер и турнир). Для pending: введите комментарий (по желанию) и нажмите «Засчитать матч» или «Обнулить матч».</p>
             {matchReportsAdminLoading && <p className="panel-text small">Загрузка…</p>}
@@ -4077,7 +4128,11 @@ function App() {
                 ))}
               </ul>
             )}
+            </>
+            )}
 
+            {adminTab === 'bans' && (
+            <>
             <h3 className="panel-title admin-news-title">{t.adminBansTitle}</h3>
             <p className="panel-text small">Найдите пользователя по имени или username, выберите срок бана и при необходимости укажите причину. Пользователь получит уведомление и плашку в профиле.</p>
             <div className="form-row">
@@ -4087,14 +4142,7 @@ function App() {
                 className="form-input"
                 placeholder={t.adminBanSearchPlaceholder}
                 value={banPlayerSearch}
-                onChange={(e) => {
-                  setBanPlayerSearch(e.target.value)
-                  const q = e.target.value.trim()
-                  if (q.length < 2) { setPlayersForBan([]); return }
-                  supabase.rpc('get_players_for_admin', { p_search: q }).then(({ data }) => {
-                    setPlayersForBan(Array.isArray(data) ? (data as PlayerOption[]) : [])
-                  })
-                }}
+                onChange={(e) => setBanPlayerSearch(e.target.value)}
               />
               {playersForBan.length > 0 && (
                 <ul className="admin-ban-players-list">
@@ -4148,7 +4196,11 @@ function App() {
                 ))}
               </ul>
             )}
+            </>
+            )}
 
+            {adminTab === 'violations' && (
+            <>
             <h3 className="panel-title admin-news-title">Нарушения рейтинга (перелив / читинг)</h3>
             <p className="panel-text small">Пары игроков, у которых за последние 30 дней обнаружен перелив рейтинга (≥10 матчей, ≥90% побед у одного). Матчи между ними аннулированы для рейтинга, ELO пересчитан. Запуск проверки: раз в сутки или после каждого подтверждения матча.</p>
             {ratingViolationsLoading && <p className="panel-text small">Загрузка…</p>}
@@ -4171,7 +4223,11 @@ function App() {
                 ))}
               </ul>
             )}
+            </>
+            )}
 
+            {adminTab === 'news' && (
+            <>
             <h3 className="panel-title admin-news-title">Новости (главная)</h3>
             <p className="panel-text small">Добавьте новость: заголовок, текст и по желанию фото. Они отображаются в блоке «Последние новости» на главной.</p>
             <div className="form-row">
@@ -4244,7 +4300,11 @@ function App() {
                 ))}
               </ul>
             )}
+            </>
+            )}
 
+            {adminTab === 'tournaments' && (
+            <>
             <h3 className="panel-title admin-news-title">Турниры</h3>
             <p className="panel-text small">Создайте турнир: укажите даты регистрации и проведения, длительность раунда (мин) и призовой пул (место → бонус ELO).</p>
             <div className="form-row">
@@ -4315,6 +4375,8 @@ function App() {
                         ))}
                       </ul>
                     )}
+            </>
+            )}
           </section>
         )}
 
@@ -5312,7 +5374,7 @@ function App() {
         <span className="site-footer-copy">Ladder &amp; Tournaments</span>
       </footer>
 
-      {showProfileIntroModal && user && (
+      {showProfileIntroModal && user && (matchesCount === 0 || matchesCount == null) && (myProfileStats?.matches_count ?? matchesCount ?? 0) === 0 && createPortal(
         <div className="profile-intro-modal-backdrop" onClick={() => closeProfileIntroModal()} role="presentation">
           <div className="profile-intro-modal" onClick={(e) => e.stopPropagation()}>
             <h3 className="profile-intro-modal-title">{t.profileIntroModalTitle}</h3>
@@ -5327,10 +5389,11 @@ function App() {
             </div>
             <button type="button" className="profile-intro-modal-close" onClick={() => closeProfileIntroModal()} aria-label="Close">×</button>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
-      {playerWarnings.length > 0 && playerId && (
+      {playerWarnings.length > 0 && playerId && createPortal(
         <div className="profile-intro-modal-backdrop" onClick={() => markWarningRead(playerWarnings[0].id)} role="presentation">
           <div className="profile-intro-modal profile-intro-modal--warning" onClick={(e) => e.stopPropagation()}>
             <h3 className="profile-intro-modal-title">Предупреждение системы</h3>
@@ -5342,7 +5405,8 @@ function App() {
             </div>
             <button type="button" className="profile-intro-modal-close" onClick={() => markWarningRead(playerWarnings[0].id)} aria-label="Close">×</button>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {reportModalOpen && reportMatchId && (

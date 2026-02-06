@@ -4675,6 +4675,41 @@
   color: var(--error, #c00);
 }
 
+/* Админка: вкладки */
+.admin-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--border);
+}
+.admin-tab {
+  padding: 8px 14px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+}
+.admin-tab:hover {
+  color: var(--text);
+  border-color: var(--border-hover);
+}
+.admin-tab--active {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: rgba(244, 117, 33, 0.1);
+}
+.app.strike-theme .admin-tab--active {
+  color: var(--strike-orange);
+  border-color: var(--strike-orange);
+  background: rgba(255, 140, 66, 0.12);
+}
+
 /* Админка: список нарушений рейтинга */
 .admin-violations-list {
   list-style: none;

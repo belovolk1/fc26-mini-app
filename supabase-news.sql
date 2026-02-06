@@ -18,10 +18,16 @@ CREATE INDEX IF NOT EXISTS news_created_at_idx ON public.news (created_at DESC);
 -- RLS
 ALTER TABLE public.news ENABLE ROW LEVEL SECURITY;
 
--- Читать могут все
+-- Читать могут все (public и anon — фронт по умолчанию подключается как anon)
 CREATE POLICY "news_public_read"
 ON public.news FOR SELECT
 TO public
+USING (true);
+
+DROP POLICY IF EXISTS "news_anon_select" ON public.news;
+CREATE POLICY "news_anon_select"
+ON public.news FOR SELECT
+TO anon
 USING (true);
 
 -- Вставка/обновление/удаление — anon (админ-форма только у доверенных пользователей в UI)
