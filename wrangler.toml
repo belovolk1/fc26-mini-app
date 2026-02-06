@@ -1,0 +1,5 @@
+# Cloudflare Pages: только статика (frontend/dist), без Functions.
+# Нужен, чтобы деплой не падал на этапе "Failed to publish your Function".
+name = "fc26-mini-app"
+pages_build_output_dir = "frontend/dist"
+compatibility_date = "2026-02-06"
