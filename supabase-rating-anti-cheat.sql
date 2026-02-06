@@ -37,10 +37,16 @@ create index if not exists player_warnings_player_read on public.player_warnings
 alter table public.rating_violations enable row level security;
 alter table public.player_warnings enable row level security;
 
+drop policy if exists "rating_violations anon select" on public.rating_violations;
+drop policy if exists "rating_violations anon insert" on public.rating_violations;
+drop policy if exists "rating_violations anon update" on public.rating_violations;
 create policy "rating_violations anon select" on public.rating_violations for select to anon using (true);
 create policy "rating_violations anon insert" on public.rating_violations for insert to anon with check (true);
 create policy "rating_violations anon update" on public.rating_violations for update to anon using (true) with check (true);
 
+drop policy if exists "player_warnings select own" on public.player_warnings;
+drop policy if exists "player_warnings insert" on public.player_warnings;
+drop policy if exists "player_warnings update own" on public.player_warnings;
 create policy "player_warnings select own" on public.player_warnings for select to anon
   using (true);
 create policy "player_warnings insert" on public.player_warnings for insert to anon with check (true);

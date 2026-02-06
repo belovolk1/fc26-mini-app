@@ -4797,6 +4797,98 @@
   flex-wrap: wrap;
 }
 
+/* Плашка бана в профиле и на ладдере */
+.profile-banned-banner {
+  padding: 16px;
+  margin-bottom: 20px;
+  background: rgba(248, 81, 73, 0.15);
+  border: 1px solid var(--error, #f85149);
+  border-radius: var(--radius);
+}
+.profile-banned-title {
+  margin: 0 0 8px;
+  font-weight: 700;
+  color: var(--error, #f85149);
+}
+.profile-banned-expiry {
+  margin: 0 0 8px;
+  font-size: 14px;
+  color: var(--text);
+}
+.profile-banned-reason {
+  margin: 8px 0 0;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+.ladder-banned-message {
+  margin-top: 16px;
+}
+
+/* Админка: баны */
+.admin-ban-players-list {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0;
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+.admin-ban-player-option {
+  display: block;
+  width: 100%;
+  padding: 10px 12px;
+  text-align: left;
+  background: none;
+  border: none;
+  color: var(--text);
+  cursor: pointer;
+  font-size: 14px;
+}
+.admin-ban-player-option:hover {
+  background: var(--bg-elevated);
+}
+.admin-bans-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 24px;
+}
+.admin-ban-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px;
+  margin-bottom: 10px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.admin-ban-item--active {
+  border-left: 4px solid var(--error, #f85149);
+}
+.admin-ban-main {
+  flex: 1;
+  min-width: 0;
+}
+.admin-ban-player {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.admin-ban-meta,
+.admin-ban-expiry {
+  font-size: 13px;
+  color: var(--text-muted);
+  display: block;
+  margin-top: 4px;
+}
+.admin-ban-reason {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
 /* Модальное окно сетки турнира */
 .bracket-modal-backdrop {
   position: fixed;

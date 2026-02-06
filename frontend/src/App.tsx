@@ -53,6 +53,9 @@ const messages: Record<
     ladderLobbyTitle: string
     ladderLobbyVs: string
     ladderLobbyAgree: string
+    ladderMatchedTitle: string
+    ladderMatchedHint: string
+    ladderConfirmLobby: string
     ladderChatTitle: string
     ladderChatPlaceholder: string
     ladderChatSend: string
@@ -229,6 +232,23 @@ const messages: Record<
     adminReportCommentPlaceholder: string
     reportResolutionModalTitle: string
     reportResolutionOk: string
+    adminBansTitle: string
+    adminBanUser: string
+    adminBanSearchPlaceholder: string
+    adminBanDuration: string
+    adminBanDurationMinutes: string
+    adminBanDurationHours: string
+    adminBanDurationDays: string
+    adminBanDurationForever: string
+    adminBanReason: string
+    adminBanSubmit: string
+    adminBanRevoke: string
+    adminBansList: string
+    adminBansEmpty: string
+    profileBannedUntil: string
+    profileBannedForever: string
+    profileBannedReason: string
+    ladderBannedNoSearch: string
   }
 > = {
   en: {
@@ -289,6 +309,9 @@ const messages: Record<
     ladderLobbyTitle: 'Lobby',
     ladderLobbyVs: 'You vs {name}',
     ladderLobbyAgree: 'Agree and enter the result below.',
+    ladderMatchedTitle: 'Match found',
+    ladderMatchedHint: 'You were matched with {name}. Both players must confirm to enter the lobby.',
+    ladderConfirmLobby: 'Confirm match',
     ladderChatTitle: 'Chat with opponent',
     ladderChatPlaceholder: 'Message…',
     ladderChatSend: 'Send',
@@ -467,6 +490,23 @@ const messages: Record<
     adminReportCommentPlaceholder: 'Comment (optional)',
     reportResolutionModalTitle: 'Report resolution',
     reportResolutionOk: 'OK',
+    adminBansTitle: 'Bans',
+    adminBanUser: 'User to ban',
+    adminBanSearchPlaceholder: 'Search by username or name…',
+    adminBanDuration: 'Duration',
+    adminBanDurationMinutes: 'Minutes',
+    adminBanDurationHours: 'Hours',
+    adminBanDurationDays: 'Days',
+    adminBanDurationForever: 'Permanent',
+    adminBanReason: 'Reason (optional)',
+    adminBanSubmit: 'Ban',
+    adminBanRevoke: 'Unban',
+    adminBansList: 'Current and recent bans',
+    adminBansEmpty: 'No bans.',
+    profileBannedUntil: 'You are banned until',
+    profileBannedForever: 'You are permanently banned.',
+    profileBannedReason: 'Reason',
+    ladderBannedNoSearch: 'You are banned. Match search is unavailable.',
   },
   ro: {
     appTitle: 'FC Area',
@@ -526,6 +566,9 @@ const messages: Record<
     ladderLobbyTitle: 'Lobby',
     ladderLobbyVs: 'Tu vs {name}',
     ladderLobbyAgree: 'Introdu rezultatul mai jos.',
+    ladderMatchedTitle: 'Meci găsit',
+    ladderMatchedHint: 'Ai fost asociat cu {name}. Ambii jucători trebuie să confirme pentru a intra în lobby.',
+    ladderConfirmLobby: 'Confirmă meciul',
     ladderChatTitle: 'Chat cu adversarul',
     ladderChatPlaceholder: 'Mesaj…',
     ladderChatSend: 'Trimite',
@@ -704,6 +747,23 @@ const messages: Record<
     adminReportCommentPlaceholder: 'Comentariu (opțional)',
     reportResolutionModalTitle: 'Decizie raport',
     reportResolutionOk: 'OK',
+    adminBansTitle: 'Bane',
+    adminBanUser: 'Utilizator de banat',
+    adminBanSearchPlaceholder: 'Caută după username sau nume…',
+    adminBanDuration: 'Durată',
+    adminBanDurationMinutes: 'Minute',
+    adminBanDurationHours: 'Ore',
+    adminBanDurationDays: 'Zile',
+    adminBanDurationForever: 'Permanent',
+    adminBanReason: 'Motiv (opțional)',
+    adminBanSubmit: 'Ban',
+    adminBanRevoke: 'Debanează',
+    adminBansList: 'Bane curente și recente',
+    adminBansEmpty: 'Niciun ban.',
+    profileBannedUntil: 'Ești banat până la',
+    profileBannedForever: 'Ești banat permanent.',
+    profileBannedReason: 'Motiv',
+    ladderBannedNoSearch: 'Ești banat. Căutarea de meciuri este indisponibilă.',
   },
   ru: {
     appTitle: 'FC Area',
@@ -763,6 +823,9 @@ const messages: Record<
     ladderLobbyTitle: 'Лобби',
     ladderLobbyVs: 'Вы vs {name}',
     ladderLobbyAgree: 'Договоритесь и введите результат ниже.',
+    ladderMatchedTitle: 'Соперник найден',
+    ladderMatchedHint: 'Вы подобраны с {name}. Оба игрока должны подтвердить матч, чтобы войти в лобби.',
+    ladderConfirmLobby: 'Подтвердить матч',
     ladderChatTitle: 'Чат с соперником',
     ladderChatPlaceholder: 'Сообщение…',
     ladderChatSend: 'Отправить',
@@ -941,6 +1004,23 @@ const messages: Record<
     adminReportCommentPlaceholder: 'Комментарий (по желанию)',
     reportResolutionModalTitle: 'Решение по жалобе',
     reportResolutionOk: 'Понятно',
+    adminBansTitle: 'Баны',
+    adminBanUser: 'Пользователь для бана',
+    adminBanSearchPlaceholder: 'Поиск по username или имени…',
+    adminBanDuration: 'Срок',
+    adminBanDurationMinutes: 'Минуты',
+    adminBanDurationHours: 'Часы',
+    adminBanDurationDays: 'Дни',
+    adminBanDurationForever: 'Навсегда',
+    adminBanReason: 'Причина (по желанию)',
+    adminBanSubmit: 'Забанить',
+    adminBanRevoke: 'Разбанить',
+    adminBansList: 'Текущие и недавние баны',
+    adminBansEmpty: 'Нет банов.',
+    profileBannedUntil: 'Вы заблокированы до',
+    profileBannedForever: 'Вы заблокированы навсегда.',
+    profileBannedReason: 'Причина',
+    ladderBannedNoSearch: 'Вы заблокированы. Поиск матчей недоступен.',
   },
 }
 
@@ -1240,7 +1320,7 @@ function App() {
   const [elo, setElo] = useState<number | null>(null)
   const [matchesCount, setMatchesCount] = useState<number | null>(null)
   const [loadingProfile, setLoadingProfile] = useState(false)
-  type SearchStatus = 'idle' | 'searching' | 'in_lobby'
+  type SearchStatus = 'idle' | 'searching' | 'matched' | 'in_lobby'
   const [searchStatus, setSearchStatus] = useState<SearchStatus>('idle')
   const [ladderGameMode, setLadderGameMode] = useState<'ultimate_teams' | 'original_teams'>('original_teams')
   const [searchStartedAt, setSearchStartedAt] = useState<number | null>(null)
@@ -1253,7 +1333,10 @@ function App() {
     score_a?: number | null
     score_b?: number | null
     score_submitted_by?: string | null
+    player_a_accepted_at?: string | null
+    player_b_accepted_at?: string | null
   } | null>(null)
+  const [acceptingLobby, setAcceptingLobby] = useState(false)
   const [opponentName, setOpponentName] = useState<string>('')
   const [scoreA, setScoreA] = useState<string>('')
   const [scoreB, setScoreB] = useState<string>('')
@@ -1279,6 +1362,20 @@ function App() {
   const [matchReportsAdminLoading, setMatchReportsAdminLoading] = useState(false)
   const [adminReportComments, setAdminReportComments] = useState<Record<string, string>>({})
   const [resolvingReportId, setResolvingReportId] = useState<string | null>(null)
+  type BanRow = { id: string; reason: string | null; expires_at: string | null; created_at: string }
+  const [myBan, setMyBan] = useState<BanRow | null>(null)
+  type BanAdminRow = { id: string; player_id: string; player_name: string | null; player_username: string | null; banned_by_name: string | null; reason: string | null; created_at: string; expires_at: string | null; revoked_at: string | null; is_active: boolean }
+  const [bansAdmin, setBansAdmin] = useState<BanAdminRow[]>([])
+  const [bansAdminLoading, setBansAdminLoading] = useState(false)
+  const [banPlayerSearch, setBanPlayerSearch] = useState('')
+  const [banPlayerId, setBanPlayerId] = useState<string | null>(null)
+  const [banPlayerLabel, setBanPlayerLabel] = useState('')
+  const [banDurationType, setBanDurationType] = useState<'minutes' | 'hours' | 'days' | 'forever'>('hours')
+  const [banDurationValue, setBanDurationValue] = useState(1)
+  const [banReason, setBanReason] = useState('')
+  const [banSending, setBanSending] = useState(false)
+  type PlayerOption = { id: string; display_name: string | null; username: string | null }
+  const [playersForBan, setPlayersForBan] = useState<PlayerOption[]>([])
   const [allMatches, setAllMatches] = useState<Array<{ match_id: number; player_a_name: string; player_b_name: string; score_a: number; score_b: number; result: string; played_at: string | null; elo_delta_a: number | null; elo_delta_b: number | null }>>([])
   const [allMatchesLoading, setAllMatchesLoading] = useState(false)
   type PlayerWarningRow = { id: string; message: string; created_at: string }
@@ -1728,9 +1825,11 @@ function App() {
     void check()
   }, [activeView, playerId, t.guestName])
 
-  // Применить найденный матч (лобби) — общий код для Realtime и опроса.
-  // Сразу удаляем себя из очереди поиска, чтобы не участвовать в матчмейкинге, пока снова не нажмём «Поиск».
-  const applyPendingMatch = async (match: { id: number; player_a_id: string; player_b_id: string; score_a?: number | null; score_b?: number | null; score_submitted_by?: string | null }) => {
+  const isBothAcceptedLobby = (m: { player_a_accepted_at?: string | null; player_b_accepted_at?: string | null }) =>
+    !!(m.player_a_accepted_at && m.player_b_accepted_at)
+
+  // Применить найденный матч — показываем лобби только когда оба подтвердили вход.
+  const applyPendingMatch = async (match: { id: number; player_a_id: string; player_b_id: string; score_a?: number | null; score_b?: number | null; score_submitted_by?: string | null; player_a_accepted_at?: string | null; player_b_accepted_at?: string | null }) => {
     if (playerId) void supabase.from('matchmaking_queue').delete().eq('player_id', playerId)
     setCurrentMatch({
       id: match.id,
@@ -1739,6 +1838,8 @@ function App() {
       score_a: match.score_a ?? undefined,
       score_b: match.score_b ?? undefined,
       score_submitted_by: match.score_submitted_by ?? undefined,
+      player_a_accepted_at: match.player_a_accepted_at ?? undefined,
+      player_b_accepted_at: match.player_b_accepted_at ?? undefined,
     })
     const oppId = match.player_a_id === playerId ? match.player_b_id : match.player_a_id
     const { data: opp } = await supabase.from('players').select('display_name, username, first_name, last_name').eq('id', oppId).single()
@@ -1746,9 +1847,9 @@ function App() {
       ? (opp.display_name?.trim() || (opp.username ? `@${opp.username}` : null) || [opp.first_name, opp.last_name].filter(Boolean).join(' ') || t.guestName)
       : t.guestName
     setOpponentName(name)
-    setSearchStatus('in_lobby')
     setSearchStartedAt(null)
     setSearchElapsed(0)
+    setSearchStatus(isBothAcceptedLobby(match) ? 'in_lobby' : 'matched')
   }
 
   const fetchPendingMatch = async (): Promise<boolean> => {
@@ -1790,6 +1891,31 @@ function App() {
       supabase.removeChannel(channel)
     }
   }, [searchStatus, playerId])
+
+  // В состоянии «matched» опрашиваем матч: когда оба подтвердили — переходим в лобби
+  useEffect(() => {
+    if (searchStatus !== 'matched' || !playerId || !currentMatch?.id) return
+    const interval = setInterval(async () => {
+      const { data: rows } = await supabase.rpc('get_my_pending_match', { p_player_id: playerId })
+      const row = Array.isArray(rows) ? rows[0] : rows
+      if (row && row.id === currentMatch.id && row.player_a_accepted_at && row.player_b_accepted_at) {
+        await applyPendingMatch(row)
+      }
+    }, 2000)
+    return () => clearInterval(interval)
+  }, [searchStatus, playerId, currentMatch?.id])
+
+  const acceptLobbyMatch = async () => {
+    if (!currentMatch || !playerId) return
+    setAcceptingLobby(true)
+    const { data: err } = await supabase.rpc('accept_lobby_match', { p_match_id: String(currentMatch.id), p_player_id: playerId })
+    setAcceptingLobby(false)
+    if (err) return
+    const { data: rows } = await supabase.rpc('get_my_pending_match', { p_player_id: playerId })
+    const row = Array.isArray(rows) ? rows[0] : rows
+    if (row && row.player_a_accepted_at && row.player_b_accepted_at) await applyPendingMatch(row)
+    else if (row) setCurrentMatch((m) => m ? { ...m, player_a_accepted_at: row.player_a_accepted_at ?? m.player_a_accepted_at, player_b_accepted_at: row.player_b_accepted_at ?? m.player_b_accepted_at } : m)
+  }
 
   // Realtime: обновление матча (соперник ввёл счёт) — второй игрок сразу видит предложенный счёт и кнопку «Подтвердить»
   useEffect(() => {
@@ -2158,6 +2284,14 @@ function App() {
     })
   }, [playerId])
 
+  useEffect(() => {
+    if (!playerId) { setMyBan(null); return }
+    supabase.rpc('get_my_ban', { p_player_id: playerId }).then(({ data, error }) => {
+      if (!error && Array.isArray(data) && data.length > 0) setMyBan(data[0] as BanRow)
+      else setMyBan(null)
+    })
+  }, [playerId])
+
   // Нарушения рейтинга для админа — при открытии админки
   const fetchRatingViolations = () => {
     setRatingViolationsLoading(true)
@@ -2226,6 +2360,12 @@ function App() {
         setMatchReportsAdminLoading(false)
         if (!error && data) setMatchReportsAdmin(data as MatchReportAdminRow[])
       })
+      setBansAdminLoading(true)
+      supabase.rpc('get_bans_admin').then(({ data, error }) => {
+        setBansAdminLoading(false)
+        if (!error && Array.isArray(data)) setBansAdmin(data as BanAdminRow[])
+        else setBansAdmin([])
+      })
     }
     if (activeView === 'admin' && isAdminUser) {
       setRatingViolationsLoading(true)
@@ -2253,6 +2393,38 @@ function App() {
       setMatchReportsAdmin((prev) => prev.map((r) => (r.id === reportId ? { ...r, status: 'resolved', resolution, admin_comment: comment.trim() || null, resolved_at: new Date().toISOString() } : r)))
       setAdminReportComments((prev) => ({ ...prev, [reportId]: '' }))
     }
+  }
+
+  const submitBan = async () => {
+    if (!playerId || !banPlayerId) return
+    setBanSending(true)
+    const { error } = await supabase.rpc('create_ban', {
+      p_player_id: banPlayerId,
+      p_banned_by: playerId,
+      p_duration_type: banDurationType,
+      p_duration_value: banDurationType === 'forever' ? 0 : banDurationValue,
+      p_reason: banReason.trim() || null,
+    })
+    setBanSending(false)
+    if (!error) {
+      setBanPlayerId(null)
+      setBanPlayerSearch('')
+      setBanPlayerLabel('')
+      setBanReason('')
+      setBanDurationValue(1)
+      setBanDurationType('hours')
+      setPlayersForBan([])
+      setBansAdminLoading(true)
+      supabase.rpc('get_bans_admin').then(({ data }) => {
+        setBansAdminLoading(false)
+        if (Array.isArray(data)) setBansAdmin(data as BanAdminRow[])
+      })
+    }
+  }
+
+  const revokeBan = async (banId: string) => {
+    const { error } = await supabase.rpc('revoke_ban', { p_ban_id: banId })
+    if (!error) setBansAdmin((prev) => prev.map((b) => (b.id === banId ? { ...b, revoked_at: new Date().toISOString(), is_active: false } : b)))
   }
 
   const markViolationSeen = (violationId: string) => {
@@ -3494,7 +3666,7 @@ function App() {
             )}
             </button>
         )}
-        {user && searchStatus === 'in_lobby' && currentMatch && activeView !== 'ladder' && (
+        {(user && (searchStatus === 'matched' || searchStatus === 'in_lobby') && currentMatch && activeView !== 'ladder') && (
             <button
               type="button"
             className="active-lobby-banner"
@@ -3901,6 +4073,77 @@ function App() {
                         </div>
                       </div>
                     )}
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            <h3 className="panel-title admin-news-title">{t.adminBansTitle}</h3>
+            <p className="panel-text small">Найдите пользователя по имени или username, выберите срок бана и при необходимости укажите причину. Пользователь получит уведомление и плашку в профиле.</p>
+            <div className="form-row">
+              <label className="form-label">{t.adminBanUser}</label>
+              <input
+                type="text"
+                className="form-input"
+                placeholder={t.adminBanSearchPlaceholder}
+                value={banPlayerSearch}
+                onChange={(e) => {
+                  setBanPlayerSearch(e.target.value)
+                  const q = e.target.value.trim()
+                  if (q.length < 2) { setPlayersForBan([]); return }
+                  supabase.rpc('get_players_for_admin', { p_search: q }).then(({ data }) => {
+                    setPlayersForBan(Array.isArray(data) ? (data as PlayerOption[]) : [])
+                  })
+                }}
+              />
+              {playersForBan.length > 0 && (
+                <ul className="admin-ban-players-list">
+                  {playersForBan.map((p) => (
+                    <li key={p.id}>
+                      <button type="button" className="admin-ban-player-option" onClick={() => { setBanPlayerId(p.id); setBanPlayerLabel(p.display_name || p.username || p.id.slice(0, 8)); setPlayersForBan([]); setBanPlayerSearch(''); }}>
+                        {p.display_name || p.username || p.id.slice(0, 8)}{p.username ? ` @${p.username}` : ''}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {banPlayerId && <p className="panel-text small">Выбран: <strong>{banPlayerLabel}</strong> <button type="button" className="strike-btn strike-btn-secondary" onClick={() => { setBanPlayerId(null); setBanPlayerLabel(''); }}>Сбросить</button></p>}
+            </div>
+            <div className="form-row form-row--inline">
+              <label className="form-label">{t.adminBanDuration}</label>
+              <select className="form-input" value={banDurationType} onChange={(e) => setBanDurationType(e.target.value as 'minutes' | 'hours' | 'days' | 'forever')}>
+                <option value="minutes">{t.adminBanDurationMinutes}</option>
+                <option value="hours">{t.adminBanDurationHours}</option>
+                <option value="days">{t.adminBanDurationDays}</option>
+                <option value="forever">{t.adminBanDurationForever}</option>
+              </select>
+              {banDurationType !== 'forever' && (
+                <input type="number" min={1} className="form-input" style={{ width: '80px' }} value={banDurationValue} onChange={(e) => setBanDurationValue(parseInt(e.target.value, 10) || 1)} />
+              )}
+            </div>
+            <div className="form-row">
+              <label className="form-label">{t.adminBanReason}</label>
+              <input type="text" className="form-input" value={banReason} onChange={(e) => setBanReason(e.target.value)} placeholder={t.adminBanReason} />
+            </div>
+            <div className="admin-actions">
+              <button type="button" className="strike-btn strike-btn-primary" disabled={banSending || !banPlayerId} onClick={submitBan}>
+                {banSending ? '…' : t.adminBanSubmit}
+              </button>
+            </div>
+            <h4 className="panel-subtitle">{t.adminBansList}</h4>
+            {bansAdminLoading && <p className="panel-text small">Загрузка…</p>}
+            {!bansAdminLoading && bansAdmin.length === 0 && <p className="panel-text small">{t.adminBansEmpty}</p>}
+            {!bansAdminLoading && bansAdmin.length > 0 && (
+              <ul className="admin-bans-list">
+                {bansAdmin.map((b) => (
+                  <li key={b.id} className={`admin-ban-item ${b.is_active ? 'admin-ban-item--active' : ''}`}>
+                    <div className="admin-ban-main">
+                      <span className="admin-ban-player">{b.player_name ?? '—'}{b.player_username ? ` @${b.player_username}` : ''}</span>
+                      <span className="admin-ban-meta">Закрыл: {b.banned_by_name ?? '—'} · {new Date(b.created_at).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })}</span>
+                      <span className="admin-ban-expiry">{b.expires_at ? `До: ${new Date(b.expires_at).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })}` : 'Навсегда'}</span>
+                      {b.reason && <p className="admin-ban-reason">{b.reason}</p>}
+                    </div>
+                    {b.is_active && <button type="button" className="strike-btn strike-btn-secondary" onClick={() => revokeBan(b.id)}>{t.adminBanRevoke}</button>}
                   </li>
                 ))}
               </ul>
@@ -4408,6 +4651,21 @@ function App() {
         {activeView === 'profile' && (
           <section className="panel profile-panel">
             <h3 className="panel-title profile-panel-title">{t.profileHeader}</h3>
+            {myBan && (
+              <div className="profile-banned-banner" role="alert">
+                <p className="profile-banned-title">
+                  {myBan.expires_at ? t.profileBannedUntil : t.profileBannedForever}
+                </p>
+                {myBan.expires_at && (
+                  <p className="profile-banned-expiry">
+                    {new Date(myBan.expires_at).toLocaleString(undefined, { dateStyle: 'long', timeStyle: 'short' })}
+                  </p>
+                )}
+                {myBan.reason && (
+                  <p className="profile-banned-reason"><strong>{t.profileBannedReason}:</strong> {myBan.reason}</p>
+                )}
+              </div>
+            )}
             {loadingProfile && (
               <p className="panel-text">{t.profileLoading}</p>
             )}
@@ -4755,7 +5013,15 @@ function App() {
               </>
             )}
 
-            {user && playerId && !hasActiveTournamentMatch && searchStatus === 'idle' && (
+            {user && playerId && myBan && (
+              <div className="profile-banned-banner ladder-banned-message" role="alert">
+                <p className="profile-banned-title">{myBan.expires_at ? t.profileBannedUntil : t.profileBannedForever}</p>
+                {myBan.expires_at && <p className="profile-banned-expiry">{new Date(myBan.expires_at).toLocaleString(undefined, { dateStyle: 'long', timeStyle: 'short' })}</p>}
+                <p className="panel-text">{t.ladderBannedNoSearch}</p>
+              </div>
+            )}
+
+            {user && playerId && !myBan && !hasActiveTournamentMatch && searchStatus === 'idle' && (
               <>
                 <p className="form-label ladder-mode-label">{t.ladderModeChoose}</p>
                 <div className="ladder-mode-options">
@@ -4782,7 +5048,7 @@ function App() {
               </>
             )}
 
-            {user && playerId && !hasActiveTournamentMatch && searchStatus === 'searching' && (
+            {user && playerId && !myBan && !hasActiveTournamentMatch && searchStatus === 'searching' && (
               <>
                 <p className="panel-text">
                   {t.ladderSearching}
@@ -4799,7 +5065,22 @@ function App() {
               </>
             )}
 
-            {user && playerId && !hasActiveTournamentMatch && searchStatus === 'in_lobby' && currentMatch && (
+            {user && playerId && !myBan && !hasActiveTournamentMatch && searchStatus === 'matched' && currentMatch && (
+              <div className="lobby-page lobby-confirm-step">
+                <header className="lobby-header">
+                  <span className="lobby-header-badge">{t.ladderMatchedTitle}</span>
+                  <h2 className="lobby-header-vs">{t.ladderLobbyVs.replace('{name}', opponentName)}</h2>
+                  <p className="lobby-header-hint">{t.ladderMatchedHint.replace('{name}', opponentName)}</p>
+                </header>
+                <div className="lobby-confirm-actions" style={{ marginTop: 16 }}>
+                  <button type="button" className="primary-button lobby-score-submit" disabled={acceptingLobby} onClick={acceptLobbyMatch}>
+                    {acceptingLobby ? '…' : t.ladderConfirmLobby}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {user && playerId && !myBan && !hasActiveTournamentMatch && searchStatus === 'in_lobby' && currentMatch && (
               <div className="lobby-page">
                 <header className="lobby-header">
                   <span className="lobby-header-badge">{t.ladderLobbyTitle}</span>
