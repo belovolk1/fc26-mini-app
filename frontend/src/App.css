@@ -1820,6 +1820,63 @@
   background: var(--bg-elevated);
   border-radius: 8px;
 }
+.admin-news-pinned-badge {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 8px;
+  font-size: 11px;
+  color: var(--accent);
+  background: var(--bg-elevated);
+  border-radius: var(--radius-sm);
+}
+.admin-news-item-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.admin-news-pin-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-right: 4px;
+}
+.admin-news-pin-btn {
+  min-width: 28px;
+  padding: 6px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.admin-news-pin-btn:hover {
+  background: var(--border);
+}
+.admin-news-pin-btn--active {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: rgba(var(--accent-rgb, 59, 130, 246), 0.1);
+}
+.admin-news-unpin-btn {
+  padding: 6px 10px;
+  font-size: 12px;
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.admin-news-unpin-btn:hover:not(:disabled) {
+  color: var(--text);
+  border-color: var(--text-muted);
+}
+.admin-news-unpin-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 .admin-news-delete {
   flex-shrink: 0;
   padding: 8px 14px;
@@ -2245,6 +2302,38 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
+}
+.profile-rank-card-identity {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.profile-rank-card-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--bg-elevated);
+  border: 2px solid var(--border);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.profile-rank-card-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.profile-rank-card-avatar-placeholder {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--accent);
+}
+.profile-rank-card-country {
+  font-size: 13px;
+  color: var(--text-muted);
 }
 .profile-rank-meta {
   margin: 0;
@@ -3774,6 +3863,16 @@
   align-items: center;
   gap: 12px;
 }
+.strike-header .app-header-main--clickable {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+}
 .strike-logo-icon {
   font-size: 28px;
   line-height: 1;
@@ -4402,6 +4501,93 @@
 .tournaments-tab-count {
   opacity: 0.9;
   font-weight: 700;
+}
+
+/* Модальное окно после первого входа — настройка профиля */
+.profile-intro-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  background: rgba(0,0,0,0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  overflow: auto;
+}
+.profile-intro-modal {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  background: var(--bg-elevated, #fff);
+  border: 1px solid var(--border);
+  border-radius: var(--radius, 12px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+  padding: 24px;
+}
+.app.strike-theme .profile-intro-modal {
+  background: var(--strike-card);
+  border-color: var(--strike-border);
+  border-radius: var(--strike-radius);
+  box-shadow: var(--strike-shadow);
+}
+.profile-intro-modal-title {
+  margin: 0 0 12px;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+}
+.app.strike-theme .profile-intro-modal-title {
+  font-family: var(--strike-font);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--strike-text);
+}
+.profile-intro-modal-body {
+  margin: 0 0 20px;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+.app.strike-theme .profile-intro-modal-body {
+  color: var(--strike-muted);
+}
+.profile-intro-modal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+.profile-intro-modal-skip {
+  padding: 10px 16px;
+  font-size: 14px;
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.profile-intro-modal-skip:hover {
+  color: var(--text);
+  border-color: var(--text-muted);
+}
+.profile-intro-modal-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  font-size: 22px;
+  line-height: 1;
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+}
+.profile-intro-modal-close:hover {
+  color: var(--text);
 }
 
 /* Модальное окно сетки турнира */
@@ -5151,6 +5337,17 @@
   color: var(--strike-muted);
   text-transform: uppercase;
 }
+.strike-stats-player-name {
+  margin: 0 0 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+.app.strike-theme .strike-stats-player-name {
+  font-family: var(--strike-font);
+  letter-spacing: 0.04em;
+  color: var(--strike-text);
+}
 .strike-elo-block {
   margin-bottom: 20px;
 }
@@ -5376,6 +5573,17 @@
   letter-spacing: 0.12em;
   color: var(--strike-muted);
   text-transform: uppercase;
+}
+.strike-section-subtitle {
+  margin: -8px 0 12px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.app.strike-theme .strike-section-subtitle {
+  font-family: var(--strike-font);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  color: var(--strike-muted);
 }
 .strike-top-list {
   list-style: none;

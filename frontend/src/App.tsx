@@ -98,6 +98,7 @@ const messages: Record<
     navAdmin: string
     matchesHeader: string
     matchesIntro: string
+    matchesAdminOnly: string
     matchesLoading: string
     matchesEmpty: string
     matchResultAWin: string
@@ -142,6 +143,10 @@ const messages: Record<
     profileTabOverview: string
     profileTabEdit: string
     profileTabSettings: string
+    profileIntroModalTitle: string
+    profileIntroModalBody: string
+    profileIntroModalButton: string
+    profileIntroModalGoToProfile: string
     guestName: string
     homeHeroHeadline: string
     homeHeroDesc: string
@@ -154,6 +159,9 @@ const messages: Record<
     homeViewLadder: string
     homeYourStats: string
     homeTopPlayers: string
+    homeTopPlayersPeriodDay: string
+    homeTopPlayersPeriodWeek: string
+    homeTopPlayersPeriodMonth: string
     homeLatestNews: string
     homeLiveCountdown: string
     homeNewsTitle1: string
@@ -315,6 +323,7 @@ const messages: Record<
     navAdmin: 'Admin',
     matchesHeader: 'All matches',
     matchesIntro: 'Recently played matches.',
+    matchesAdminOnly: 'This page is available only to administrators.',
     matchesLoading: 'Loading matches…',
     matchesEmpty: 'No matches yet.',
     matchResultAWin: 'Player A win',
@@ -359,6 +368,10 @@ const messages: Record<
     profileTabOverview: 'Overview',
     profileTabEdit: 'Edit Profile',
     profileTabSettings: 'Settings',
+    profileIntroModalTitle: 'Customize your profile',
+    profileIntroModalBody: 'You can change your nickname from the default one from Telegram, upload an avatar, and set your country in the Profile section whenever you want.',
+    profileIntroModalButton: 'Got it',
+    profileIntroModalGoToProfile: 'Go to Profile',
     guestName: 'Guest',
     homeHeroHeadline: 'COMPETE. CLIMB. DOMINATE.',
     homeHeroDesc: 'FC Area is the platform for FC 26 players: find opponents for Ultimate Team and Original Teams, play ladder and tournaments, track ELO and stats.',
@@ -371,6 +384,9 @@ const messages: Record<
     homeViewLadder: 'VIEW LADDER',
     homeYourStats: 'YOUR STATS',
     homeTopPlayers: 'TOP PLAYERS',
+    homeTopPlayersPeriodDay: 'Today',
+    homeTopPlayersPeriodWeek: 'This week',
+    homeTopPlayersPeriodMonth: 'This month',
     homeLatestNews: 'LATEST NEWS',
     homeLiveCountdown: 'LIVE COUNTDOWN',
     homeNewsTitle1: 'New season update: map changes & balance',
@@ -531,6 +547,7 @@ const messages: Record<
     navAdmin: 'Admin',
     matchesHeader: 'Toate meciurile',
     matchesIntro: 'Meciuri jucate recent.',
+    matchesAdminOnly: 'Această pagină este disponibilă doar administratorilor.',
     matchesLoading: 'Se încarcă meciurile…',
     matchesEmpty: 'Niciun meci încă.',
     matchResultAWin: 'Victorie jucător A',
@@ -575,6 +592,10 @@ const messages: Record<
     profileTabOverview: 'Prezentare',
     profileTabEdit: 'Editează Profilul',
     profileTabSettings: 'Setări',
+    profileIntroModalTitle: 'Personalizează-ți profilul',
+    profileIntroModalBody: 'Poți schimba porecla din cea implicită de pe Telegram, încărca un avatar și seta țara în secțiunea Profil oricând dorești.',
+    profileIntroModalButton: 'Am înțeles',
+    profileIntroModalGoToProfile: 'Mergi la Profil',
     guestName: 'Vizitator',
     homeHeroHeadline: 'CONCURĂ. URCA. DOMINĂ.',
     homeHeroDesc: 'FC Area este platforma pentru jucătorii FC 26: găsește adversari pentru Ultimate Team și Original Teams, joacă ladder și turnee, urmărește ELO și statisticile.',
@@ -587,6 +608,9 @@ const messages: Record<
     homeViewLadder: 'VEZI CLASAMENT',
     homeYourStats: 'STATISTICILE TALE',
     homeTopPlayers: 'TOP JUCĂTORI',
+    homeTopPlayersPeriodDay: 'Azi',
+    homeTopPlayersPeriodWeek: 'Săptămâna aceasta',
+    homeTopPlayersPeriodMonth: 'Luna aceasta',
     homeLatestNews: 'ȘTIRI RECENTE',
     homeLiveCountdown: 'COUNTDOWN LIVE',
     homeNewsTitle1: 'Actualizare sezon: hărți și balans',
@@ -747,6 +771,7 @@ const messages: Record<
     navAdmin: 'Админ',
     matchesHeader: 'Все матчи',
     matchesIntro: 'Недавно сыгранные матчи.',
+    matchesAdminOnly: 'Эта страница доступна только администраторам.',
     matchesLoading: 'Загрузка матчей…',
     matchesEmpty: 'Матчей пока нет.',
     matchResultAWin: 'Победа игрока A',
@@ -791,6 +816,10 @@ const messages: Record<
     profileTabOverview: 'Обзор',
     profileTabEdit: 'Редактировать',
     profileTabSettings: 'Настройки',
+    profileIntroModalTitle: 'Настройте профиль',
+    profileIntroModalBody: 'Вы можете сменить никнейм с того, что по умолчанию приходит из Telegram, загрузить аватар и указать страну в разделе «Профиль» в любой момент.',
+    profileIntroModalButton: 'Понятно',
+    profileIntroModalGoToProfile: 'Перейти в профиль',
     guestName: 'Гость',
     homeHeroHeadline: 'СРАЖАЙСЯ. РАСТИ. ДОМИНИРУЙ.',
     homeHeroDesc: 'FC Area — платформа для игроков FC 26: ищи соперников для Ultimate Team и Original Teams, играй в ладдер и турниры, следи за ELO и статистикой.',
@@ -803,6 +832,9 @@ const messages: Record<
     homeViewLadder: 'РЕЙТИНГ',
     homeYourStats: 'ТВОЯ СТАТИСТИКА',
     homeTopPlayers: 'ТОП ИГРОКИ',
+    homeTopPlayersPeriodDay: 'За день',
+    homeTopPlayersPeriodWeek: 'За неделю',
+    homeTopPlayersPeriodMonth: 'За месяц',
     homeLatestNews: 'ПОСЛЕДНИЕ НОВОСТИ',
     homeLiveCountdown: 'ДО СТАРТА',
     homeNewsTitle1: 'Новый сезон: карты и баланс',
@@ -861,6 +893,7 @@ const messages: Record<
 }
 
 const WIDGET_USER_KEY = 'fc_area_telegram_user'
+const PROFILE_INTRO_SEEN_PREFIX = 'fc_area_profile_intro_seen_'
 
 const COUNTRIES: { code: string; name: string; flag: string }[] = [
   { code: 'RU', name: 'Russia', flag: '🇷🇺' },
@@ -1167,6 +1200,7 @@ function App() {
   }
   const [leaderboard, setLeaderboard] = useState<LeaderboardRow[]>([])
   const [leaderboardLoading, setLeaderboardLoading] = useState(false)
+  const [topPlayersPeriod] = useState<'day' | 'week' | 'month'>(() => ['day', 'week', 'month'][Math.floor(Math.random() * 3)] as 'day' | 'week' | 'month')
   const [selectedPlayerRow, setSelectedPlayerRow] = useState<LeaderboardRow | null>(null)
   const [profileFromHashLoading, setProfileFromHashLoading] = useState(false)
   const [myAvatarUrl, setMyAvatarUrl] = useState<string>('')
@@ -1293,6 +1327,19 @@ function App() {
 
   const user = widgetUser
 
+  const [showProfileIntroModal, setShowProfileIntroModal] = useState(false)
+  useEffect(() => {
+    if (!user?.id) return
+    const key = PROFILE_INTRO_SEEN_PREFIX + user.id
+    if (!localStorage.getItem(key)) setShowProfileIntroModal(true)
+  }, [user?.id])
+
+  const closeProfileIntroModal = (goToProfile?: boolean) => {
+    if (user?.id) localStorage.setItem(PROFILE_INTRO_SEEN_PREFIX + user.id, '1')
+    setShowProfileIntroModal(false)
+    if (goToProfile) setActiveView('profile')
+  }
+
   // авто-выбор языка по Telegram только если пользователь ещё не сохранял выбор
   useEffect(() => {
     if (getStoredLang() != null) return
@@ -1314,7 +1361,7 @@ function App() {
   const [adminSending, setAdminSending] = useState(false)
   const [adminResult, setAdminResult] = useState<string | null>(null)
 
-  type NewsRow = { id: string; title: string; body: string; image_url: string | null; created_at: string }
+  type NewsRow = { id: string; title: string; body: string; image_url: string | null; created_at: string; pinned_order: number | null }
   type TournamentRow = {
     id: string
     name: string
@@ -1383,7 +1430,7 @@ function App() {
       setNewsDetailLoading(true)
       supabase
         .from('news')
-        .select('id, title, body, image_url, created_at')
+        .select('id, title, body, image_url, created_at, pinned_order')
         .eq('id', id)
         .single()
         .then(({ data, error }) => {
@@ -1475,6 +1522,21 @@ function App() {
     }
   }, [myProfileStats])
 
+  // Realtime: обновление ELO в шапке при изменении записи игрока (после матчей)
+  useEffect(() => {
+    if (!playerId) return
+    const ch = supabase
+      .channel(`player-elo-${playerId}`)
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'players', filter: `id=eq.${playerId}` }, (payload) => {
+        const row = payload.new as { elo?: number }
+        if (typeof row?.elo === 'number') setElo(row.elo)
+      })
+      .subscribe()
+    return () => {
+      supabase.removeChannel(ch)
+    }
+  }, [playerId])
+
   const displayName = useMemo(() => {
     if (!user) return t.guestName
     if (myDisplayName.trim()) return myDisplayName.trim()
@@ -1483,6 +1545,14 @@ function App() {
     if (user.username) return `@${user.username}`
     return t.guestName
   }, [t.guestName, user, myDisplayName])
+
+  const refetchHeaderElo = async () => {
+    if (!playerId) return
+    const { data } = await supabase.from('players').select('elo').eq('id', playerId).single()
+    if (data != null && typeof (data as { elo?: number }).elo === 'number') {
+      setElo((data as { elo: number }).elo)
+    }
+  }
 
   const refetchMatchesCount = async () => {
     if (!playerId) return
@@ -1615,8 +1685,7 @@ function App() {
             setSearchStartedAt(null)
             setSearchElapsed(0)
             refetchMatchesCount()
-            // сразу после засчитанного матча перезагружаем профиль,
-            // чтобы ELO и статы в шапке обновились в реальном времени
+            refetchHeaderElo()
             void supabase
               .rpc('get_player_profile', { p_player_id: playerId })
               .then(({ data, error }) => {
@@ -1661,6 +1730,7 @@ function App() {
         setSearchStartedAt(null)
         setSearchElapsed(0)
         refetchMatchesCount()
+        refetchHeaderElo()
         void supabase
           .rpc('get_player_profile', { p_player_id: playerId })
           .then(({ data: prof, error: profErr }) => {
@@ -1978,7 +2048,7 @@ function App() {
     setNewsLoading(true)
     supabase
       .from('news')
-      .select('id, title, body, image_url, created_at')
+      .select('id, title, body, image_url, created_at, pinned_order')
       .order('created_at', { ascending: false })
       .then(({ data, error }) => {
         setNewsLoading(false)
@@ -1990,6 +2060,18 @@ function App() {
   useEffect(() => {
     if (activeView === 'home' || activeView === 'admin') fetchNews()
   }, [activeView])
+
+  // На главной: сначала закреплённые 1, 2, 3, затем остальные по дате, всего до 6
+  const homeNewsSorted = useMemo(() => {
+    return [...newsList]
+      .sort((a, b) => {
+        const pa = a.pinned_order ?? 999
+        const pb = b.pinned_order ?? 999
+        if (pa !== pb) return pa - pb
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      })
+      .slice(0, 6)
+  }, [newsList])
 
   const NEWS_BUCKET = 'news'
   const addNews = async () => {
@@ -2045,6 +2127,16 @@ function App() {
   const deleteNews = async (id: string) => {
     if (!isAdminUser) return
     const { error } = await supabase.from('news').delete().eq('id', id)
+    if (!error) fetchNews()
+  }
+
+  const setPinnedOrder = async (newsId: string, order: number | null) => {
+    if (!isAdminUser) return
+    if (order !== null && (order < 1 || order > 3)) return
+    if (order !== null) {
+      await supabase.from('news').update({ pinned_order: null }).eq('pinned_order', order)
+    }
+    const { error } = await supabase.from('news').update({ pinned_order: order }).eq('id', newsId)
     if (!error) fetchNews()
   }
 
@@ -2390,8 +2482,9 @@ function App() {
     lang: Lang
     onRefresh: () => void | Promise<void>
     onMatchUpdated?: (updated: TournamentMatchRow) => void
+    onMatchConfirmed?: () => void
   }) {
-    const { matches, playerId: pid, leaderboard, lang: bracketLang, onMatchUpdated } = props
+    const { matches, playerId: pid, leaderboard, lang: bracketLang, onMatchUpdated, onMatchConfirmed } = props
     const [matchMessage, setMatchMessage] = useState<string | null>(null)
     const [savingMatchId, setSavingMatchId] = useState<string | null>(null)
     const [scoreInputs, setScoreInputs] = useState<Record<string, { a: string; b: string }>>({})
@@ -2480,7 +2573,10 @@ function App() {
       const { data, error } = await supabase.from('tournament_matches').update({ winner_id: winner, status: 'confirmed' }).eq('id', m.id).select().single()
       setSavingMatchId(null)
       if (error) setMatchMessage(error.message)
-      else if (data && onMatchUpdated) onMatchUpdated(data as TournamentMatchRow)
+      else {
+        if (data && onMatchUpdated) onMatchUpdated(data as TournamentMatchRow)
+        onMatchConfirmed?.()
+      }
     }
 
     const hasEmptySlots = matches.some((m) => m.player_a_id == null && m.player_b_id == null)
@@ -2893,6 +2989,7 @@ function App() {
     setSearchStartedAt(null)
     setSearchElapsed(0)
     refetchMatchesCount()
+    refetchHeaderElo()
   }
 
   const sendChatMessage = async () => {
@@ -2936,7 +3033,7 @@ function App() {
     { view: 'home', label: t.navHome },
     { view: 'ladder', label: t.navPlay },
     { view: 'tournaments', label: t.navTournaments, badge: myActiveTournamentRegistrations.length || undefined },
-    { view: 'matches', label: t.navMatches },
+    ...(isAdminUser ? [{ view: 'matches' as View, label: t.navMatches }] : []),
     { view: 'rating', label: t.navRating },
     { view: 'profile', label: t.navProfile },
     ...(isAdminUser ? [{ view: 'admin' as View, label: t.navAdmin }] : []),
@@ -2946,11 +3043,16 @@ function App() {
     <div className={`app ${useMobileLayout ? 'app--mobile' : 'app--desktop'} strike-theme${activeView === 'rating' && selectedPlayerRow ? ' rating-modal-open' : ''}`}>
       <div className="site-header strike-header">
         <header className="app-header">
-          <div className="app-header-main">
+          <button
+            type="button"
+            className="app-header-main app-header-main--clickable"
+            onClick={() => { setActiveView('home'); setSelectedNews(null); setNavOpen(false); window.location.hash = '' }}
+            aria-label={t.navHome}
+          >
             <span className="strike-logo-icon" aria-hidden="true">⚽</span>
             <h1 className="app-title">{t.appTitle}</h1>
             <p className="app-subtitle">{t.appSubtitle}</p>
-          </div>
+          </button>
         </header>
         {showHamburger ? (
           <>
@@ -3207,6 +3309,9 @@ function App() {
               </div>
               <aside className="strike-stats">
                 <h3 className="strike-stats-title">{t.homeYourStats}</h3>
+                {user && (displayName || user.username) && (
+                  <p className="strike-stats-player-name">{displayName || (user.username ? `@${user.username}` : '')}</p>
+                )}
                 <div className="strike-elo-block">
                   <span className="strike-elo-label">{t.ratingElo}</span>
                   <span className="strike-elo-value">{myProfileStats?.elo ?? elo ?? '—'}</span>
@@ -3262,12 +3367,15 @@ function App() {
             <div className="strike-bottom">
               <section className="strike-section strike-section--top-players">
                 <h3 className="strike-section-title">{t.homeTopPlayers}</h3>
+                <p className="strike-section-subtitle">
+                  {topPlayersPeriod === 'day' ? t.homeTopPlayersPeriodDay : topPlayersPeriod === 'week' ? t.homeTopPlayersPeriodWeek : t.homeTopPlayersPeriodMonth}
+                </p>
                 <ul className="strike-top-list">
                   {leaderboardLoading && <li className="strike-top-placeholder">{t.ratingLoading}</li>}
                   {!leaderboardLoading && leaderboard.length === 0 && (
                     <li className="strike-top-placeholder">{t.ratingEmpty}</li>
                   )}
-                  {!leaderboardLoading && leaderboard.slice(0, 5).map((r, i) => (
+                  {!leaderboardLoading && leaderboard.slice(0, 3).map((r, i) => (
                     <li
                       key={r.player_id}
                       className={`strike-top-item ${i === 0 ? 'strike-top-item--first' : ''}`}
@@ -3303,7 +3411,7 @@ function App() {
                       <span className="strike-news-date">—</span>
                     </article>
                   )}
-                  {!newsLoading && newsList.slice(0, 6).map((n) => (
+                  {!newsLoading && homeNewsSorted.map((n) => (
                     <article
                       key={n.id}
                       className="strike-news-card strike-news-card--clickable"
@@ -3391,7 +3499,13 @@ function App() {
           </section>
         )}
 
-        {activeView === 'matches' && (
+        {activeView === 'matches' && !isAdminUser && (
+          <section className="panel">
+            <p className="panel-text panel-error">{t.matchesAdminOnly}</p>
+            <button type="button" className="primary-button" onClick={() => setActiveView('home')}>{t.navHome}</button>
+          </section>
+        )}
+        {activeView === 'matches' && isAdminUser && (
           <section className="panel">
             <h3 className="panel-title">{t.matchesHeader}</h3>
             <p className="panel-text small">{t.matchesIntro}</p>
@@ -3526,6 +3640,7 @@ function App() {
               </button>
             </div>
             <h4 className="panel-subtitle">Опубликованные новости</h4>
+            <p className="panel-text small">Закрепите до 3 новостей — они будут показываться первыми на главной (позиции 1, 2, 3).</p>
             {newsLoading && <p className="panel-text small">Загрузка…</p>}
             {!newsLoading && newsList.length === 0 && <p className="panel-text small">Пока нет новостей.</p>}
             {!newsLoading && newsList.length > 0 && (
@@ -3538,9 +3653,17 @@ function App() {
                         <strong>{n.title}</strong>
                         <p className="panel-text small">{n.body.slice(0, 80)}{n.body.length > 80 ? '…' : ''}</p>
                         <span className="panel-text small">{new Date(n.created_at).toLocaleDateString()}</span>
+                        {n.pinned_order != null && <span className="admin-news-pinned-badge">Закреплена на главной: {n.pinned_order}</span>}
                       </div>
                     </div>
-                    <button type="button" className="admin-news-delete" onClick={() => deleteNews(n.id)}>Удалить</button>
+                    <div className="admin-news-item-actions">
+                      <span className="admin-news-pin-label">Закрепить:</span>
+                      {[1, 2, 3].map((slot) => (
+                        <button key={slot} type="button" className={`admin-news-pin-btn ${n.pinned_order === slot ? 'admin-news-pin-btn--active' : ''}`} onClick={() => setPinnedOrder(n.id, slot)} title={`Позиция ${slot}`}>{slot}</button>
+                      ))}
+                      <button type="button" className="admin-news-unpin-btn" onClick={() => setPinnedOrder(n.id, null)} disabled={n.pinned_order == null}>Открепить</button>
+                      <button type="button" className="admin-news-delete" onClick={() => deleteNews(n.id)}>Удалить</button>
+                    </div>
                   </li>
                 ))}
               </ul>
@@ -4031,6 +4154,20 @@ function App() {
               </span>
             </div>
                                 <div className="profile-rank-card-right">
+                                  <div className="profile-rank-card-identity">
+                                    <div className="profile-rank-card-avatar">
+                                      {myAvatarUrl ? (
+                                        <img src={myAvatarUrl} alt="" className="profile-rank-card-avatar-img" />
+                                      ) : (
+                                        <span className="profile-rank-card-avatar-placeholder">{(displayName || '?').charAt(0).toUpperCase()}</span>
+                                      )}
+                                    </div>
+                                    {myCountryCode && (
+                                      <span className="profile-rank-card-country">
+                                        {COUNTRIES.find((c) => c.code === myCountryCode)?.flag ?? '🌐'} {COUNTRIES.find((c) => c.code === myCountryCode)?.name ?? myCountryCode}
+                                      </span>
+                                    )}
+                                  </div>
                                   <span className="profile-elo-big">{myProfileStats?.elo ?? elo ?? '—'} ELO</span>
                                   <p className="profile-rank-meta">{t.profileEloLabel}</p>
                                   <p className="profile-matches-summary">
@@ -4531,6 +4668,7 @@ function App() {
                             [tr.id]: (prev[tr.id] ?? []).map((match) => (match.id === updated.id ? updated : match)),
                           }))
                         }}
+                        onMatchConfirmed={refetchHeaderElo}
                       />
                     </div>
                   </div>
@@ -4545,6 +4683,24 @@ function App() {
         <span className="site-footer-brand">{t.appTitle}</span>
         <span className="site-footer-copy">Ladder &amp; Tournaments</span>
       </footer>
+
+      {showProfileIntroModal && user && (
+        <div className="profile-intro-modal-backdrop" onClick={() => closeProfileIntroModal()} role="presentation">
+          <div className="profile-intro-modal" onClick={(e) => e.stopPropagation()}>
+            <h3 className="profile-intro-modal-title">{t.profileIntroModalTitle}</h3>
+            <p className="profile-intro-modal-body">{t.profileIntroModalBody}</p>
+            <div className="profile-intro-modal-actions">
+              <button type="button" className="primary-button" onClick={() => closeProfileIntroModal(true)}>
+                {t.profileIntroModalGoToProfile}
+              </button>
+              <button type="button" className="profile-intro-modal-skip" onClick={() => closeProfileIntroModal()}>
+                {t.profileIntroModalButton}
+              </button>
+            </div>
+            <button type="button" className="profile-intro-modal-close" onClick={() => closeProfileIntroModal()} aria-label="Close">×</button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
