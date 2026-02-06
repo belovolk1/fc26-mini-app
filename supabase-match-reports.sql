@@ -45,12 +45,33 @@ create table if not exists public.report_telegram_notifications (
 
 alter table public.match_reports enable row level security;
 alter table public.report_resolution_notifications enable row level security;
+-- Политики для anon (гость) и authenticated (логин по JWT/Telegram) — иначе «new row violates row-level security policy»
 create policy "match_reports select" on public.match_reports for select to anon using (true);
 create policy "match_reports insert" on public.match_reports for insert to anon with check (true);
 create policy "match_reports update" on public.match_reports for update to anon using (true) with check (true);
+drop policy if exists "match_reports select auth" on public.match_reports;
+drop policy if exists "match_reports insert auth" on public.match_reports;
+drop policy if exists "match_reports update auth" on public.match_reports;
+create policy "match_reports select auth" on public.match_reports for select to authenticated using (true);
+create policy "match_reports insert auth" on public.match_reports for insert to authenticated with check (true);
+create policy "match_reports update auth" on public.match_reports for update to authenticated using (true) with check (true);
 create policy "report_resolution_notifications select" on public.report_resolution_notifications for select to anon using (true);
 create policy "report_resolution_notifications insert" on public.report_resolution_notifications for insert to anon with check (true);
 create policy "report_resolution_notifications update" on public.report_resolution_notifications for update to anon using (true) with check (true);
+drop policy if exists "report_resolution_notifications select auth" on public.report_resolution_notifications;
+drop policy if exists "report_resolution_notifications insert auth" on public.report_resolution_notifications;
+drop policy if exists "report_resolution_notifications update auth" on public.report_resolution_notifications;
+create policy "report_resolution_notifications select auth" on public.report_resolution_notifications for select to authenticated using (true);
+create policy "report_resolution_notifications insert auth" on public.report_resolution_notifications for insert to authenticated with check (true);
+create policy "report_resolution_notifications update auth" on public.report_resolution_notifications for update to authenticated using (true) with check (true);
+-- report_telegram_notifications: RLS + политики, чтобы create_match_report не падал при вставке (если RLS включён в проекте)
+alter table public.report_telegram_notifications enable row level security;
+drop policy if exists "report_telegram_notifications insert anon" on public.report_telegram_notifications;
+drop policy if exists "report_telegram_notifications insert auth" on public.report_telegram_notifications;
+drop policy if exists "report_telegram_notifications select service" on public.report_telegram_notifications;
+create policy "report_telegram_notifications insert anon" on public.report_telegram_notifications for insert to anon with check (true);
+create policy "report_telegram_notifications insert auth" on public.report_telegram_notifications for insert to authenticated with check (true);
+create policy "report_telegram_notifications select service" on public.report_telegram_notifications for select to service_role using (true);
 
 -- 5) Подтверждение матча ладдера от имени админа (при решении «засчитать» по жалобе)
 create or replace function public.admin_confirm_match_result(p_match_id text)
@@ -99,7 +120,7 @@ exception when others then return SQLERRM;
 end;
 $$;
 
--- 6) Создать жалобу (матч не подтверждается)
+-- 6) Создать жалобу (матч не подтверждается). SECURITY DEFINER — выполняется от владельца функции (обходит RLS).
 create or replace function public.create_match_report(
   p_match_type text,
   p_match_id text,
@@ -110,10 +131,10 @@ create or replace function public.create_match_report(
 returns uuid
 language plpgsql
 security definer
+set search_path = public
 as $$
 declare
   v_report_id uuid;
-  v_opponent_id uuid;
 begin
   if p_match_type not in ('ladder', 'tournament') or nullif(trim(p_message), '') is null then
     return null;

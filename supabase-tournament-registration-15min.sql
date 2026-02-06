@@ -34,4 +34,4 @@ DROP TRIGGER IF EXISTS tournament_registration_15min_trigger ON public.tournamen
 CREATE TRIGGER tournament_registration_15min_trigger
   BEFORE INSERT ON public.tournament_registrations
   FOR EACH ROW
-  EXECUTE FUNCTION public.tournament_registration_check_15min();
+  EXECUTE PROCEDURE public.tournament_registration_check_15min();

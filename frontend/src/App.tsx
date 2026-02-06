@@ -68,6 +68,7 @@ const messages: Record<
     ladderSaved: string
     ladderSubmitScore: string
     ladderWaitingConfirm: string
+    ladderOpponentConfirmed: string
     ladderOpponentProposed: string
     ladderConfirmResult: string
     ladderResultConfirmed: string
@@ -324,6 +325,7 @@ const messages: Record<
     ladderSaved: 'Result saved.',
     ladderSubmitScore: 'Submit score',
     ladderWaitingConfirm: 'Waiting for opponent to confirm.',
+    ladderOpponentConfirmed: 'Opponent has confirmed. Confirm match to enter the lobby.',
     ladderOpponentProposed: 'Opponent proposed score: {score}.',
     ladderConfirmResult: 'Confirm result',
     ladderResultConfirmed: 'Result confirmed.',
@@ -581,6 +583,7 @@ const messages: Record<
     ladderSaved: 'Rezultat salvat.',
     ladderSubmitScore: 'Trimite scorul',
     ladderWaitingConfirm: 'Se așteaptă confirmarea adversarului.',
+    ladderOpponentConfirmed: 'Adversarul a confirmat. Confirmă meciul pentru a intra în lobby.',
     ladderOpponentProposed: 'Adversarul a propus scorul: {score}.',
     ladderConfirmResult: 'Confirmă rezultatul',
     ladderResultConfirmed: 'Rezultat confirmat.',
@@ -838,6 +841,7 @@ const messages: Record<
     ladderSaved: 'Результат сохранён.',
     ladderSubmitScore: 'Отправить счёт',
     ladderWaitingConfirm: 'Ожидаем подтверждения соперника.',
+    ladderOpponentConfirmed: 'Соперник подтвердил. Подтвердите матч, чтобы войти в лобби.',
     ladderOpponentProposed: 'Соперник предложил счёт: {score}.',
     ladderConfirmResult: 'Подтвердить результат',
     ladderResultConfirmed: 'Результат засчитан.',
@@ -5136,20 +5140,31 @@ function App() {
               </>
             )}
 
-            {user && playerId && !myBan && !hasActiveTournamentMatch && searchStatus === 'matched' && currentMatch && (
-              <div className="lobby-page lobby-confirm-step">
-                <header className="lobby-header">
-                  <span className="lobby-header-badge">{t.ladderMatchedTitle}</span>
-                  <h2 className="lobby-header-vs">{t.ladderLobbyVs.replace('{name}', opponentName)}</h2>
-                  <p className="lobby-header-hint">{t.ladderMatchedHint.replace('{name}', opponentName)}</p>
-                </header>
-                <div className="lobby-confirm-actions" style={{ marginTop: 16 }}>
-                  <button type="button" className="primary-button lobby-score-submit" disabled={acceptingLobby} onClick={acceptLobbyMatch}>
-                    {acceptingLobby ? '…' : t.ladderConfirmLobby}
-                  </button>
+            {user && playerId && !myBan && !hasActiveTournamentMatch && searchStatus === 'matched' && currentMatch && (() => {
+              const iAmPlayerA = currentMatch.player_a_id === playerId
+              const iAccepted = iAmPlayerA ? !!currentMatch.player_a_accepted_at : !!currentMatch.player_b_accepted_at
+              const opponentAccepted = iAmPlayerA ? !!currentMatch.player_b_accepted_at : !!currentMatch.player_a_accepted_at
+              const statusHint = iAccepted && !opponentAccepted
+                ? t.ladderWaitingConfirm
+                : !iAccepted && opponentAccepted
+                  ? t.ladderOpponentConfirmed
+                  : null
+              return (
+                <div className="lobby-page lobby-confirm-step">
+                  <header className="lobby-header">
+                    <span className="lobby-header-badge">{t.ladderMatchedTitle}</span>
+                    <h2 className="lobby-header-vs">{t.ladderLobbyVs.replace('{name}', opponentName)}</h2>
+                    <p className="lobby-header-hint">{t.ladderMatchedHint.replace('{name}', opponentName)}</p>
+                  </header>
+                  {statusHint && <p className="lobby-status-hint">{statusHint}</p>}
+                  <div className="lobby-confirm-actions" style={{ marginTop: 16 }}>
+                    <button type="button" className="primary-button lobby-score-submit" disabled={acceptingLobby} onClick={acceptLobbyMatch}>
+                      {acceptingLobby ? '…' : t.ladderConfirmLobby}
+                    </button>
+                  </div>
                 </div>
-              </div>
-            )}
+              )
+            })()}
 
             {user && playerId && !myBan && !hasActiveTournamentMatch && searchStatus === 'in_lobby' && currentMatch && (
               <div className="lobby-page">
@@ -5418,7 +5433,7 @@ function App() {
         document.body
       )}
 
-      {reportModalOpen && reportMatchId && (
+      {reportModalOpen && reportMatchId && createPortal(
         <div className="report-modal-backdrop" onClick={closeReportModal} role="presentation">
           <div className="report-modal" onClick={(e) => e.stopPropagation()}>
             <h4 className="report-modal-title">{t.reportModalTitle}</h4>
@@ -5448,10 +5463,11 @@ function App() {
             </div>
             <button type="button" className="bracket-match-modal-close" onClick={closeReportModal} aria-label="Close">×</button>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
-      {reportResolutionModalOpen && reportResolutions.length > 0 && (
+      {reportResolutionModalOpen && reportResolutions.length > 0 && createPortal(
         <div className="report-modal-backdrop" onClick={() => markReportResolutionReadAndNext(reportResolutions[0].id)} role="presentation">
           <div className="report-modal" onClick={(e) => e.stopPropagation()}>
             <h4 className="report-modal-title">{t.reportResolutionModalTitle}</h4>
@@ -5459,7 +5475,8 @@ function App() {
             <button type="button" className="strike-btn strike-btn-primary" onClick={() => markReportResolutionReadAndNext(reportResolutions[0].id)}>{t.reportResolutionOk}</button>
             <button type="button" className="bracket-match-modal-close" onClick={() => markReportResolutionReadAndNext(reportResolutions[0].id)} aria-label="Close">×</button>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )
