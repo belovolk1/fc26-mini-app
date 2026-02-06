@@ -1465,11 +1465,6 @@ function App() {
   const [adminTargetUsername, setAdminTargetUsername] = useState('')
   const [adminSending, setAdminSending] = useState(false)
   const [adminResult, setAdminResult] = useState<string | null>(null)
-  type PlayerWarningRow = { id: string; message: string; created_at: string }
-  type RatingViolationRow = { id: string; player_a_id: string; player_b_id: string; player_a_name: string; player_b_name: string; detected_at: string; matches_voided_count: number; message: string | null; created_at: string; admin_seen_at: string | null }
-  const [playerWarnings, setPlayerWarnings] = useState<PlayerWarningRow[]>([])
-  const [ratingViolations, setRatingViolations] = useState<RatingViolationRow[]>([])
-  const [ratingViolationsLoading, setRatingViolationsLoading] = useState(false)
 
   type NewsRow = { id: string; title: string; body: string; image_url: string | null; created_at: string; pinned_order: number | null }
   type TournamentRow = {
