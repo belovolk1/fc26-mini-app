@@ -233,6 +233,12 @@ async function processTournamentNotifications() {
         telegramIds = (players || []).map((p) => p.telegram_id).filter(Boolean)
         const name = tour?.name || 'Tournament'
         message = `🏆 Tournament «${name}» has started!\n\nBracket is available in the app — check your match.`
+      } else if (row.type === 'registration_open') {
+        const { data: tour } = await supabase.from('tournaments').select('name').eq('id', row.tournament_id).single()
+        const { data: players } = await supabase.from('players').select('telegram_id').not('telegram_id', 'is', null)
+        telegramIds = (players || []).map((p) => p.telegram_id).filter(Boolean)
+        const name = tour?.name || 'Tournament'
+        message = `📣 Registration for tournament «${name}» is now open!\n\nYou have 15 minutes. Open the app to register.`
       } else if (row.type === 'round_reminder' && row.match_id) {
         const { data: match } = await supabase.from('tournament_matches').select('player_a_id, player_b_id').eq('id', row.match_id).single()
         if (!match || (!match.player_a_id && !match.player_b_id)) {

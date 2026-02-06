@@ -197,6 +197,7 @@ const messages: Record<
     tournamentStatusUpcoming: string
     tournamentRegUntil: string
     tournamentStart: string
+    tournamentRegistrationOpensHint: string
     tournamentParticipants: string
     tournamentRegister: string
     tournamentUnregister: string
@@ -413,6 +414,7 @@ const messages: Record<
     tournamentStatusUpcoming: 'Coming soon',
     tournamentRegUntil: 'Reg. until',
     tournamentStart: 'Start',
+    tournamentRegistrationOpensHint: 'Registration opens 15 minutes before start.',
     tournamentParticipants: 'participants',
     tournamentRegister: 'Register',
     tournamentUnregister: 'Cancel registration',
@@ -628,6 +630,7 @@ const messages: Record<
     tournamentStatusUpcoming: 'În curând',
     tournamentRegUntil: 'Înscriere până la',
     tournamentStart: 'Start',
+    tournamentRegistrationOpensHint: 'Înscrierea se deschide cu 15 minute înainte de start.',
     tournamentParticipants: 'participanți',
     tournamentRegister: 'Înscriere',
     tournamentUnregister: 'Anulează înscrierea',
@@ -843,6 +846,7 @@ const messages: Record<
     tournamentStatusUpcoming: 'Скоро',
     tournamentRegUntil: 'Рег. до',
     tournamentStart: 'Старт',
+    tournamentRegistrationOpensHint: 'Регистрация откроется за 15 минут до старта.',
     tournamentParticipants: 'участников',
     tournamentRegister: 'Регистрация',
     tournamentUnregister: 'Отменить регистрацию',
@@ -2698,9 +2702,10 @@ function App() {
   const renderTournamentCard = (tr: TournamentRow, _isFeatured: boolean) => {
     const isRegistered = tournamentRegistrations.has(tr.id)
     const now = new Date().getTime()
-    const regStart = new Date(tr.registration_start).getTime()
     const regEnd = new Date(tr.registration_end).getTime()
-    const canRegister = tr.status === 'registration' && playerId && now >= regStart && now < regEnd
+    const tournamentStart = new Date(tr.tournament_start).getTime()
+    const registrationOpensAt = tournamentStart - 15 * 60 * 1000
+    const canRegister = tr.status === 'registration' && playerId && now >= registrationOpensAt && now < regEnd
     const statusLabel =
       tr.status === 'registration'
         ? t.tournamentStatusRegistration
@@ -2749,6 +2754,9 @@ function App() {
               </div>
             )}
             <div className="tournament-card-ref-actions">
+              {tr.status === 'registration' && playerId && now < registrationOpensAt && (
+                <p className="tournament-card-ref-hint">{t.tournamentRegistrationOpensHint}</p>
+              )}
               {canRegister && !isRegistered && (
                 <button type="button" className="tournament-card-ref-btn tournament-card-ref-btn--primary tournament-card-ref-btn--register" onClick={() => tournamentRegister(tr.id)}>
                   <span className="tournament-card-ref-btn-icon" aria-hidden="true">👤</span>

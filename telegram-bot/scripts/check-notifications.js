@@ -151,6 +151,12 @@ async function main() {
       if (count === 0 && playerIds.length > 0) {
         console.log('      ⚠️ У участников нет telegram_id — напишите боту /start в Telegram.')
       }
+    } else if (row.type === 'registration_open') {
+      const { data: tour } = await supabase.from('tournaments').select('name').eq('id', row.tournament_id).single()
+      console.log('   registration_open:', tour?.name || row.tournament_id, '| получателей (все с telegram_id):', totalWithTg)
+      if (totalWithTg === 0) {
+        console.log('      ⚠️ Нет ни одного игрока с telegram_id. Напишите боту /start в Telegram.')
+      }
     } else if (row.type === 'round_reminder' && row.match_id) {
       const { data: match } = await supabase.from('tournament_matches').select('player_a_id, player_b_id').eq('id', row.match_id).single()
       const ids = match ? [match.player_a_id, match.player_b_id].filter(Boolean) : []

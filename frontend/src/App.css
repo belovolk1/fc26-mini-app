@@ -4534,6 +4534,13 @@
   line-height: 1.5;
   font-family: var(--strike-font-body);
 }
+.tournament-card-ref-hint {
+  margin: 0 0 12px;
+  font-size: 12px;
+  color: var(--strike-muted);
+  font-style: italic;
+  font-family: var(--strike-font-body);
+}
 .tournament-card-ref-actions {
   display: flex;
   flex-wrap: wrap;
