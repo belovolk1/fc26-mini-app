@@ -273,7 +273,59 @@ async function processTournamentNotifications() {
 setInterval(processTournamentNotifications, NOTIFICATION_POLL_INTERVAL_MS)
 setTimeout(processTournamentNotifications, 5000) // первый запуск через 5 сек
 
-console.log('✅ Бот успешно запущен! Уведомления турниров: каждые', NOTIFICATION_POLL_INTERVAL_MS / 1000, 'сек.')
+// ========== Жалобы: уведомление админу в Telegram ==========
+const ADMIN_CHAT_ID = process.env.ADMIN_CHAT_ID ? String(process.env.ADMIN_CHAT_ID).trim() : ''
+
+async function processReportNotifications() {
+  if (!ADMIN_CHAT_ID) return
+  try {
+    const { data: rows, error } = await supabase
+      .from('report_telegram_notifications')
+      .select('id, report_id')
+      .is('sent_at', null)
+      .order('created_at', { ascending: true })
+    if (error) {
+      if (error.code === '42P01') return // таблица не найдена
+      console.error('Ошибка выборки report_telegram_notifications:', error.message)
+      return
+    }
+    if (!rows?.length) return
+    for (const row of rows) {
+      const { data: report, error: reportErr } = await supabase
+        .from('match_reports')
+        .select('match_type, match_id, message, screenshot_url, created_at, reporter_player_id')
+        .eq('id', row.report_id)
+        .single()
+      if (reportErr || !report) {
+        await supabase.from('report_telegram_notifications').update({ sent_at: new Date().toISOString() }).eq('id', row.id)
+        continue
+      }
+      let reporterName = '—'
+      if (report.reporter_player_id) {
+        const { data: p } = await supabase.from('players').select('display_name, username').eq('id', report.reporter_player_id).single()
+        reporterName = p?.display_name?.trim() || (p?.username ? `@${p.username}` : '') || report.reporter_player_id.slice(0, 8)
+      }
+      const typeLabel = report.match_type === 'ladder' ? 'Ладдер' : 'Турнир'
+      let text = `⚠️ Жалоба на матч (${typeLabel})\n\nОт: ${reporterName}\nМатч ID: ${report.match_id}\n\n${report.message || '—'}`
+      if (report.screenshot_url) text += `\n\nСкриншот: ${report.screenshot_url}`
+      text += `\n\n${new Date(report.created_at).toISOString()}`
+      try {
+        await bot.sendMessage(ADMIN_CHAT_ID, text)
+        await supabase.from('report_telegram_notifications').update({ sent_at: new Date().toISOString() }).eq('id', row.id)
+        console.log('✅ Жалоба отправлена админу:', row.report_id)
+      } catch (err) {
+        console.error('Не удалось отправить жалобу админу:', err.message)
+      }
+    }
+  } catch (e) {
+    console.error('Ошибка processReportNotifications:', e.message)
+  }
+}
+
+setInterval(processReportNotifications, NOTIFICATION_POLL_INTERVAL_MS)
+setTimeout(processReportNotifications, 8000)
+
+console.log('✅ Бот успешно запущен! Уведомления турниров: каждые', NOTIFICATION_POLL_INTERVAL_MS / 1000, 'сек.' + (ADMIN_CHAT_ID ? ' Жалобы → админ чат.' : ' (ADMIN_CHAT_ID не задан — жалобы в Telegram не отправляются)'))
 
 // HTTP‑сервер для Render: сервис должен слушать PORT, иначе Render считает его мёртвым
 let lastPollAt = null

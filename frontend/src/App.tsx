@@ -216,6 +216,19 @@ const messages: Record<
     adminStartBracket: string
     adminDeleteTournamentConfirm: string
     adminTourTournamentDeletedFewPlayers: string
+    reportButton: string
+    reportModalTitle: string
+    reportMessagePlaceholder: string
+    reportScreenshotOptional: string
+    reportSubmit: string
+    reportSent: string
+    reportError: string
+    adminReportsTitle: string
+    adminReportResolveCounted: string
+    adminReportResolveVoided: string
+    adminReportCommentPlaceholder: string
+    reportResolutionModalTitle: string
+    reportResolutionOk: string
   }
 > = {
   en: {
@@ -441,6 +454,19 @@ const messages: Record<
     adminStartBracket: 'Start bracket',
     adminDeleteTournamentConfirm: 'Delete tournament? Registrations and matches will be removed.',
     adminTourTournamentDeletedFewPlayers: 'Tournament deleted: only 1 player registered (need at least 2).',
+    reportButton: 'Report',
+    reportModalTitle: 'Submit a report',
+    reportMessagePlaceholder: 'Describe the issue (e.g. wrong score, cheating)…',
+    reportScreenshotOptional: 'Screenshot (optional)',
+    reportSubmit: 'Submit report',
+    reportSent: 'Report sent. The match will not be counted until an admin decides.',
+    reportError: 'Failed to send report.',
+    adminReportsTitle: 'Reports',
+    adminReportResolveCounted: 'Count match',
+    adminReportResolveVoided: 'Void match',
+    adminReportCommentPlaceholder: 'Comment (optional)',
+    reportResolutionModalTitle: 'Report resolution',
+    reportResolutionOk: 'OK',
   },
   ro: {
     appTitle: 'FC Area',
@@ -665,6 +691,19 @@ const messages: Record<
     adminStartBracket: 'Pornire tablou',
     adminDeleteTournamentConfirm: 'Ștergi turneul? Înscrierile și meciurile vor fi șterse.',
     adminTourTournamentDeletedFewPlayers: 'Turneu șters: doar 1 participant înscris (minim 2).',
+    reportButton: 'Raport',
+    reportModalTitle: 'Trimite un raport',
+    reportMessagePlaceholder: 'Descrie problema (ex. scor greșit, trișare)…',
+    reportScreenshotOptional: 'Captură de ecran (opțional)',
+    reportSubmit: 'Trimite raportul',
+    reportSent: 'Raport trimis. Meciul nu va fi contorizat până ce un admin decide.',
+    reportError: 'Nu s-a putut trimite raportul.',
+    adminReportsTitle: 'Rapoarte',
+    adminReportResolveCounted: 'Contorizează meciul',
+    adminReportResolveVoided: 'Anulează meciul',
+    adminReportCommentPlaceholder: 'Comentariu (opțional)',
+    reportResolutionModalTitle: 'Decizie raport',
+    reportResolutionOk: 'OK',
   },
   ru: {
     appTitle: 'FC Area',
@@ -889,6 +928,19 @@ const messages: Record<
     adminStartBracket: 'Старт сетки',
     adminDeleteTournamentConfirm: 'Удалить турнир? Регистрации и матчи будут удалены.',
     adminTourTournamentDeletedFewPlayers: 'Турнир удалён: зарегистрирован только 1 участник (нужно минимум 2).',
+    reportButton: 'Жалоба',
+    reportModalTitle: 'Отправить жалобу',
+    reportMessagePlaceholder: 'Опишите проблему (например, неверный счёт, читинг)…',
+    reportScreenshotOptional: 'Скриншот (по желанию)',
+    reportSubmit: 'Отправить жалобу',
+    reportSent: 'Жалоба отправлена. Матч не будет засчитан до решения админа.',
+    reportError: 'Не удалось отправить жалобу.',
+    adminReportsTitle: 'Жалобы',
+    adminReportResolveCounted: 'Засчитать матч',
+    adminReportResolveVoided: 'Обнулить матч',
+    adminReportCommentPlaceholder: 'Комментарий (по желанию)',
+    reportResolutionModalTitle: 'Решение по жалобе',
+    reportResolutionOk: 'Понятно',
   },
 }
 
@@ -1072,6 +1124,37 @@ function getRankDisplayLabel(rank: { level: number; isElite: boolean } | null): 
   return `LEVEL ${rank.level}`
 }
 
+/** Блок ELO + ранг (или калибровка) + иконка ранга (заглушка под будущие иконки). rankLabel — переведённая подпись ранга (если не передана, используется английская). */
+function EloWithRank({
+  elo,
+  matchesCount,
+  calibrationLabel,
+  rankLabel: rankLabelProp,
+  compact,
+  showEloValue = true,
+}: {
+  elo: number | null
+  matchesCount: number
+  calibrationLabel: string
+  rankLabel?: string
+  compact?: boolean
+  showEloValue?: boolean
+}) {
+  const isCalibration = matchesCount < 10
+  const rank = getRankFromElo(elo)
+  const rankLabel = rankLabelProp ?? (rank ? getRankDisplayLabel(rank) : '—')
+  const level = rank?.level ?? 0
+  const isElite = rank?.isElite ?? false
+  const iconClass = isCalibration ? 'rank-icon--calibration' : isElite ? 'rank-icon--elite' : `rank-icon--level-${level}`
+  return (
+    <span className={`elo-with-rank ${compact ? 'elo-with-rank--compact' : ''} ${!showEloValue ? 'elo-with-rank--label-only' : ''}`}>
+      <span className={`rank-icon ${iconClass}`} aria-hidden title={isCalibration ? calibrationLabel : rankLabel} />
+      <span className="elo-with-rank-label">{isCalibration ? calibrationLabel : rankLabel}</span>
+      {showEloValue && <span className="elo-with-rank-value">{elo ?? '—'} ELO</span>}
+    </span>
+  )
+}
+
 /* === SVG иконки для профиля (тематика: ранги, статы, матчи) === */
 const ProfileRankBadgeSvg = () => (
   <svg className="profile-rank-badge-svg" viewBox="0 0 64 72" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
@@ -1181,8 +1264,28 @@ function App() {
   const [chatInput, setChatInput] = useState('')
   const [chatSending, setChatSending] = useState(false)
   const [chatLoadError, setChatLoadError] = useState<string | null>(null)
+  const [reportModalOpen, setReportModalOpen] = useState(false)
+  const [reportMatchType, setReportMatchType] = useState<'ladder' | 'tournament'>('ladder')
+  const [reportMatchId, setReportMatchId] = useState<string | null>(null)
+  const [reportMessage, setReportMessage] = useState('')
+  const [reportScreenshotFile, setReportScreenshotFile] = useState<File | null>(null)
+  const [reportSending, setReportSending] = useState(false)
+  const [reportToast, setReportToast] = useState<string | null>(null)
+  type ReportResolutionRow = { id: string; report_id: string; message: string; created_at: string }
+  const [reportResolutions, setReportResolutions] = useState<ReportResolutionRow[]>([])
+  const [reportResolutionModalOpen, setReportResolutionModalOpen] = useState(false)
+  type MatchReportAdminRow = { id: string; match_type: string; match_id: string; reporter_player_id: string; reporter_name: string | null; message: string | null; screenshot_url: string | null; status: string; admin_comment: string | null; resolution: string | null; resolved_at: string | null; created_at: string; player_a_id: string | null; player_b_id: string | null; player_a_name: string | null; player_b_name: string | null; score_display: string | null }
+  const [matchReportsAdmin, setMatchReportsAdmin] = useState<MatchReportAdminRow[]>([])
+  const [matchReportsAdminLoading, setMatchReportsAdminLoading] = useState(false)
+  const [adminReportComments, setAdminReportComments] = useState<Record<string, string>>({})
+  const [resolvingReportId, setResolvingReportId] = useState<string | null>(null)
   const [allMatches, setAllMatches] = useState<Array<{ match_id: number; player_a_name: string; player_b_name: string; score_a: number; score_b: number; result: string; played_at: string | null; elo_delta_a: number | null; elo_delta_b: number | null }>>([])
   const [allMatchesLoading, setAllMatchesLoading] = useState(false)
+  type PlayerWarningRow = { id: string; message: string; created_at: string }
+  const [playerWarnings, setPlayerWarnings] = useState<PlayerWarningRow[]>([])
+  type RatingViolationRow = { id: string; player_a_id: string; player_b_id: string; player_a_name: string; player_b_name: string; detected_at: string; matches_voided_count: number; message: string; created_at: string; admin_seen_at: string | null }
+  const [ratingViolations, setRatingViolations] = useState<RatingViolationRow[]>([])
+  const [ratingViolationsLoading, setRatingViolationsLoading] = useState(false)
   type LeaderboardRow = {
     rank: number
     player_id: string
@@ -1354,12 +1457,19 @@ function App() {
   }, [user])
 
   const t = messages[lang]
+  const getTranslatedRankLabel = (rank: { level: number; isElite: boolean } | null) =>
+    !rank ? '—' : rank.isElite ? `${t.profileRankLevel.replace('{n}', '10')} - ${t.profileRankElite}` : t.profileRankLevel.replace('{n}', String(rank.level))
   const isAdminUser = user?.username?.toLowerCase() === 'belovolk1'
   const [adminMessage, setAdminMessage] = useState('')
   const [adminMinElo, setAdminMinElo] = useState('')
   const [adminTargetUsername, setAdminTargetUsername] = useState('')
   const [adminSending, setAdminSending] = useState(false)
   const [adminResult, setAdminResult] = useState<string | null>(null)
+  type PlayerWarningRow = { id: string; message: string; created_at: string }
+  type RatingViolationRow = { id: string; player_a_id: string; player_b_id: string; player_a_name: string; player_b_name: string; detected_at: string; matches_voided_count: number; message: string | null; created_at: string; admin_seen_at: string | null }
+  const [playerWarnings, setPlayerWarnings] = useState<PlayerWarningRow[]>([])
+  const [ratingViolations, setRatingViolations] = useState<RatingViolationRow[]>([])
+  const [ratingViolationsLoading, setRatingViolationsLoading] = useState(false)
 
   type NewsRow = { id: string; title: string; body: string; image_url: string | null; created_at: string; pinned_order: number | null }
   type TournamentRow = {
@@ -1484,6 +1594,26 @@ function App() {
 
     void loadProfile()
   }, [user])
+
+  useEffect(() => {
+    if (!playerId) return
+    supabase.rpc('get_my_report_resolutions', { p_player_id: playerId }).then(({ data, error }) => {
+      if (!error && Array.isArray(data) && data.length > 0) {
+        setReportResolutions(data as ReportResolutionRow[])
+        setReportResolutionModalOpen(true)
+      }
+    })
+  }, [playerId])
+
+  const markReportResolutionReadAndNext = async (notificationId: string) => {
+    if (!playerId) return
+    await supabase.rpc('mark_report_resolution_read', { p_notification_id: notificationId, p_player_id: playerId })
+    setReportResolutions((prev) => {
+      const next = prev.filter((r) => r.id !== notificationId)
+      if (next.length === 0) setReportResolutionModalOpen(false)
+      return next
+    })
+  }
 
   // Полная статистика своего профиля (профиль и главная — блок Your Stats)
   useEffect(() => {
@@ -2021,6 +2151,31 @@ function App() {
     })
   }, [selectedPlayerRow?.player_id])
 
+  // Непрочитанные предупреждения (перелив рейтинга) — при наличии playerId
+  useEffect(() => {
+    if (!playerId) {
+      setPlayerWarnings([])
+      return
+    }
+    supabase.rpc('get_my_warnings', { p_player_id: playerId }).then(({ data, error }) => {
+      if (!error && Array.isArray(data)) setPlayerWarnings(data as PlayerWarningRow[])
+      else setPlayerWarnings([])
+    })
+  }, [playerId])
+
+  // Нарушения рейтинга для админа — при открытии админки
+  const fetchRatingViolations = () => {
+    setRatingViolationsLoading(true)
+    supabase.rpc('get_rating_violations_admin').then(({ data, error }) => {
+      setRatingViolationsLoading(false)
+      if (!error && Array.isArray(data)) setRatingViolations(data as RatingViolationRow[])
+      else setRatingViolations([])
+    })
+  }
+  useEffect(() => {
+    if (activeView === 'admin' && isAdminUser) fetchRatingViolations()
+  }, [activeView, isAdminUser])
+
   // Загрузка рейтинга при открытии страницы «Рейтинг», главной (Top Players) или турниров (имена в сетке)
   useEffect(() => {
     if (activeView !== 'rating' && activeView !== 'home' && activeView !== 'tournaments') return
@@ -2060,6 +2215,56 @@ function App() {
   useEffect(() => {
     if (activeView === 'home' || activeView === 'admin') fetchNews()
   }, [activeView])
+
+  useEffect(() => {
+    if (!playerId) return
+    supabase.rpc('get_my_warnings', { p_player_id: playerId }).then(({ data, error }) => {
+      if (!error && Array.isArray(data)) setPlayerWarnings(data as PlayerWarningRow[])
+      else setPlayerWarnings([])
+    })
+  }, [playerId])
+
+  useEffect(() => {
+    if (activeView === 'admin' && isAdminUser) {
+      setMatchReportsAdminLoading(true)
+      supabase.rpc('get_match_reports_admin').then(({ data, error }) => {
+        setMatchReportsAdminLoading(false)
+        if (!error && data) setMatchReportsAdmin(data as MatchReportAdminRow[])
+      })
+    }
+    if (activeView === 'admin' && isAdminUser) {
+      setRatingViolationsLoading(true)
+      supabase.rpc('get_rating_violations_admin').then(({ data, error }) => {
+        setRatingViolationsLoading(false)
+        if (!error && Array.isArray(data)) setRatingViolations(data as RatingViolationRow[])
+        else setRatingViolations([])
+      })
+    }
+  }, [activeView, isAdminUser])
+
+  const markWarningRead = (warningId: string) => {
+    if (!playerId) return
+    supabase.rpc('mark_warning_read', { p_warning_id: warningId, p_player_id: playerId }).then(() => {
+      setPlayerWarnings((prev) => prev.filter((w) => w.id !== warningId))
+    })
+  }
+
+  const resolveReport = async (reportId: string, resolution: 'counted' | 'voided') => {
+    const comment = adminReportComments[reportId] ?? ''
+    setResolvingReportId(reportId)
+    const { error } = await supabase.rpc('resolve_match_report', { p_report_id: reportId, p_admin_comment: comment.trim() || null, p_resolution: resolution })
+    setResolvingReportId(null)
+    if (!error) {
+      setMatchReportsAdmin((prev) => prev.map((r) => (r.id === reportId ? { ...r, status: 'resolved', resolution, admin_comment: comment.trim() || null, resolved_at: new Date().toISOString() } : r)))
+      setAdminReportComments((prev) => ({ ...prev, [reportId]: '' }))
+    }
+  }
+
+  const markViolationSeen = (violationId: string) => {
+    supabase.rpc('mark_rating_violation_seen', { p_violation_id: violationId }).then(() => {
+      setRatingViolations((prev) => prev.map((v) => (v.id === violationId ? { ...v, admin_seen_at: new Date().toISOString() } : v)))
+    })
+  }
 
   // На главной: сначала закреплённые 1, 2, 3, затем остальные по дате, всего до 6
   const homeNewsSorted = useMemo(() => {
@@ -2671,9 +2876,10 @@ function App() {
                                           : t.bracketScoreHintEnter}
                                     </p>
                                     {m.status === 'score_submitted' && canConfirm ? (
-                                      <div className="bracket-match-card-result-row">
+                                      <div className="bracket-match-card-result-row bracket-match-card-result-actions">
                                         <span className="bracket-match-card-score-display">{m.score_a ?? 0} : {m.score_b ?? 0}</span>
                                         <button type="button" className="bracket-match-card-btn bracket-match-card-btn--primary" disabled={savingMatchId === m.id} onClick={() => confirmScore(m)}>{t.bracketConfirmResult}</button>
+                                        <button type="button" className="bracket-match-card-btn bracket-match-card-btn--secondary" onClick={() => openReportModal('tournament', m.id)}>{t.reportButton}</button>
                                       </div>
                                     ) : m.status === 'score_submitted' && m.score_submitted_by === pid ? (
                                       <div className="bracket-match-card-result-row">
@@ -2734,9 +2940,10 @@ function App() {
                     {m.status === 'score_submitted' && canConfirm ? t.bracketScoreHintConfirm : m.status === 'score_submitted' && m.score_submitted_by === pid ? t.bracketScoreWaitingConfirm : t.bracketScoreHintEnter}
                   </p>
                   {m.status === 'score_submitted' && canConfirm ? (
-                    <div className="bracket-match-card-result-row">
+                    <div className="bracket-match-card-result-row bracket-match-card-result-actions">
                       <span className="bracket-match-card-score-display">{m.score_a ?? 0} : {m.score_b ?? 0}</span>
                       <button type="button" className="bracket-match-card-btn bracket-match-card-btn--primary" disabled={savingMatchId === m.id} onClick={() => { confirmScore(m); setMatchResultModalId(null); }}>{t.bracketConfirmResult}</button>
+                      <button type="button" className="bracket-match-card-btn bracket-match-card-btn--secondary" onClick={() => { openReportModal('tournament', m.id); setMatchResultModalId(null); }}>{t.reportButton}</button>
                     </div>
                   ) : m.status === 'score_submitted' && m.score_submitted_by === pid ? (
                     <p className="bracket-match-card-result-hint">{t.bracketScoreWaitingConfirm}</p>
@@ -2992,6 +3199,53 @@ function App() {
     refetchHeaderElo()
   }
 
+  const openReportModal = (matchType: 'ladder' | 'tournament', matchId: string) => {
+    setReportMatchType(matchType)
+    setReportMatchId(matchId)
+    setReportMessage('')
+    setReportScreenshotFile(null)
+    setReportToast(null)
+    setReportModalOpen(true)
+  }
+  const closeReportModal = () => {
+    setReportModalOpen(false)
+    setReportMatchId(null)
+    setReportMessage('')
+    setReportScreenshotFile(null)
+  }
+  const submitReport = async () => {
+    if (!playerId || !reportMatchId || !reportMessage.trim()) return
+    setReportSending(true)
+    setReportToast(null)
+    let screenshotUrl: string | null = null
+    if (reportScreenshotFile) {
+      const ext = reportScreenshotFile.name.split('.').pop() || 'jpg'
+      const path = `${crypto.randomUUID()}.${ext}`
+      const { error: upErr } = await supabase.storage.from('reports').upload(path, reportScreenshotFile, { contentType: reportScreenshotFile.type, upsert: false })
+      if (upErr) {
+        setReportSending(false)
+        setReportToast(t.reportError + (upErr.message ? ' ' + upErr.message : ''))
+        return
+      }
+      const { data: urlData } = supabase.storage.from('reports').getPublicUrl(path)
+      screenshotUrl = urlData?.publicUrl ?? null
+    }
+    const { error } = await supabase.rpc('create_match_report', {
+      match_type: reportMatchType,
+      match_id: reportMatchId,
+      reporter_player_id: playerId,
+      message: reportMessage.trim(),
+      screenshot_url: screenshotUrl,
+    })
+    setReportSending(false)
+    if (error) {
+      setReportToast(t.reportError + (error.message ? ' ' + error.message : ''))
+      return
+    }
+    setReportToast(t.reportSent)
+    setTimeout(() => { closeReportModal(); setReportToast(null) }, 2000)
+  }
+
   const sendChatMessage = async () => {
     const text = chatInput.trim()
     if (!text || !currentMatch?.id || !playerId || chatSending) return
@@ -3084,7 +3338,15 @@ function App() {
                   </div>
                   <div className="nav-drawer-user">
                     <span className="nav-drawer-user-name">{displayName}</span>
-                    <span className="nav-drawer-user-elo">ELO: {elo ?? '—'}</span>
+                    <span className="nav-drawer-user-elo">
+                      <EloWithRank
+                        elo={elo}
+                        matchesCount={myProfileStats?.matches_count ?? matchesCount ?? 0}
+                        calibrationLabel={t.profileCalibrationLabel}
+                        rankLabel={getTranslatedRankLabel(getRankFromElo(elo))}
+                        compact
+                      />
+                    </span>
                   </div>
                   <div className="nav-drawer-lang">
                     {(['en', 'ro', 'ru'] as const).map((l) => (
@@ -3152,7 +3414,15 @@ function App() {
                     }}
                   />
                 </div>
-                <span className="strike-header-elo-value">{elo ?? '—'} ELO</span>
+                <span className="strike-header-elo-value">
+                  <EloWithRank
+                    elo={elo}
+                    matchesCount={myProfileStats?.matches_count ?? matchesCount ?? 0}
+                    calibrationLabel={t.profileCalibrationLabel}
+                    rankLabel={getTranslatedRankLabel(getRankFromElo(elo))}
+                    compact
+                  />
+                </span>
               </div>
             </div>
             <button
@@ -3314,7 +3584,14 @@ function App() {
                 )}
                 <div className="strike-elo-block">
                   <span className="strike-elo-label">{t.ratingElo}</span>
-                  <span className="strike-elo-value">{myProfileStats?.elo ?? elo ?? '—'}</span>
+                  <span className="strike-elo-value">
+                    <EloWithRank
+                      elo={myProfileStats?.elo ?? elo ?? null}
+                      matchesCount={myProfileStats?.matches_count ?? matchesCount ?? 0}
+                      calibrationLabel={t.profileCalibrationLabel}
+                      rankLabel={getTranslatedRankLabel(getRankFromElo(myProfileStats?.elo ?? elo ?? null))}
+                    />
+                  </span>
                   <div className="strike-elo-bar">
                     <div
                       className="strike-elo-bar-fill"
@@ -3393,7 +3670,9 @@ function App() {
                         )}
                       </span>
                       <span className="strike-top-name">{r.display_name || '—'}</span>
-                      <span className="strike-top-elo">ELO {r.elo ?? '—'}</span>
+                      <span className="strike-top-elo">
+                        <EloWithRank elo={r.elo ?? null} matchesCount={r.matches_count ?? 0} calibrationLabel={t.profileCalibrationLabel} rankLabel={getTranslatedRankLabel(getRankFromElo(r.elo ?? null))} compact />
+                      </span>
                       {i === 0 && <span className="strike-top-crown">👑</span>}
                     </li>
                   ))}
@@ -3596,6 +3875,65 @@ function App() {
                 </button>
                         </div>
 
+            <h3 className="panel-title admin-news-title">{t.adminReportsTitle}</h3>
+            <p className="panel-text small">Жалобы на матчи (ладдер и турнир). Для pending: введите комментарий (по желанию) и нажмите «Засчитать матч» или «Обнулить матч».</p>
+            {matchReportsAdminLoading && <p className="panel-text small">Загрузка…</p>}
+            {!matchReportsAdminLoading && matchReportsAdmin.length === 0 && <p className="panel-text small">Жалоб нет.</p>}
+            {!matchReportsAdminLoading && matchReportsAdmin.length > 0 && (
+              <ul className="admin-reports-list">
+                {matchReportsAdmin.map((r) => (
+                  <li key={r.id} className={`admin-report-item admin-report-item--${r.status}`}>
+                    <div className="admin-report-main">
+                      <span className="admin-report-meta">{r.match_type} · {r.player_a_name ?? '—'} vs {r.player_b_name ?? '—'} ({r.score_display ?? '—'})</span>
+                      <span className="admin-report-reporter">Жалоба от: {r.reporter_name ?? '—'}</span>
+                      <p className="admin-report-message">{r.message ?? '—'}</p>
+                      {r.screenshot_url && <a href={r.screenshot_url} target="_blank" rel="noopener noreferrer" className="admin-report-screenshot">Скриншот</a>}
+                      <span className="admin-report-date">{new Date(r.created_at).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })}</span>
+                      {r.status === 'resolved' && r.resolution && <span className="admin-report-resolution">Решение: {r.resolution}{r.admin_comment ? ` — ${r.admin_comment}` : ''}</span>}
+                    </div>
+                    {r.status === 'pending' && (
+                      <div className="admin-report-resolve">
+                        <input
+                          type="text"
+                          className="form-input admin-report-comment"
+                          placeholder={t.adminReportCommentPlaceholder}
+                          value={adminReportComments[r.id] ?? ''}
+                          onChange={(e) => setAdminReportComments((prev) => ({ ...prev, [r.id]: e.target.value }))}
+                        />
+                        <div className="admin-report-resolve-btns">
+                          <button type="button" className="strike-btn strike-btn-primary" disabled={resolvingReportId === r.id} onClick={() => resolveReport(r.id, 'counted')}>{t.adminReportResolveCounted}</button>
+                          <button type="button" className="strike-btn strike-btn-secondary" disabled={resolvingReportId === r.id} onClick={() => resolveReport(r.id, 'voided')}>{t.adminReportResolveVoided}</button>
+                        </div>
+                      </div>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            <h3 className="panel-title admin-news-title">Нарушения рейтинга (перелив / читинг)</h3>
+            <p className="panel-text small">Пары игроков, у которых за последние 30 дней обнаружен перелив рейтинга (≥10 матчей, ≥90% побед у одного). Матчи между ними аннулированы для рейтинга, ELO пересчитан. Запуск проверки: раз в сутки или после каждого подтверждения матча.</p>
+            {ratingViolationsLoading && <p className="panel-text small">Загрузка…</p>}
+            {!ratingViolationsLoading && ratingViolations.length === 0 && <p className="panel-text small">Нарушений нет.</p>}
+            {!ratingViolationsLoading && ratingViolations.length > 0 && (
+              <ul className="admin-violations-list">
+                {ratingViolations.map((v) => (
+                  <li key={v.id} className={`admin-violation-item ${v.admin_seen_at ? 'admin-violation-item--seen' : ''}`}>
+                    <div className="admin-violation-main">
+                      <span className="admin-violation-players">{v.player_a_name ?? '—'} ↔ {v.player_b_name ?? '—'}</span>
+                      <span className="admin-violation-meta">
+                        {new Date(v.detected_at).toLocaleString(undefined, { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })} · аннулировано матчей: {v.matches_voided_count}
+                      </span>
+                      {v.message && <p className="admin-violation-message">{v.message}</p>}
+                    </div>
+                    {!v.admin_seen_at && (
+                      <button type="button" className="admin-violation-seen-btn" onClick={() => markViolationSeen(v.id)}>Просмотрено</button>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+
             <h3 className="panel-title admin-news-title">Новости (главная)</h3>
             <p className="panel-text small">Добавьте новость: заголовок, текст и по желанию фото. Они отображаются в блоке «Последние новости» на главной.</p>
             <div className="form-row">
@@ -3794,7 +4132,9 @@ function App() {
                             <td className="rating-country-cell">
                               {r.country_code ? (COUNTRIES.find((c) => c.code === r.country_code)?.flag ?? r.country_code) : '—'}
                             </td>
-                            <td className="rating-elo-cell">{r.elo ?? '—'}</td>
+                            <td className="rating-elo-cell">
+                              <EloWithRank elo={r.elo ?? null} matchesCount={r.matches_count ?? 0} calibrationLabel={t.profileCalibrationLabel} rankLabel={getTranslatedRankLabel(getRankFromElo(r.elo ?? null))} compact />
+                            </td>
                             <td>{r.matches_count}</td>
                             <td className="rating-winrate-cell">{r.win_rate != null ? `${r.win_rate}%` : '—'}</td>
                           </tr>
@@ -3835,13 +4175,12 @@ function App() {
                         </div>
                         <div className="rating-elo-block-big">
                           <span className="rating-elo-label-small">{t.ratingElo}</span>
-                          <span className="rating-elo-big">{selectedPlayerRow.elo ?? '—'}</span>
-                          <div className="rating-rank-chip">
-                            {(() => {
-                              const rank = getRankFromElo(selectedPlayerRow.elo ?? null)
-                              return getRankDisplayLabel(rank)
-                            })()}
-                          </div>
+                          <EloWithRank
+                            elo={selectedPlayerRow.elo ?? null}
+                            matchesCount={selectedPlayerRow.matches_count ?? 0}
+                            calibrationLabel={t.profileCalibrationLabel}
+                            rankLabel={getTranslatedRankLabel(getRankFromElo(selectedPlayerRow.elo ?? null))}
+                          />
                         </div>
                       </div>
                       <div className="rating-stats-grid">
@@ -3966,13 +4305,12 @@ function App() {
                         </div>
                         <div className="rating-elo-block-big">
                           <span className="rating-elo-label-small">{t.ratingElo}</span>
-                          <span className="rating-elo-big">{selectedPlayerRow.elo ?? '—'}</span>
-                          <div className="rating-rank-chip">
-                            {(() => {
-                              const rank = getRankFromElo(selectedPlayerRow.elo ?? null)
-                              return getRankDisplayLabel(rank)
-                            })()}
-                          </div>
+                          <EloWithRank
+                            elo={selectedPlayerRow.elo ?? null}
+                            matchesCount={selectedPlayerRow.matches_count ?? 0}
+                            calibrationLabel={t.profileCalibrationLabel}
+                            rankLabel={getTranslatedRankLabel(getRankFromElo(selectedPlayerRow.elo ?? null))}
+                          />
                         </div>
                       </div>
 
@@ -4148,11 +4486,16 @@ function App() {
                                     <ProfileRankBadgeSvg />
                                   </div>
                                   <span className="profile-rank-level profile-rank-level--label">
-                                    {(myProfileStats?.matches_count ?? matchesCount ?? 0) <= 10
-                                      ? t.profileCalibrationLabel
-                                      : getRankDisplayLabel(getRankFromElo(myProfileStats?.elo ?? elo ?? null))}
-              </span>
-            </div>
+                                    <EloWithRank
+                                      elo={myProfileStats?.elo ?? elo ?? null}
+                                      matchesCount={myProfileStats?.matches_count ?? matchesCount ?? 0}
+                                      calibrationLabel={t.profileCalibrationLabel}
+                                      rankLabel={getTranslatedRankLabel(getRankFromElo(myProfileStats?.elo ?? elo ?? null))}
+                                      compact
+                                      showEloValue={false}
+                                    />
+                                  </span>
+                                </div>
                                 <div className="profile-rank-card-right">
                                   <div className="profile-rank-card-identity">
                                     <div className="profile-rank-card-avatar">
@@ -4576,14 +4919,23 @@ function App() {
                         {matchMessage}
                       </p>
                     )}
-                    <button
-                      type="button"
-                      className="primary-button lobby-score-submit"
-                      disabled={savingMatch}
-                      onClick={confirmLobbyResult}
-                    >
-                      {savingMatch ? '…' : t.ladderConfirmResult}
-                    </button>
+                    <div className="lobby-confirm-actions">
+                      <button
+                        type="button"
+                        className="primary-button lobby-score-submit"
+                        disabled={savingMatch}
+                        onClick={confirmLobbyResult}
+                      >
+                        {savingMatch ? '…' : t.ladderConfirmResult}
+                      </button>
+                      <button
+                        type="button"
+                        className="strike-btn strike-btn-secondary lobby-report-btn"
+                        onClick={() => openReportModal('ladder', String(currentMatch.id))}
+                      >
+                        {t.reportButton}
+                      </button>
+                    </div>
                   </section>
                 )}
               </div>
@@ -4698,6 +5050,65 @@ function App() {
               </button>
             </div>
             <button type="button" className="profile-intro-modal-close" onClick={() => closeProfileIntroModal()} aria-label="Close">×</button>
+          </div>
+        </div>
+      )}
+
+      {playerWarnings.length > 0 && playerId && (
+        <div className="profile-intro-modal-backdrop" onClick={() => markWarningRead(playerWarnings[0].id)} role="presentation">
+          <div className="profile-intro-modal profile-intro-modal--warning" onClick={(e) => e.stopPropagation()}>
+            <h3 className="profile-intro-modal-title">Предупреждение системы</h3>
+            <p className="profile-intro-modal-body">{playerWarnings[0].message}</p>
+            <div className="profile-intro-modal-actions">
+              <button type="button" className="primary-button" onClick={() => markWarningRead(playerWarnings[0].id)}>
+                {t.profileIntroModalButton}
+              </button>
+            </div>
+            <button type="button" className="profile-intro-modal-close" onClick={() => markWarningRead(playerWarnings[0].id)} aria-label="Close">×</button>
+          </div>
+        </div>
+      )}
+
+      {reportModalOpen && reportMatchId && (
+        <div className="report-modal-backdrop" onClick={closeReportModal} role="presentation">
+          <div className="report-modal" onClick={(e) => e.stopPropagation()}>
+            <h4 className="report-modal-title">{t.reportModalTitle}</h4>
+            <textarea
+              className="form-input report-modal-textarea"
+              rows={4}
+              placeholder={t.reportMessagePlaceholder}
+              value={reportMessage}
+              onChange={(e) => setReportMessage(e.target.value)}
+            />
+            <div className="form-row">
+              <label className="form-label">{t.reportScreenshotOptional}</label>
+              <input
+                type="file"
+                accept="image/*"
+                className="form-input"
+                onChange={(e) => setReportScreenshotFile(e.target.files?.[0] ?? null)}
+              />
+              {reportScreenshotFile && <span className="panel-text small"> {reportScreenshotFile.name}</span>}
+            </div>
+            {reportToast && <p className={reportToast.startsWith(t.reportSent) ? 'lobby-message lobby-message--success' : 'lobby-message lobby-message--error'}>{reportToast}</p>}
+            <div className="report-modal-actions">
+              <button type="button" className="strike-btn strike-btn-secondary" onClick={closeReportModal}>{t.newsBack}</button>
+              <button type="button" className="strike-btn strike-btn-primary" disabled={reportSending || !reportMessage.trim()} onClick={submitReport}>
+                {reportSending ? '…' : t.reportSubmit}
+              </button>
+            </div>
+            <button type="button" className="bracket-match-modal-close" onClick={closeReportModal} aria-label="Close">×</button>
+          </div>
+        </div>
+      )}
+
+      {reportResolutionModalOpen && reportResolutions.length > 0 && (
+        <div className="report-modal-backdrop" onClick={() => markReportResolutionReadAndNext(reportResolutions[0].id)} role="presentation">
+          <div className="report-modal" onClick={(e) => e.stopPropagation()}>
+            <h4 className="report-modal-title">{t.reportResolutionModalTitle}</h4>
+            <p className="report-resolution-message">{reportResolutions[0].message}</p>
+            <button type="button" className="strike-btn strike-btn-primary" onClick={() => markReportResolutionReadAndNext(reportResolutions[0].id)}>{t.reportResolutionOk}</button>
+            <button type="button" className="bracket-match-modal-close" onClick={() => markReportResolutionReadAndNext(reportResolutions[0].id)} aria-label="Close">×</button>
           </div>
         </div>
       )}
