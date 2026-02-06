@@ -1564,8 +1564,6 @@ function App() {
   const [adminTargetUsername, setAdminTargetUsername] = useState('')
   const [adminSending, setAdminSending] = useState(false)
   const [adminResult, setAdminResult] = useState<string | null>(null)
-  type AdminTabId = 'broadcast' | 'reports' | 'bans' | 'violations' | 'news' | 'tournaments'
-  const [adminTab, setAdminTab] = useState<AdminTabId>('broadcast')
 
   type NewsRow = { id: string; title: string; body: string; image_url: string | null; created_at: string; pinned_order: number | null }
   type TournamentRow = {
