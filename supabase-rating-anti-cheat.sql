@@ -301,7 +301,9 @@ language sql security definer stable as $$
   )
   select row_number() over (order by s.elo desc nulls last, s.id)::bigint, s.id, s.display_name, s.avatar_url, s.country_code, s.elo, s.matches_count, s.wins, s.draws, s.losses, s.goals_for, s.goals_against,
     round(case when s.matches_count > 0 then (s.wins * 100.0 / s.matches_count) else null end, 1)::numeric
-  from player_stats s order by s.elo desc nulls last, s.id limit 500;
+  from player_stats s
+  where s.matches_count >= 10
+  order by s.elo desc nulls last, s.id limit 500;
 $$;
 grant execute on function public.get_leaderboard() to anon;
 

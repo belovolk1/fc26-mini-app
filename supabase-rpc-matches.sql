@@ -199,11 +199,13 @@ exception when others then
 end;
 $$;
 
--- Все сыгранные матчи (с именами игроков) для страницы «Все матчи»
+-- Все сыгранные матчи (с именами и id игроков) для страницы «Все матчи»
 drop function if exists public.get_all_played_matches();
 create or replace function public.get_all_played_matches()
 returns table (
   match_id bigint,
+  player_a_id uuid,
+  player_b_id uuid,
   player_a_name text,
   player_b_name text,
   score_a int,
@@ -219,6 +221,8 @@ stable
 as $$
   select
     m.id,
+    m.player_a_id,
+    m.player_b_id,
     coalesce(
       case when pa.username is not null and pa.username <> '' then '@' || pa.username
         else nullif(trim(coalesce(pa.first_name, '') || ' ' || coalesce(pa.last_name, '')), '')
@@ -310,6 +314,7 @@ as $$
       case when s.matches_count > 0 then (s.wins * 100.0 / s.matches_count) else null end
     , 1)::numeric as win_rate
   from player_stats s
+  where s.matches_count >= 10
   order by s.elo desc nulls last, s.id
   limit 500;
 $$;
@@ -392,6 +397,7 @@ drop function if exists public.get_player_recent_matches(uuid);
 create or replace function public.get_player_recent_matches(p_player_id uuid)
 returns table (
   match_id bigint,
+  opponent_id uuid,
   opponent_name text,
   my_score int,
   opp_score int,
@@ -405,14 +411,14 @@ stable
 as $$
   select
     m.id,
+    (case when m.player_a_id = p_player_id then m.player_b_id else m.player_a_id end),
     coalesce(
-      case when m.player_a_id = p_player_id then
-             case when pb.username is not null and pb.username <> '' then '@' || pb.username
-                  else nullif(trim(coalesce(pb.first_name, '') || ' ' || coalesce(pb.last_name, '')), '') end
-           else
-             case when pa.username is not null and pa.username <> '' then '@' || pa.username
-                  else nullif(trim(coalesce(pa.first_name, '') || ' ' || coalesce(pa.last_name, '')), '') end
-      end, '—'
+      nullif(trim(
+        case when m.player_a_id = p_player_id then coalesce(pb.display_name, case when pb.username is not null and pb.username <> '' then '@' || pb.username else nullif(trim(coalesce(pb.first_name, '') || ' ' || coalesce(pb.last_name, '')), '') end)
+             else coalesce(pa.display_name, case when pa.username is not null and pa.username <> '' then '@' || pa.username else nullif(trim(coalesce(pa.first_name, '') || ' ' || coalesce(pa.last_name, '')), '') end)
+        end
+      ), ''),
+      '—'
     )::text,
     (case when m.player_a_id = p_player_id then m.score_a else m.score_b end)::int,
     (case when m.player_a_id = p_player_id then m.score_b else m.score_a end)::int,

@@ -1386,7 +1386,7 @@ function App() {
   const [playersForBan, setPlayersForBan] = useState<PlayerOption[]>([])
   type AdminTabId = 'broadcast' | 'reports' | 'bans' | 'violations' | 'news' | 'tournaments'
   const [adminTab, setAdminTab] = useState<AdminTabId>('broadcast')
-  const [allMatches, setAllMatches] = useState<Array<{ match_id: number; player_a_name: string; player_b_name: string; score_a: number; score_b: number; result: string; played_at: string | null; elo_delta_a: number | null; elo_delta_b: number | null }>>([])
+  const [allMatches, setAllMatches] = useState<Array<{ match_id: number; player_a_id: string; player_b_id: string; player_a_name: string; player_b_name: string; score_a: number; score_b: number; result: string; played_at: string | null; elo_delta_a: number | null; elo_delta_b: number | null }>>([])
   const [allMatchesLoading, setAllMatchesLoading] = useState(false)
   type PlayerWarningRow = { id: string; message: string; created_at: string }
   const [playerWarnings, setPlayerWarnings] = useState<PlayerWarningRow[]>([])
@@ -1419,7 +1419,7 @@ function App() {
   const [profileSaveLoading, setProfileSaveLoading] = useState(false)
   const [avatarUploading, setAvatarUploading] = useState(false)
   const [avatarUploadError, setAvatarUploadError] = useState<string | null>(null)
-  type RecentMatchRow = { match_id: number; opponent_name: string | null; my_score: number; opp_score: number; result: string; played_at: string | null; elo_delta?: number | null }
+  type RecentMatchRow = { match_id: number; opponent_id: string | null; opponent_name: string | null; my_score: number; opp_score: number; result: string; played_at: string | null; elo_delta?: number | null }
   const [recentMatches, setRecentMatches] = useState<RecentMatchRow[]>([])
   const [recentMatchesLoading, setRecentMatchesLoading] = useState(false)
   const [myProfileStats, setMyProfileStats] = useState<LeaderboardRow | null>(null)
@@ -2262,6 +2262,18 @@ function App() {
     })
   }, [activeView])
 
+  // Переход на страницу/профиль игрока по id (рейтинг + панель профиля)
+  const openPlayerProfile = (playerId: string) => {
+    window.location.hash = `player=${playerId}`
+    setActiveView('rating')
+    setProfileFromHashLoading(true)
+    supabase.rpc('get_player_profile', { p_player_id: playerId }).then(({ data, error }) => {
+      setProfileFromHashLoading(false)
+      if (!error && Array.isArray(data) && data.length > 0) setSelectedPlayerRow(data[0] as LeaderboardRow)
+      else setSelectedPlayerRow(null)
+    })
+  }
+
   // При загрузке с #player=uuid — открыть рейтинг и показать профиль игрока в той же вкладке
   useEffect(() => {
     const hash = window.location.hash.slice(1)
@@ -2905,8 +2917,9 @@ function App() {
     onRefresh: () => void | Promise<void>
     onMatchUpdated?: (updated: TournamentMatchRow) => void
     onMatchConfirmed?: () => void
+    onOpenPlayerProfile?: (playerId: string) => void
   }) {
-    const { matches, playerId: pid, leaderboard, lang: bracketLang, onMatchUpdated, onMatchConfirmed } = props
+    const { matches, playerId: pid, leaderboard, lang: bracketLang, onMatchUpdated, onMatchConfirmed, onOpenPlayerProfile } = props
     const [matchMessage, setMatchMessage] = useState<string | null>(null)
     const [savingMatchId, setSavingMatchId] = useState<string | null>(null)
     const [scoreInputs, setScoreInputs] = useState<Record<string, { a: string; b: string }>>({})
@@ -3060,9 +3073,17 @@ function App() {
                       return (
                         <div key={m.id} className={`bracket-match-card ${matchStatusClass}`}>
                           <div className="bracket-match-card-row bracket-match-card-players">
-                            <span className={m.winner_id === m.player_a_id ? 'bracket-match-card-winner' : ''}>{getPlayerName(m.player_a_id)}</span>
+                            {m.player_a_id ? (
+                              <button type="button" className={`player-name-link ${m.winner_id === m.player_a_id ? 'bracket-match-card-winner' : ''}`} onClick={() => onOpenPlayerProfile?.(m.player_a_id)}>{getPlayerName(m.player_a_id)}</button>
+                            ) : (
+                              <span className={m.winner_id === m.player_a_id ? 'bracket-match-card-winner' : ''}>{getPlayerName(m.player_a_id)}</span>
+                            )}
                             <span className="bracket-match-card-vs"> – </span>
-                            <span className={m.winner_id === m.player_b_id ? 'bracket-match-card-winner' : ''}>{getPlayerName(m.player_b_id)}</span>
+                            {m.player_b_id ? (
+                              <button type="button" className={`player-name-link ${m.winner_id === m.player_b_id ? 'bracket-match-card-winner' : ''}`} onClick={() => onOpenPlayerProfile?.(m.player_b_id)}>{getPlayerName(m.player_b_id)}</button>
+                            ) : (
+                              <span className={m.winner_id === m.player_b_id ? 'bracket-match-card-winner' : ''}>{getPlayerName(m.player_b_id)}</span>
+                            )}
                           </div>
                           <div className="bracket-match-card-score">
                             {m.score_a != null && m.score_b != null ? `${m.score_a} : ${m.score_b}` : '—'}
@@ -3148,7 +3169,11 @@ function App() {
           return (
             <div className="bracket-match-modal-backdrop" onClick={() => setMatchResultModalId(null)} role="presentation">
               <div className="bracket-match-modal" onClick={(e) => e.stopPropagation()}>
-                <h4 className="bracket-match-modal-title">{getPlayerName(m.player_a_id)} – {getPlayerName(m.player_b_id)}</h4>
+                <h4 className="bracket-match-modal-title">
+                  {m.player_a_id ? <button type="button" className="player-name-link" onClick={() => onOpenPlayerProfile?.(m.player_a_id)}>{getPlayerName(m.player_a_id)}</button> : getPlayerName(m.player_a_id)}
+                  {' – '}
+                  {m.player_b_id ? <button type="button" className="player-name-link" onClick={() => onOpenPlayerProfile?.(m.player_b_id)}>{getPlayerName(m.player_b_id)}</button> : getPlayerName(m.player_b_id)}
+                </h4>
                 <div className="bracket-match-modal-score">{m.score_a != null && m.score_b != null ? `${m.score_a} : ${m.score_b}` : '—'}</div>
                 <p className="bracket-match-modal-meta">{dateTimeStr} – {finished ? 'Confirmed' : m.status === 'score_submitted' ? 'Pending confirm' : 'Both ready'}</p>
                 <div className="bracket-match-modal-result">
@@ -3848,7 +3873,7 @@ function App() {
                   {myRecentMatches.slice(0, 6).map((m) => (
                     <li key={m.match_id} className={`strike-recent-item strike-recent-item--${m.result}`}>
                       <span className="strike-recent-result">{m.result === 'win' ? '✓' : m.result === 'loss' ? '✗' : '−'}</span>
-                      <span className="strike-recent-opponent">{m.opponent_name ?? '—'}</span>
+                      <span className="strike-recent-opponent">{m.opponent_id ? <button type="button" className="player-name-link" onClick={() => openPlayerProfile(m.opponent_id!)}>{m.opponent_name ?? '—'}</button> : (m.opponent_name ?? '—')}</span>
                       <span className="strike-recent-score">
                         {m.my_score}–{m.opp_score}
                       </span>
@@ -4019,7 +4044,7 @@ function App() {
                 {allMatches.map((m) => (
                   <li key={m.match_id} className="match-card">
                     <div className="match-card-team match-card-team-a">
-                      <span className="match-card-player">{m.player_a_name}</span>
+                      <span className="match-card-player">{m.player_a_id ? <button type="button" className="player-name-link" onClick={() => openPlayerProfile(m.player_a_id)}>{m.player_a_name}</button> : m.player_a_name}</span>
                     </div>
                     <div className="match-card-score-wrap">
                       <span className="match-card-score">
@@ -4041,7 +4066,7 @@ function App() {
                       )}
                     </div>
                     <div className="match-card-team match-card-team-b">
-                      <span className="match-card-player">{m.player_b_name}</span>
+                      <span className="match-card-player">{m.player_b_id ? <button type="button" className="player-name-link" onClick={() => openPlayerProfile(m.player_b_id)}>{m.player_b_name}</button> : m.player_b_name}</span>
                     </div>
                   </li>
                 ))}
@@ -4131,8 +4156,13 @@ function App() {
                 {matchReportsAdmin.map((r) => (
                   <li key={r.id} className={`admin-report-item admin-report-item--${r.status}`}>
                     <div className="admin-report-main">
-                      <span className="admin-report-meta">{r.match_type} · {r.player_a_name ?? '—'} vs {r.player_b_name ?? '—'} ({r.score_display ?? '—'})</span>
-                      <span className="admin-report-reporter">Жалоба от: {r.reporter_name ?? '—'}</span>
+                      <span className="admin-report-meta">
+                        {r.match_type} · {r.player_a_id ? <button type="button" className="player-name-link" onClick={() => openPlayerProfile(r.player_a_id)}>{r.player_a_name ?? '—'}</button> : (r.player_a_name ?? '—')}
+                        {' vs '}
+                        {r.player_b_id ? <button type="button" className="player-name-link" onClick={() => openPlayerProfile(r.player_b_id)}>{r.player_b_name ?? '—'}</button> : (r.player_b_name ?? '—')}
+                        {' '}({r.score_display ?? '—'})
+                      </span>
+                      <span className="admin-report-reporter">Жалоба от: {r.reporter_player_id ? <button type="button" className="player-name-link" onClick={() => openPlayerProfile(r.reporter_player_id)}>{r.reporter_name ?? '—'}</button> : (r.reporter_name ?? '—')}</span>
                       <p className="admin-report-message">{r.message ?? '—'}</p>
                       {r.screenshot_url && <a href={r.screenshot_url} target="_blank" rel="noopener noreferrer" className="admin-report-screenshot">Скриншот</a>}
                       <span className="admin-report-date">{new Date(r.created_at).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })}</span>
@@ -4215,7 +4245,7 @@ function App() {
                 {bansAdmin.map((b) => (
                   <li key={b.id} className={`admin-ban-item ${b.is_active ? 'admin-ban-item--active' : ''}`}>
                     <div className="admin-ban-main">
-                      <span className="admin-ban-player">{b.player_name ?? '—'}{b.player_username ? ` @${b.player_username}` : ''}</span>
+                      <span className="admin-ban-player">{b.player_id ? <button type="button" className="player-name-link" onClick={() => openPlayerProfile(b.player_id)}>{b.player_name ?? '—'}</button> : (b.player_name ?? '—')}{b.player_username ? ` @${b.player_username}` : ''}</span>
                       <span className="admin-ban-meta">Закрыл: {b.banned_by_name ?? '—'} · {new Date(b.created_at).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })}</span>
                       <span className="admin-ban-expiry">{b.expires_at ? `До: ${new Date(b.expires_at).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })}` : 'Навсегда'}</span>
                       {b.reason && <p className="admin-ban-reason">{b.reason}</p>}
@@ -4239,7 +4269,11 @@ function App() {
                 {ratingViolations.map((v) => (
                   <li key={v.id} className={`admin-violation-item ${v.admin_seen_at ? 'admin-violation-item--seen' : ''}`}>
                     <div className="admin-violation-main">
-                      <span className="admin-violation-players">{v.player_a_name ?? '—'} ↔ {v.player_b_name ?? '—'}</span>
+                      <span className="admin-violation-players">
+                        {v.player_a_id ? <button type="button" className="player-name-link" onClick={() => openPlayerProfile(v.player_a_id)}>{v.player_a_name ?? '—'}</button> : (v.player_a_name ?? '—')}
+                        {' ↔ '}
+                        {v.player_b_id ? <button type="button" className="player-name-link" onClick={() => openPlayerProfile(v.player_b_id)}>{v.player_b_name ?? '—'}</button> : (v.player_b_name ?? '—')}
+                      </span>
                       <span className="admin-violation-meta">
                         {new Date(v.detected_at).toLocaleString(undefined, { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })} · аннулировано матчей: {v.matches_voided_count}
                       </span>
@@ -4558,7 +4592,7 @@ function App() {
                             <tbody>
                               {recentMatches.slice(0, 5).map((match) => (
                                 <tr key={match.match_id} className={`profile-recent-match profile-recent-match--${match.result}`}>
-                                  <td className="profile-recent-opponent">{match.opponent_name ?? '—'}</td>
+                                  <td className="profile-recent-opponent">{match.opponent_id ? <button type="button" className="player-name-link" onClick={() => openPlayerProfile(match.opponent_id!)}>{match.opponent_name ?? '—'}</button> : (match.opponent_name ?? '—')}</td>
                                   <td className="profile-recent-score">
                                     {match.my_score}:{match.opp_score}
                                   </td>
@@ -4690,7 +4724,7 @@ function App() {
                             <tbody>
                               {recentMatches.slice(0, 5).map((match) => (
                                 <tr key={match.match_id} className={`profile-recent-match profile-recent-match--${match.result}`}>
-                                  <td className="profile-recent-opponent">{match.opponent_name ?? '—'}</td>
+                                  <td className="profile-recent-opponent">{match.opponent_id ? <button type="button" className="player-name-link" onClick={() => openPlayerProfile(match.opponent_id!)}>{match.opponent_name ?? '—'}</button> : (match.opponent_name ?? '—')}</td>
                                   <td className="profile-recent-score">
                                     {match.my_score}:{match.opp_score}
                                   </td>
@@ -4917,7 +4951,7 @@ function App() {
                                         <tbody>
                                           {myRecentMatches.map((match) => (
                                             <tr key={match.match_id} className={`profile-recent-match profile-recent-match--${match.result}`}>
-                                              <td className="profile-recent-opponent">{match.opponent_name ?? '—'}</td>
+                                              <td className="profile-recent-opponent">{match.opponent_id ? <button type="button" className="player-name-link" onClick={() => openPlayerProfile(match.opponent_id!)}>{match.opponent_name ?? '—'}</button> : (match.opponent_name ?? '—')}</td>
                                               <td className="profile-recent-score">{match.my_score}:{match.opp_score}</td>
                                               <td>
                                                 <span className={`profile-result-pill profile-result-pill--${match.result}`}>
@@ -5169,7 +5203,11 @@ function App() {
                 <div className="lobby-page lobby-confirm-step">
                   <header className="lobby-header">
                     <span className="lobby-header-badge">{t.ladderMatchedTitle}</span>
-                    <h2 className="lobby-header-vs">{t.ladderLobbyVs.replace('{name}', opponentName)}</h2>
+                    <h2 className="lobby-header-vs">
+                      {t.ladderLobbyVs.split('{name}')[0]}
+                      {opponentId ? <button type="button" className="player-name-link" onClick={() => openPlayerProfile(opponentId)}>{opponentName}</button> : opponentName}
+                      {t.ladderLobbyVs.split('{name}')[1]}
+                    </h2>
                     <p className="lobby-header-hint">{t.ladderMatchedHint.replace('{name}', opponentName)}</p>
                   </header>
                   {statusHint && <p className="lobby-status-hint">{statusHint}</p>}
@@ -5186,7 +5224,11 @@ function App() {
               <div className="lobby-page">
                 <header className="lobby-header">
                   <span className="lobby-header-badge">{t.ladderLobbyTitle}</span>
-                  <h2 className="lobby-header-vs">{t.ladderLobbyVs.replace('{name}', opponentName)}</h2>
+                  <h2 className="lobby-header-vs">
+                    {t.ladderLobbyVs.split('{name}')[0]}
+                    {opponentId ? <button type="button" className="player-name-link" onClick={() => openPlayerProfile(opponentId)}>{opponentName}</button> : opponentName}
+                    {t.ladderLobbyVs.split('{name}')[1]}
+                  </h2>
                   <p className="lobby-header-hint">{t.ladderLobbyAgree}</p>
                 </header>
 
@@ -5387,6 +5429,7 @@ function App() {
                         playerId={playerId}
                         leaderboard={leaderboard}
                         lang={lang}
+                        onOpenPlayerProfile={openPlayerProfile}
                         onRefresh={async () => {
                           fetchTournaments(true)
                           const { data } = await supabase.from('tournament_matches').select('*').eq('tournament_id', tr.id).order('round', { ascending: false }).order('match_index')
@@ -5414,7 +5457,7 @@ function App() {
         <span className="site-footer-copy">Ladder &amp; Tournaments</span>
       </footer>
 
-      {showProfileIntroModal && user && (matchesCount === 0 || matchesCount == null) && (myProfileStats?.matches_count ?? matchesCount ?? 0) === 0 && createPortal(
+      {showProfileIntroModal && user && matchesCount != null && matchesCount === 0 && (myProfileStats?.matches_count ?? matchesCount ?? 0) === 0 && createPortal(
         <div className="profile-intro-modal-backdrop" onClick={() => closeProfileIntroModal()} role="presentation">
           <div className="profile-intro-modal" onClick={(e) => e.stopPropagation()}>
             <h3 className="profile-intro-modal-title">{t.profileIntroModalTitle}</h3>
