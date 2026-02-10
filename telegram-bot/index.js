@@ -238,7 +238,7 @@ async function processTournamentNotifications() {
         const { data: players } = await supabase.from('players').select('telegram_id').not('telegram_id', 'is', null)
         telegramIds = (players || []).map((p) => p.telegram_id).filter(Boolean)
         const name = tour?.name || 'Tournament'
-        message = `📣 Registration for tournament «${name}» is now open!\n\nYou have 15 minutes. Open the app to register.`
+        message = `📣 Осталось 15 минут на регистрацию!\n\nТурнир «${name}» начнётся через 15 минут. Успей зарегистрироваться в приложении.`
       } else if (row.type === 'round_reminder' && row.match_id) {
         const { data: match } = await supabase.from('tournament_matches').select('player_a_id, player_b_id').eq('id', row.match_id).single()
         if (!match || (!match.player_a_id && !match.player_b_id)) {
@@ -272,6 +272,45 @@ async function processTournamentNotifications() {
 
 setInterval(processTournamentNotifications, NOTIFICATION_POLL_INTERVAL_MS)
 setTimeout(processTournamentNotifications, 5000) // первый запуск через 5 сек
+
+// ========== Уведомления об отмене турнира (0 или 1 участник) ==========
+async function processTournamentCancelledNotifications() {
+  try {
+    const { data: rows, error } = await supabase
+      .from('tournament_cancelled_telegram_notifications')
+      .select('id, tournament_name')
+      .is('sent_at', null)
+      .order('created_at', { ascending: true })
+    if (error) {
+      if (error.code === '42P01') return // таблица не найдена
+      console.error('Ошибка выборки tournament_cancelled_telegram_notifications:', error.message)
+      return
+    }
+    if (!rows?.length) return
+    const { data: players } = await supabase.from('players').select('telegram_id').not('telegram_id', 'is', null)
+    const telegramIds = (players || []).map((p) => p.telegram_id).filter(Boolean)
+    for (const row of rows) {
+      const message = `❌ Турнир «${row.tournament_name}» отменён: зарегистрировано меньше двух участников.`
+      let sent = 0
+      for (const chatId of telegramIds) {
+        try {
+          await bot.sendMessage(String(chatId), message)
+          sent++
+          await new Promise((r) => setTimeout(r, 80))
+        } catch (err) {
+          console.error('Не удалось отправить уведомление об отмене в', chatId, err.message)
+        }
+      }
+      console.log('✅ Отменён турнир уведомлён:', row.tournament_name, '→', sent, 'получателей')
+      await supabase.from('tournament_cancelled_telegram_notifications').update({ sent_at: new Date().toISOString() }).eq('id', row.id)
+    }
+  } catch (e) {
+    console.error('Ошибка processTournamentCancelledNotifications:', e.message)
+  }
+}
+
+setInterval(processTournamentCancelledNotifications, NOTIFICATION_POLL_INTERVAL_MS)
+setTimeout(processTournamentCancelledNotifications, 6000)
 
 // ========== Жалобы: уведомление админу в Telegram ==========
 const ADMIN_CHAT_ID = process.env.ADMIN_CHAT_ID ? String(process.env.ADMIN_CHAT_ID).trim() : ''

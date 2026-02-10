@@ -77,7 +77,7 @@ async function run() {
       const { data: players } = await supabase.from('players').select('telegram_id').not('telegram_id', 'is', null)
       telegramIds = (players || []).map((p) => p.telegram_id).filter(Boolean)
       const name = tour?.name || 'Tournament'
-      message = `📣 Registration for tournament «${name}» is now open!\n\nYou have 15 minutes. Open the app to register.`
+      message = `📣 Осталось 15 минут на регистрацию!\n\nТурнир «${name}» начнётся через 15 минут. Успей зарегистрироваться в приложении.`
     } else if (row.type === 'round_reminder' && row.match_id) {
       const { data: match } = await supabase.from('tournament_matches').select('player_a_id, player_b_id').eq('id', row.match_id).single()
       if (!match || (!match.player_a_id && !match.player_b_id)) {
@@ -103,6 +103,31 @@ async function run() {
     }
     await supabase.from('tournament_telegram_notifications').update({ sent_at: new Date().toISOString() }).eq('id', row.id)
   }
+
+  // Уведомления об отмене турнира (0 или 1 участник)
+  const { data: cancelledRows, error: cancelledErr } = await supabase
+    .from('tournament_cancelled_telegram_notifications')
+    .select('id, tournament_name')
+    .is('sent_at', null)
+    .order('created_at', { ascending: true })
+  if (!cancelledErr && cancelledRows?.length) {
+    const { data: players } = await supabase.from('players').select('telegram_id').not('telegram_id', 'is', null)
+    const telegramIds = (players || []).map((p) => p.telegram_id).filter(Boolean)
+    for (const row of cancelledRows) {
+      const message = `❌ Турнир «${row.tournament_name}» отменён: зарегистрировано меньше двух участников.`
+      for (const chatId of telegramIds) {
+        try {
+          await bot.sendMessage(String(chatId), message)
+          await new Promise((r) => setTimeout(r, 80))
+        } catch (err) {
+          console.error('  Failed to send cancelled notification to', chatId, err.message)
+        }
+      }
+      await supabase.from('tournament_cancelled_telegram_notifications').update({ sent_at: new Date().toISOString() }).eq('id', row.id)
+      console.log('  tournament_cancelled «' + row.tournament_name + '» →', telegramIds.length, 'recipient(s)')
+    }
+  }
+
   console.log('\nDone.')
 }
 
