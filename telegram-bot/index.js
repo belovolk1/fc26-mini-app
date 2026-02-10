@@ -192,6 +192,13 @@ async function enqueueRoundReminders() {
 
 async function processTournamentNotifications() {
   try {
+    // Вызов tournament_tick раз в минуту: ставит в очередь registration_open за 15 мин до старта,
+    // закрывает регистрацию и т.д. Без этого уведомления приходят только если кто-то открыл страницу турниров.
+    try {
+      await supabase.rpc('tournament_tick', {})
+    } catch (tickErr) {
+      if (tickErr?.code !== 'PGRST202') console.error('tournament_tick:', tickErr?.message || tickErr)
+    }
     await enqueueRoundReminders()
     const { data: rows, error } = await supabase
       .from('tournament_telegram_notifications')

@@ -30,6 +30,12 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey)
 async function run() {
   console.log('=== Sending pending tournament notifications ===\n')
 
+  try {
+    await supabase.rpc('tournament_tick', {})
+  } catch (e) {
+    if (e?.code !== 'PGRST202') console.error('tournament_tick:', e?.message || e)
+  }
+
   const { data: rows, error } = await supabase
     .from('tournament_telegram_notifications')
     .select('id, tournament_id, type, match_id')
