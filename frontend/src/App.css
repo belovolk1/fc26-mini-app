@@ -6181,6 +6181,15 @@
 .strike-elo-block {
   margin-bottom: 20px;
 }
+.strike-elo-block-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.strike-elo-block-row .strike-elo-value {
+  margin-bottom: 0;
+}
 .app.strike-theme .strike-elo-block {
   margin-bottom: var(--strike-space-lg);
 }

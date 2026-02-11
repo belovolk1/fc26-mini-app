@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import './App.css'
 import { supabase } from './supabaseClient'
 
-type View = 'home' | 'profile' | 'ladder' | 'tournaments' | 'matches' | 'rating' | 'admin' | 'news-detail' | 'test-ranks'
+type View = 'home' | 'profile' | 'ladder' | 'tournaments' | 'matches' | 'rating' | 'admin' | 'news-detail'
 type Lang = 'en' | 'ro' | 'ru'
 
 const messages: Record<
@@ -103,7 +103,6 @@ const messages: Record<
     navMatches: string
     navRating: string
     navAdmin: string
-    navTestRanks: string
     matchesHeader: string
     matchesIntro: string
     matchesAdminOnly: string
@@ -273,7 +272,6 @@ const messages: Record<
       rating: 'Rating',
       admin: 'Admin',
       'news-detail': 'News',
-      'test-ranks': 'Test ranks',
     },
     quickPlayTitle: 'Quick play',
     quickPlayText:
@@ -312,8 +310,7 @@ const messages: Record<
     profileError: 'Failed to load profile. Check your connection and try again.',
     profileErrorRlsHint: 'If the error mentions RLS or policy: run the script supabase-rls-players-matches.sql in Supabase (SQL Editor).',
     ladderHeader: 'Quick play (ladder)',
-    ladderText:
-      'Here will be real‑time matchmaking: game mode, queue, 40‑minute deadline and result input.',
+    ladderText: '',
     ladderButton: 'Search game',
     ladderHint:
       'Press search — when someone else is searching, you are matched into a lobby. Agree and enter the score.',
@@ -343,7 +340,7 @@ const messages: Record<
     ladderConfirmResult: 'Confirm result',
     ladderResultConfirmed: 'Result confirmed.',
     ladderError: 'Could not save. Try again.',
-    ladderLoginRequired: 'Log in to play.',
+    ladderLoginRequired: 'Log in with Telegram to play.',
     ladderProfileLoading: 'Loading profile…',
     ladderProfileNotReady: 'Profile not ready. Open the Profile tab and wait for it to load, or log in again.',
     ladderTwoPlayersHint: 'Two different players must press Search at the same time (e.g. two devices or two accounts).',
@@ -372,7 +369,6 @@ const messages: Record<
     navMatches: 'Matches',
     navRating: 'Rating',
     navAdmin: 'Admin',
-    navTestRanks: 'Test ranks',
     matchesHeader: 'All matches',
     matchesIntro: 'Recently played matches.',
     matchesAdminOnly: 'This page is available only to administrators.',
@@ -541,7 +537,6 @@ const messages: Record<
       rating: 'Clasament',
       admin: 'Admin',
       'news-detail': 'Știri',
-      'test-ranks': 'Test ranguri',
     },
     quickPlayTitle: 'Joc rapid',
     quickPlayText:
@@ -580,8 +575,7 @@ const messages: Record<
     profileError: 'Profilul nu s-a putut încărca. Verifică conexiunea și încearcă din nou.',
     profileErrorRlsHint: 'Dacă eroarea menționează RLS sau policy: rulează scriptul supabase-rls-players-matches.sql în Supabase (SQL Editor).',
     ladderHeader: 'Joc rapid (ladder)',
-    ladderText:
-      'Aici va fi matchmaking în timp real: mod de joc, coadă, termen de 40 de minute și introducerea rezultatului.',
+    ladderText: '',
     ladderButton: 'Caută joc',
     ladderHint:
       'Apasă căutarea — când cineva caută, sunteți pereche într-un lobby. Introduceți rezultatul.',
@@ -611,7 +605,7 @@ const messages: Record<
     ladderConfirmResult: 'Confirmă rezultatul',
     ladderResultConfirmed: 'Rezultat confirmat.',
     ladderError: 'Nu s-a putut salva.',
-    ladderLoginRequired: 'Autentifică-te pentru a juca.',
+    ladderLoginRequired: 'Autentifică-te cu Telegram pentru a juca.',
     ladderProfileLoading: 'Se încarcă profilul…',
     ladderProfileNotReady: 'Profilul nu e gata. Deschide tab-ul Profil și așteaptă încărcarea sau autentifică-te din nou.',
     ladderTwoPlayersHint: 'Doi jucători diferiți trebuie să apese Caută în același timp (ex. două dispozitive sau două conturi).',
@@ -640,7 +634,6 @@ const messages: Record<
     navMatches: 'Meciuri',
     navRating: 'Clasament',
     navAdmin: 'Admin',
-    navTestRanks: 'Test ranguri',
     matchesHeader: 'Toate meciurile',
     matchesIntro: 'Meciuri jucate recent.',
     matchesAdminOnly: 'Această pagină este disponibilă doar administratorilor.',
@@ -809,7 +802,6 @@ const messages: Record<
       rating: 'Рейтинг',
       admin: 'Админка',
       'news-detail': 'Новость',
-      'test-ranks': 'Тест рангов',
     },
     quickPlayTitle: 'Быстрая игра',
     quickPlayText:
@@ -848,8 +840,7 @@ const messages: Record<
     profileError: 'Не удалось загрузить профиль. Проверьте подключение и попробуйте снова.',
     profileErrorRlsHint: 'Если в ошибке упоминается RLS или policy: выполните в Supabase (SQL Editor) скрипт supabase-rls-players-matches.sql.',
     ladderHeader: 'Быстрая игра (ладдер)',
-    ladderText:
-      'Здесь будет поиск соперника в реальном времени: выбор режима, очередь, дедлайн 40 минут и ввод результата.',
+    ladderText: '',
     ladderButton: 'Поиск игры',
     ladderHint:
       'Нажмите поиск — когда кто-то тоже ищет, вас соединят в лобби. Договоритесь и введите счёт.',
@@ -879,7 +870,7 @@ const messages: Record<
     ladderConfirmResult: 'Подтвердить результат',
     ladderResultConfirmed: 'Результат засчитан.',
     ladderError: 'Не удалось сохранить.',
-    ladderLoginRequired: 'Войдите, чтобы играть.',
+    ladderLoginRequired: 'Войдите через Telegram, чтобы играть.',
     ladderProfileLoading: 'Загрузка профиля…',
     ladderProfileNotReady: 'Профиль не загружен. Откройте вкладку «Профиль» и дождитесь загрузки или войдите снова.',
     ladderTwoPlayersHint: 'Два разных игрока должны нажать «Поиск» одновременно (например, с двух устройств или двух аккаунтов).',
@@ -908,7 +899,6 @@ const messages: Record<
     navMatches: 'Матчи',
     navRating: 'Рейтинг',
     navAdmin: 'Админ',
-    navTestRanks: 'Тест рангов',
     matchesHeader: 'Все матчи',
     matchesIntro: 'Недавно сыгранные матчи.',
     matchesAdminOnly: 'Эта страница доступна только администраторам.',
@@ -1478,12 +1468,6 @@ const HomeCardIconRating = () => (
   <svg className="strike-card-icon-svg" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
     <path d="M8 28V18h4v10H8zM18 28V12h4v16h-4zM28 28V8h4v20h-4z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
     <path d="M6 32h28" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-  </svg>
-)
-const HomeCardIconTestRanks = () => (
-  <svg className="strike-card-icon-svg" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-    <path d="M20 4l4 8 9 1.5-6.5 6 1.5 9-8-4-8 4 1.5-9-6.5-6 9-1.5L20 4z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" fill="none" />
-    <path d="M12 28l4 8 4-8 8-4-8-4-4-8-4 8-8 4 8 4z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" fill="none" />
   </svg>
 )
 
@@ -3790,7 +3774,6 @@ function App() {
     { view: 'home', label: t.navHome },
     { view: 'ladder', label: t.navPlay },
     { view: 'tournaments', label: t.navTournaments, badge: myActiveTournamentRegistrations.length || undefined },
-    { view: 'test-ranks', label: t.navTestRanks },
     { view: 'rating', label: t.navRating },
     { view: 'profile', label: t.navProfile },
     ...(isAdminUser ? [{ view: 'matches' as View, label: t.navMatches }] : []),
@@ -3931,6 +3914,7 @@ function App() {
                     calibrationLabel={t.profileCalibrationLabel}
                     rankLabel={getTranslatedRankLabel(getRankFromElo(elo))}
                     compact
+                    showEloValue={false}
                   />
                 </span>
               </div>
@@ -4086,12 +4070,6 @@ function App() {
                   <p className="strike-card-text">{t.ratingIntro}</p>
                   <span className="strike-card-btn strike-btn strike-btn-outline">{t.homeViewLadder}</span>
                 </button>
-                <button type="button" className="strike-card" onClick={() => setActiveView('test-ranks')}>
-                  <div className="strike-card-icon"><HomeCardIconTestRanks /></div>
-                  <h3 className="strike-card-title">{t.navTestRanks}</h3>
-                  <p className="strike-card-text">{t.viewTitle['test-ranks']}</p>
-                  <span className="strike-card-btn strike-btn strike-btn-outline">{t.navTestRanks}</span>
-                </button>
               </div>
               <aside className="strike-stats">
                 <h3 className="strike-stats-title">{t.homeYourStats}</h3>
@@ -4100,15 +4078,17 @@ function App() {
                 )}
                 <div className="strike-elo-block">
                   <span className="strike-elo-label">{t.ratingElo}</span>
-                  <span className="strike-elo-value">
+                  <div className="strike-elo-block-row">
+                    <span className="strike-elo-value">{myProfileStats?.elo ?? elo ?? '—'}</span>
                     <EloWithRank
                       elo={myProfileStats?.elo ?? elo ?? null}
                       matchesCount={myProfileStats?.matches_count ?? matchesCount ?? 0}
                       calibrationLabel={t.profileCalibrationLabel}
                       rankLabel={getTranslatedRankLabel(getRankFromElo(myProfileStats?.elo ?? elo ?? null))}
                       rankIconSize="large"
+                      showEloValue={false}
                     />
-                  </span>
+                  </div>
                   <div className="strike-elo-bar">
                     <div
                       className="strike-elo-bar-fill"
@@ -4190,7 +4170,6 @@ function App() {
                       <span className="strike-top-rank-only">
                         <EloWithRank elo={r.elo ?? null} matchesCount={r.matches_count ?? 0} calibrationLabel={t.profileCalibrationLabel} rankLabel={getTranslatedRankLabel(getRankFromElo(r.elo ?? null))} compact showEloValue={false} />
                       </span>
-                      {i === 0 && <span className="strike-top-crown">👑</span>}
                     </li>
                   ))}
                 </ul>
@@ -4262,174 +4241,6 @@ function App() {
 
         {activeView !== 'home' && (
           <h2 className="view-title">{t.viewTitle[activeView]}</h2>
-        )}
-
-        {activeView === 'test-ranks' && (
-          <section className="panel">
-            <h3 className="panel-title">Тест рангов (SVG)</h3>
-            <p className="panel-text small">Примеры иконок рангов 1–10 и варианты Elite.</p>
-            <h4 className="admin-test-ranks-title">Elite — варианты</h4>
-            <div className="admin-test-ranks">
-              <div className="admin-rank-item">
-                <svg className="admin-rank-svg" viewBox="0 0 48 48" width={56} height={56} aria-hidden>
-                  <circle cx="24" cy="24" r="22" fill="var(--bg-elevated)" stroke="var(--border)" strokeWidth="1" />
-                  <image href="/Eliterank.svg" x="6" y="6" width="36" height="36" />
-                </svg>
-                <span className="admin-rank-label">Elite — феникс + венок</span>
-              </div>
-              <div className="admin-rank-item">
-                <svg className="admin-rank-svg" viewBox="0 0 48 48" width={56} height={56} aria-hidden>
-                  <defs>
-                    <linearGradient id="elite-v2-b" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#ffd700" />
-                      <stop offset="100%" stopColor="#ff8c00" />
-                    </linearGradient>
-                    <filter id="elite-v2-glow-b" x="-50%" y="-50%" width="200%" height="200%">
-                      <feGaussianBlur stdDeviation="0.6" result="blur" />
-                      <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
-                    </filter>
-                  </defs>
-                  <circle cx="24" cy="24" r="22" fill="var(--bg-elevated)" stroke="var(--border)" strokeWidth="1" />
-                  <path d="M26 10 L22 24 L28 24 L24 38 L30 24 L26 24 Z" fill="url(#elite-v2-b)" stroke="#ff8c00" strokeWidth="0.8" strokeLinejoin="round" filter="url(#elite-v2-glow-b)" />
-                </svg>
-                <span className="admin-rank-label">Elite — молния</span>
-              </div>
-              <div className="admin-rank-item">
-                <svg className="admin-rank-svg" viewBox="0 0 48 48" width={56} height={56} aria-hidden>
-                  <defs>
-                    <linearGradient id="elite-v2-c" x1="0%" y1="50%" x2="100%" y2="50%">
-                      <stop offset="0%" stopColor="#ffd700" />
-                      <stop offset="100%" stopColor="#ff8c00" />
-                    </linearGradient>
-                    <filter id="elite-v2-glow-c" x="-50%" y="-50%" width="200%" height="200%">
-                      <feGaussianBlur stdDeviation="0.5" result="blur" />
-                      <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
-                    </filter>
-                  </defs>
-                  <circle cx="24" cy="24" r="22" fill="var(--bg-elevated)" stroke="var(--border)" strokeWidth="1" />
-                  <path d="M12 24 Q18 14 24 18 Q30 14 36 24 Q30 34 24 30 Q18 34 12 24 Z" fill="none" stroke="url(#elite-v2-c)" strokeWidth="2" strokeLinejoin="round" filter="url(#elite-v2-glow-c)" />
-                  <path d="M16 24 Q22 18 24 20 Q26 18 32 24 Q26 30 24 28 Q22 30 16 24 Z" fill="none" stroke="url(#elite-v2-c)" strokeWidth="1.2" opacity="0.8" />
-                </svg>
-                <span className="admin-rank-label">Elite — крылья</span>
-              </div>
-              <div className="admin-rank-item">
-                <svg className="admin-rank-svg" viewBox="0 0 48 48" width={56} height={56} aria-hidden>
-                  <defs>
-                    <linearGradient id="elite-v2-d" x1="50%" y1="0%" x2="50%" y2="100%">
-                      <stop offset="0%" stopColor="#ffd700" />
-                      <stop offset="100%" stopColor="#cc5500" />
-                    </linearGradient>
-                    <filter id="elite-v2-glow-d" x="-50%" y="-50%" width="200%" height="200%">
-                      <feGaussianBlur stdDeviation="0.6" result="blur" />
-                      <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
-                    </filter>
-                  </defs>
-                  <circle cx="24" cy="24" r="22" fill="var(--bg-elevated)" stroke="var(--border)" strokeWidth="1" />
-                  <circle cx="24" cy="24" r="8" fill="url(#elite-v2-d)" stroke="#ff8c00" strokeWidth="0.8" filter="url(#elite-v2-glow-d)" />
-                  <path d="M24 8 L25 12 L24 11 L23 12 Z M24 40 L25 36 L24 37 L23 36 Z M8 24 L12 25 L11 24 L12 23 Z M40 24 L36 25 L37 24 L36 23 Z" fill="#ffd700" stroke="#ff8c00" strokeWidth="0.5" />
-                  <path d="M14 14 L16 18 L15 16 L18 16 Z M34 14 L32 18 L33 16 L30 16 Z M14 34 L16 30 L15 32 L18 32 Z M34 34 L32 30 L33 32 L30 32 Z" fill="#ffd700" stroke="#ff8c00" strokeWidth="0.5" opacity="0.9" />
-                </svg>
-                <span className="admin-rank-label">Elite — солнце</span>
-              </div>
-              <div className="admin-rank-item">
-                <svg className="admin-rank-svg" viewBox="0 0 48 48" width={56} height={56} aria-hidden>
-                  <defs>
-                    <linearGradient id="elite-v2-e" x1="0%" y1="0%" x2="0%" y2="100%">
-                      <stop offset="0%" stopColor="#ffd700" />
-                      <stop offset="100%" stopColor="#ff8c00" />
-                    </linearGradient>
-                    <filter id="elite-v2-glow-e" x="-50%" y="-50%" width="200%" height="200%">
-                      <feGaussianBlur stdDeviation="0.5" result="blur" />
-                      <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
-                    </filter>
-                  </defs>
-                  <circle cx="24" cy="24" r="22" fill="var(--bg-elevated)" stroke="var(--border)" strokeWidth="1" />
-                  <path d="M24 10 L27 20 L38 20 L29 26 L33 36 L24 30 L15 36 L19 26 L10 20 L21 20 Z" fill="url(#elite-v2-e)" stroke="#ff8c00" strokeWidth="0.6" strokeLinejoin="round" filter="url(#elite-v2-glow-e)" />
-                  <path d="M24 14 L26 21 L34 21 L28 25 L30 33 L24 29 L18 33 L20 25 L14 21 L22 21 Z" fill="none" stroke="url(#elite-v2-e)" strokeWidth="1" strokeLinejoin="round" opacity="0.7" />
-                </svg>
-                <span className="admin-rank-label">Elite — двойная звезда</span>
-              </div>
-              <div className="admin-rank-item">
-                <svg className="admin-rank-svg" viewBox="0 0 48 48" width={56} height={56} aria-hidden>
-                  <defs>
-                    <linearGradient id="elite-v2-f" x1="0%" y1="0%" x2="0%" y2="100%">
-                      <stop offset="0%" stopColor="#ffd700" />
-                      <stop offset="100%" stopColor="#cc5500" />
-                    </linearGradient>
-                    <filter id="elite-v2-glow-f" x="-50%" y="-50%" width="200%" height="200%">
-                      <feGaussianBlur stdDeviation="0.5" result="blur" />
-                      <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
-                    </filter>
-                  </defs>
-                  <circle cx="24" cy="24" r="22" fill="var(--bg-elevated)" stroke="var(--border)" strokeWidth="1" />
-                  <path d="M24 8 L26 12 L24 14 L22 12 Z" fill="url(#elite-v2-f)" stroke="#ff8c00" strokeWidth="0.6" filter="url(#elite-v2-glow-f)" />
-                  <path d="M24 14 L24 34 M18 22 L30 22" fill="none" stroke="url(#elite-v2-f)" strokeWidth="2" strokeLinecap="round" filter="url(#elite-v2-glow-f)" />
-                  <path d="M22 34 L26 34 L26 38 L22 38 Z" fill="url(#elite-v2-f)" stroke="#ff8c00" strokeWidth="0.6" filter="url(#elite-v2-glow-f)" />
-                </svg>
-                <span className="admin-rank-label">Elite — меч</span>
-              </div>
-              <div className="admin-rank-item">
-                <svg className="admin-rank-svg" viewBox="0 0 48 48" width={56} height={56} aria-hidden>
-                  <defs>
-                    <linearGradient id="elite-v2-g" x1="0%" y1="0%" x2="0%" y2="100%">
-                      <stop offset="0%" stopColor="#ffd700" />
-                      <stop offset="50%" stopColor="#ff8c00" />
-                      <stop offset="100%" stopColor="#cc5500" />
-                    </linearGradient>
-                    <filter id="elite-v2-glow-g" x="-50%" y="-50%" width="200%" height="200%">
-                      <feGaussianBlur stdDeviation="0.5" result="blur" />
-                      <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
-                    </filter>
-                  </defs>
-                  <circle cx="24" cy="24" r="22" fill="var(--bg-elevated)" stroke="var(--border)" strokeWidth="1" />
-                  <circle cx="24" cy="24" r="16" fill="none" stroke="url(#elite-v2-g)" strokeWidth="3" filter="url(#elite-v2-glow-g)" />
-                  <circle cx="24" cy="24" r="11" fill="none" stroke="url(#elite-v2-g)" strokeWidth="1.5" opacity="0.6" filter="url(#elite-v2-glow-g)" />
-                </svg>
-                <span className="admin-rank-label">Elite — полный круг</span>
-              </div>
-            </div>
-            <h4 className="admin-test-ranks-title">Ранги 1–10</h4>
-            <div className="admin-test-ranks">
-              {[10, 9, 8, 7, 6, 5, 4, 3, 2, 1].map((rank) => {
-                const colors: Record<number, string> = {
-                  10: '#e74c3c', 9: '#f39c12', 8: '#e67e22', 7: '#f1c40f', 6: '#e6a800', 5: '#d4a017', 4: '#b8860b',
-                  3: '#2ecc71', 2: '#27ae60', 1: '#1e8449',
-                }
-                const arcPercent = rank === 1 ? 0.08 : rank === 2 ? 0.18 : rank === 3 ? 0.28 : rank === 4 ? 0.38 : rank === 5 ? 0.48 : rank === 6 ? 0.58 : rank === 7 ? 0.68 : rank === 8 ? 0.78 : rank === 9 ? 0.88 : 0.95
-                const startDeg = 150
-                const sweepDeg = 360 * arcPercent
-                const r = 18
-                const cx = 24
-                const cy = 24
-                const rad = (d: number) => (d - 90) * Math.PI / 180
-                const x1 = cx + r * Math.cos(rad(startDeg))
-                const y1 = cy + r * Math.sin(rad(startDeg))
-                const x2 = cx + r * Math.cos(rad(startDeg + sweepDeg))
-                const y2 = cy + r * Math.sin(rad(startDeg + sweepDeg))
-                const largeArc = sweepDeg > 180 ? 1 : 0
-                const arcPath = `M ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2}`
-                return (
-                  <div key={rank} className="admin-rank-item">
-                    <svg className="admin-rank-svg" viewBox="0 0 48 48" width={56} height={56} aria-hidden>
-                      <defs>
-                        <filter id={`rank-glow-${rank}`} x="-50%" y="-50%" width="200%" height="200%">
-                          <feGaussianBlur stdDeviation="0.5" result="blur" />
-                          <feMerge>
-                            <feMergeNode in="blur" />
-                            <feMergeNode in="SourceGraphic" />
-                          </feMerge>
-                        </filter>
-                      </defs>
-                      <circle cx="24" cy="24" r="22" fill="var(--bg-elevated)" stroke="var(--border)" strokeWidth="1" />
-                      <path d={arcPath} fill="none" stroke={colors[rank]} strokeWidth="4" strokeLinecap="round" filter={`url(#rank-glow-${rank})`} />
-                      <text x="24" y="28" textAnchor="middle" fill={colors[rank]} fontSize="16" fontWeight="bold" fontFamily="system-ui, sans-serif">{rank}</text>
-                    </svg>
-                    <span className="admin-rank-label">Ранг {rank}</span>
-                  </div>
-                )
-              })}
-            </div>
-          </section>
         )}
 
         {activeView === 'news-detail' && (
@@ -5562,7 +5373,7 @@ function App() {
         {activeView === 'ladder' && (
           <section className="panel">
             <h3 className="panel-title">{t.ladderHeader}</h3>
-            <p className="panel-text">{t.ladderText}</p>
+            {t.ladderText && <p className="panel-text">{t.ladderText}</p>}
 
             {!user && (
               <p className="panel-error">{t.ladderLoginRequired}</p>
