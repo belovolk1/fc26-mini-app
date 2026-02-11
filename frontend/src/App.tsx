@@ -3961,10 +3961,10 @@ function App() {
                     <li
                       key={r.player_id}
                       className={`strike-top-item ${i === 0 ? 'strike-top-item--first' : ''}`}
-                      onClick={() => {
-                        setSelectedPlayerRow(r)
-                        setActiveView('rating')
-                      }}
+                      onClick={() => openPlayerProfile(r.player_id)}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openPlayerProfile(r.player_id); } }}
                     >
                       <span className="strike-top-rank">{r.rank}</span>
                       <span className="strike-top-avatar">
@@ -4567,25 +4567,22 @@ function App() {
                 )}
               </div>
 
-              {/* На мобильных модалка рендерится в body через Portal — поверх футера */}
-              {!isWideScreen && selectedPlayerRow && createPortal(
-                <div className="app strike-theme" style={{ position: 'fixed', inset: 0, zIndex: 9999, pointerEvents: 'none' }}>
-                  <aside
-                    className="rating-details rating-details--has-player rating-details--portal"
-                    style={{ pointerEvents: 'auto', width: '100%', height: '100%' }}
-                    onClick={(e) => { if (e.target === e.currentTarget) setSelectedPlayerRow(null) }}
-                  >
-                    <div className="rating-details-close-wrap">
+              {/* Модальное окно с деталями игрока при клике по строке рейтинга */}
+              {selectedPlayerRow && createPortal(
+                <div className="rating-modal-backdrop" onClick={() => setSelectedPlayerRow(null)} role="presentation">
+                  <div className="rating-modal-panel" onClick={(e) => e.stopPropagation()}>
+                    <div className="rating-modal-header">
+                      <h2 className="rating-modal-title">{selectedPlayerRow.display_name ?? '—'}</h2>
                       <button
                         type="button"
-                        className="rating-details-close"
-                        onClick={(e) => { e.stopPropagation(); setSelectedPlayerRow(null) }}
+                        className="rating-modal-close"
+                        onClick={() => setSelectedPlayerRow(null)}
                         aria-label={t.ratingBack}
                       >
                         ×
                       </button>
                     </div>
-                    <div className="rating-details-inner" onClick={(e) => e.stopPropagation()}>
+                    <div className="rating-modal-body">
                       <div className="rating-details-header">
                         <div className="rating-details-name-row">
                           <h2 className="rating-player-heading">{selectedPlayerRow.display_name ?? '—'}</h2>
@@ -4663,9 +4660,9 @@ function App() {
                                     </span>
                                   </td>
                                   <td className="profile-recent-elo-cell">
-                                    {typeof match.elo_delta === 'number' && match.elo_delta !== 0 ? (
+                                    {typeof match.elo_delta === 'number' ? (
                                       <>
-                                        {match.elo_delta > 0 ? <IconEloUpSvg /> : <IconEloDownSvg />}
+                                        {match.elo_delta !== 0 && (match.elo_delta > 0 ? <IconEloUpSvg /> : <IconEloDownSvg />)}
                                         <span className="profile-recent-elo-delta">
                                           {match.elo_delta > 0 ? `+${match.elo_delta}` : match.elo_delta}
                                         </span>
@@ -4690,147 +4687,9 @@ function App() {
                         </div>
                       )}
                     </div>
-                  </aside>
+                  </div>
                 </div>,
                 document.body
-              )}
-
-              {(isWideScreen || !selectedPlayerRow) && (
-                <aside
-                  className={`rating-details ${selectedPlayerRow ? 'rating-details--has-player' : ''}`}
-                  onClick={selectedPlayerRow ? (e) => { if (e.target === e.currentTarget && window.innerWidth <= 1023) setSelectedPlayerRow(null) } : undefined}
-                >
-                  {selectedPlayerRow && (
-                    <div className="rating-details-close-wrap">
-                      <button
-                        type="button"
-                        className="rating-details-close"
-                        onClick={(e) => { e.stopPropagation(); setSelectedPlayerRow(null) }}
-                        aria-label={t.ratingBack}
-                      >
-                        ×
-                      </button>
-                    </div>
-                  )}
-                  <div className="rating-details-inner" onClick={selectedPlayerRow ? (e) => e.stopPropagation() : undefined}>
-                  {profileFromHashLoading && !selectedPlayerRow && (
-                    <p className="panel-text small">{t.ratingLoading}</p>
-                  )}
-                  {selectedPlayerRow ? (
-                    <>
-                      <div className="rating-details-header">
-                        <div className="rating-details-name-row">
-                          <h2 className="rating-player-heading">{selectedPlayerRow.display_name ?? '—'}</h2>
-                          {selectedPlayerRow.country_code && (
-                            <span className="rating-player-country">
-                              {COUNTRIES.find((c) => c.code === selectedPlayerRow.country_code)?.flag ?? '🌐'}
-                            </span>
-                          )}
-                        </div>
-                        <div className="rating-elo-block-big">
-                          <span className="rating-elo-label-small">{t.ratingElo}</span>
-                          <EloWithRank
-                            elo={selectedPlayerRow.elo ?? null}
-                            matchesCount={selectedPlayerRow.matches_count ?? 0}
-                            calibrationLabel={t.profileCalibrationLabel}
-                            rankLabel={getTranslatedRankLabel(getRankFromElo(selectedPlayerRow.elo ?? null))}
-                          />
-                        </div>
-                      </div>
-
-                      <div className="rating-stats-grid">
-                        <div className="rating-stat-card">
-                          <span className="rating-stat-label">{t.ratingMatches}</span>
-                          <span className="rating-stat-value">{selectedPlayerRow.matches_count}</span>
-                        </div>
-                        <div className="rating-stat-card">
-                          <span className="rating-stat-label">{t.ratingWins}</span>
-                          <span className="rating-stat-value">{selectedPlayerRow.wins}</span>
-                        </div>
-                        <div className="rating-stat-card">
-                          <span className="rating-stat-label">{t.ratingLosses}</span>
-                          <span className="rating-stat-value">{selectedPlayerRow.losses}</span>
-                        </div>
-                        <div className="rating-stat-card">
-                          <span className="rating-stat-label">GF/GA</span>
-                          <span className="rating-stat-value">
-                            {selectedPlayerRow.goals_for}/{selectedPlayerRow.goals_against}
-                          </span>
-                        </div>
-                        <div className="rating-stat-card rating-stat-card-accent">
-                          <span className="rating-stat-label">{t.ratingWinRate}</span>
-                          <span className="rating-stat-value">
-                            {selectedPlayerRow.win_rate != null ? `${selectedPlayerRow.win_rate}%` : '—'}
-                          </span>
-                        </div>
-                      </div>
-
-                      <h4 className="rating-last-title">{t.profileLast10Matches}</h4>
-                      {recentMatchesLoading && <p className="panel-text small">…</p>}
-                      {!recentMatchesLoading && recentMatches.length === 0 && (
-                        <p className="panel-text small">{t.profileRecentMatchesEmpty}</p>
-                      )}
-                      {!recentMatchesLoading && recentMatches.length > 0 && (
-                        <div className="profile-recent-table-wrap rating-last-table">
-                          <table className="profile-recent-table">
-                            <thead>
-                              <tr>
-                                <th>{t.profilePlayerLabel}</th>
-                                <th>{t.profileTableScore}</th>
-                                <th>{t.profileTableEvent}</th>
-                                <th>{t.profileTableResult}</th>
-                                <th>{t.profileTableElo}</th>
-                                <th>{t.profileTableDate}</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {recentMatches.slice(0, 5).map((match) => (
-                                <tr key={match.match_id} className={`profile-recent-match profile-recent-match--${match.result}`}>
-                                  <td className="profile-recent-opponent">{match.opponent_id ? <button type="button" className="player-name-link" onClick={() => openPlayerProfile(match.opponent_id!)}>{match.opponent_name ?? '—'}</button> : (match.opponent_name ?? '—')}</td>
-                                  <td className="profile-recent-score">
-                                    {match.my_score}:{match.opp_score}
-                                  </td>
-                                  <td className="profile-recent-event">{match.match_type === 'tournament' && match.tournament_name ? match.tournament_name : t.profileEventLadder}</td>
-                                  <td>
-                                    <span className={`profile-result-pill profile-result-pill--${match.result}`}>
-                                      {match.result === 'win' ? 'W' : match.result === 'loss' ? 'L' : 'D'}
-                                    </span>
-                                  </td>
-                                  <td className="profile-recent-elo-cell">
-                                    {typeof match.elo_delta === 'number' && match.elo_delta !== 0 ? (
-                                      <>
-                                        {match.elo_delta > 0 ? <IconEloUpSvg /> : <IconEloDownSvg />}
-                                        <span className="profile-recent-elo-delta">
-                                          {match.elo_delta > 0 ? `+${match.elo_delta}` : match.elo_delta}
-                                        </span>
-                                      </>
-                                    ) : (
-                                      '—'
-                                    )}
-                                  </td>
-                                  <td className="profile-recent-date">
-                                    {match.played_at
-                                      ? new Date(match.played_at).toLocaleDateString(undefined, {
-                                          day: '2-digit',
-                                          month: '2-digit',
-                                          year: 'numeric',
-                                        })
-                                      : '—'}
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      )}
-                    </>
-                  ) : (
-                    <p className="panel-text small rating-details-placeholder">
-                      {t.ratingEmptySelectedPlayer ?? 'Select a player on the left to see details.'}
-                    </p>
-                  )}
-                  </div>
-                </aside>
               )}
             </div>
           </section>
@@ -4958,9 +4817,9 @@ function App() {
                                       </span>
                                     </td>
                                     <td className="profile-recent-elo-cell">
-                                      {typeof match.elo_delta === 'number' && match.elo_delta !== 0 ? (
+                                      {typeof match.elo_delta === 'number' ? (
                                         <>
-                                          {match.elo_delta > 0 ? <IconEloUpSvg /> : <IconEloDownSvg />}
+                                          {match.elo_delta !== 0 && (match.elo_delta > 0 ? <IconEloUpSvg /> : <IconEloDownSvg />)}
                                           <span className="profile-recent-elo-delta">
                                             {match.elo_delta > 0 ? `+${match.elo_delta}` : match.elo_delta}
                                           </span>
@@ -5153,9 +5012,9 @@ function App() {
                                                 </span>
                                               </td>
                                               <td className="profile-recent-elo-cell">
-                                                {typeof match.elo_delta === 'number' && match.elo_delta !== 0 ? (
+                                                {typeof match.elo_delta === 'number' ? (
                                                   <>
-                                                    {match.elo_delta > 0 ? <IconEloUpSvg /> : <IconEloDownSvg />}
+                                                    {match.elo_delta !== 0 && (match.elo_delta > 0 ? <IconEloUpSvg /> : <IconEloDownSvg />)}
                                                     <span className="profile-recent-elo-delta">
                                                       {match.elo_delta > 0 ? `+${match.elo_delta}` : match.elo_delta}
                                                     </span>

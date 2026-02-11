@@ -3470,17 +3470,12 @@
   }
 }
 .rating-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 2.2fr) minmax(320px, 1.3fr);
-  gap: 32px;
-  align-items: start;
+  display: block;
   width: 100%;
   max-width: 100%;
 }
 @media (max-width: 1023px) {
   .rating-layout {
-    grid-template-columns: 1fr;
-    gap: 24px;
     min-width: 0;
     overflow-x: hidden;
   }
@@ -3545,6 +3540,118 @@
   color: var(--strike-muted);
   font-family: var(--strike-font-body);
 }
+
+/* Модальное окно рейтинга (рендер в body) */
+.rating-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10002;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  overflow: auto;
+  --strike-card: #111419;
+  --strike-elevated: #171a1f;
+  --strike-border: #23272e;
+  --strike-border-subtle: #1a1d23;
+  --strike-text: #f5f7fa;
+  --strike-muted: #7d8590;
+  --strike-orange: #ff6b00;
+  --strike-orange-bright: #ff8533;
+  --strike-orange-glow: rgba(255, 107, 0, 0.4);
+  --strike-orange-soft: rgba(255, 107, 0, 0.15);
+  --strike-font: 'Outfit', sans-serif;
+  --strike-font-body: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --strike-radius: 10px;
+  --strike-radius-sm: 8px;
+  --strike-border-w: 1px;
+  --strike-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  --strike-shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+.rating-modal-panel {
+  width: 100%;
+  max-width: 560px;
+  max-height: calc(100vh - 32px);
+  display: flex;
+  flex-direction: column;
+  background: var(--strike-card);
+  border: var(--strike-border-w) solid var(--strike-border);
+  border-radius: var(--strike-radius);
+  box-shadow: var(--strike-shadow);
+}
+.rating-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--strike-border);
+  flex-shrink: 0;
+  background: var(--strike-elevated);
+  border-radius: var(--strike-radius) var(--strike-radius) 0 0;
+}
+.rating-modal-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--strike-text);
+  font-family: var(--strike-font);
+}
+.rating-modal-close {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  font-size: 24px;
+  line-height: 1;
+  color: var(--strike-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  border-radius: var(--strike-radius-sm);
+}
+.rating-modal-close:hover {
+  color: var(--strike-text);
+  background: var(--strike-border-subtle);
+}
+.rating-modal-body {
+  padding: 16px 20px 24px;
+  overflow-y: auto;
+  min-height: 0;
+  background: var(--strike-card);
+  color: var(--strike-text);
+}
+/* Таблица в модалке рейтинга — фиксированные доли колонок, ELO не выпирает */
+.rating-modal-body .rating-last-table .profile-recent-table {
+  table-layout: fixed;
+  width: 100%;
+}
+.rating-modal-body .rating-last-table .profile-recent-table th:nth-child(1),
+.rating-modal-body .rating-last-table .profile-recent-table td:nth-child(1) { width: 26%; }
+.rating-modal-body .rating-last-table .profile-recent-table th:nth-child(2),
+.rating-modal-body .rating-last-table .profile-recent-table td:nth-child(2) { width: 12%; }
+.rating-modal-body .rating-last-table .profile-recent-table th:nth-child(3),
+.rating-modal-body .rating-last-table .profile-recent-table td:nth-child(3) { width: 14%; }
+.rating-modal-body .rating-last-table .profile-recent-table th:nth-child(4),
+.rating-modal-body .rating-last-table .profile-recent-table td:nth-child(4) { width: 12%; }
+.rating-modal-body .rating-last-table .profile-recent-table th:nth-child(5),
+.rating-modal-body .rating-last-table .profile-recent-table td:nth-child(5) { width: 14%; min-width: 0; box-sizing: border-box; }
+.rating-modal-body .rating-last-table .profile-recent-table th:nth-child(6),
+.rating-modal-body .rating-last-table .profile-recent-table td:nth-child(6) { width: 22%; }
+.rating-modal-body .profile-recent-elo-cell {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  justify-content: flex-start;
+}
+.rating-modal-body .profile-recent-elo-cell .profile-recent-elo-delta {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .rating-details {
   min-width: 0;
   overflow: visible;
