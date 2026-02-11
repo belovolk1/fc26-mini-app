@@ -1317,8 +1317,8 @@ function RankIconSvg({
         width={size}
         height={size}
         aria-hidden
-        title={title}
       >
+        <title>{title}</title>
         <circle cx={cx} cy={cy} r={22} fill="var(--bg-elevated)" stroke="var(--border)" strokeWidth="1" strokeDasharray="4 3" />
       </svg>
     )
@@ -1332,8 +1332,8 @@ function RankIconSvg({
         width={size}
         height={size}
         aria-hidden
-        title={title}
       >
+        <title>{title}</title>
         <circle cx={cx} cy={cy} r={22} fill="var(--bg-elevated)" stroke="var(--border)" strokeWidth="1" />
         <image href="/Eliterank.svg" x={8} y={8} width={32} height={32} preserveAspectRatio="xMidYMid meet" />
       </svg>
@@ -1374,8 +1374,8 @@ function RankIconSvg({
       width={size}
       height={size}
       aria-hidden
-      title={title}
     >
+      <title>{title}</title>
       <defs>
         <filter id={`rank-arc-glow-${uid}`} x="-50%" y="-50%" width="200%" height="200%">
           <feGaussianBlur stdDeviation="0.5" result="blur" />
@@ -1487,23 +1487,7 @@ const HomeCardIconTestRanks = () => (
   </svg>
 )
 
-/* === SVG иконки для профиля (тематика: ранги, статы, матчи) === */
-const ProfileRankBadgeSvg = () => (
-  <svg className="profile-rank-badge-svg" viewBox="0 0 64 72" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-    <defs>
-      <linearGradient id="rankShieldGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-        <stop offset="0%" stopColor="#ff9f43" />
-        <stop offset="100%" stopColor="#cc5500" />
-      </linearGradient>
-      <filter id="rankGlow">
-        <feGaussianBlur stdDeviation="2" result="blur" />
-        <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
-      </filter>
-    </defs>
-    <path d="M32 4L8 14v20c0 14 10 26 24 34 14-8 24-20 24-34V14L32 4z" fill="url(#rankShieldGrad)" stroke="rgba(255,140,0,0.8)" strokeWidth="2" filter="url(#rankGlow)" />
-    <path d="M20 28l24 24M44 28L20 52" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" fill="none" opacity="0.9" />
-  </svg>
-)
+/* === SVG иконки для профиля (тематика: статы, матчи) === */
 const IconMatchesSvg = () => (
   <svg className="profile-stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
     <path d="M14.5 17.5L3 6V3h3l11.5 11.5M13 6l6-3 3 3-3 6-3-3" />
