@@ -215,6 +215,7 @@ const messages: Record<
     tournamentUnregister: string
     tournamentBracket: string
     bracketViewTitle: string
+    bracketConfirmParticipationHint: string
     tournamentHideBracket: string
     tournamentWinner: string
     adminStartBracket: string
@@ -475,6 +476,7 @@ const messages: Record<
     tournamentUnregister: 'Cancel registration',
     tournamentBracket: 'Bracket',
     bracketViewTitle: 'Tournament Bracket',
+    bracketConfirmParticipationHint: 'Confirm your participation: open your match and press «Ready to play».',
     tournamentHideBracket: 'Hide bracket',
     tournamentWinner: 'Winner:',
     adminStartBracket: 'Start bracket',
@@ -734,6 +736,7 @@ const messages: Record<
     tournamentUnregister: 'Anulează înscrierea',
     tournamentBracket: 'Tablou',
     bracketViewTitle: 'Tournament Bracket',
+    bracketConfirmParticipationHint: 'Confirmă participarea: deschide meciul tău și apasă «Gata de joc».',
     tournamentHideBracket: 'Ascunde tabloul',
     tournamentWinner: 'Câștigător:',
     adminStartBracket: 'Pornire tablou',
@@ -993,6 +996,7 @@ const messages: Record<
     tournamentUnregister: 'Отменить регистрацию',
     tournamentBracket: 'Сетка',
     bracketViewTitle: 'Турнирная сетка',
+    bracketConfirmParticipationHint: 'Подтвердите участие: откройте свой матч и нажмите «Готов играть».',
     tournamentHideBracket: 'Скрыть сетку',
     tournamentWinner: 'Победитель:',
     adminStartBracket: 'Старт сетки',
@@ -3018,7 +3022,26 @@ function App() {
     const noMatchesYet = matches.length === 0
     const roundNumbers = [1, 2, 3, 4, 5, 6].filter((r) => rounds[r]?.length)
     const [activeRoundTab, setActiveRoundTab] = useState<number>(1)
-    const activeRound = roundNumbers.includes(activeRoundTab) ? activeRoundTab : (roundNumbers[0] ?? 1)
+    const fallbackRound = roundNumbers.length
+      ? (roundNumbers.find((r) => r >= activeRoundTab) ?? roundNumbers[roundNumbers.length - 1])
+      : 1
+    const activeRound = roundNumbers.includes(activeRoundTab) ? activeRoundTab : fallbackRound
+
+    useEffect(() => {
+      if (roundNumbers.length === 0) return
+      if (roundNumbers.includes(activeRoundTab)) return
+      const next = roundNumbers.find((r) => r >= activeRoundTab) ?? roundNumbers[roundNumbers.length - 1]
+      setActiveRoundTab(next)
+    }, [roundNumbers.join(','), activeRoundTab])
+
+    const needsConfirmParticipation = pid && matches.some((m) => {
+      if (!m.player_a_id && !m.player_b_id) return false
+      const isA = m.player_a_id === pid
+      const isB = m.player_b_id === pid
+      if (isA && !m.player_a_ready_at) return true
+      if (isB && !m.player_b_ready_at) return true
+      return false
+    })
 
     return (
       <div className="bracket-view">
@@ -3039,6 +3062,11 @@ function App() {
             </nav>
           )}
         </header>
+        {needsConfirmParticipation && (
+          <p className="bracket-view-hint bracket-view-hint--participation" role="status">
+            {t.bracketConfirmParticipationHint}
+          </p>
+        )}
         <div className="tournament-bracket">
           {matchMessage && <p className="bracket-view-message">{matchMessage}</p>}
           {noMatchesYet && (

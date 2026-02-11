@@ -71,6 +71,35 @@ CREATE TRIGGER tournament_notify_trigger
   FOR EACH ROW
   EXECUTE PROCEDURE public.tournament_notify_on_start();
 
+-- При переходе draft → registration в окне «за 15 минут до старта» — уведомление «регистрация открыта» (как при создании турнира)
+CREATE OR REPLACE FUNCTION public.tournament_notify_registration_open()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  IF OLD.status = 'draft' AND NEW.status = 'registration'
+     AND now() >= NEW.tournament_start - interval '15 minutes'
+     AND now() < NEW.tournament_start THEN
+    IF NOT EXISTS (
+      SELECT 1 FROM tournament_telegram_notifications
+      WHERE tournament_id = NEW.id AND type = 'registration_open'
+    ) THEN
+      INSERT INTO tournament_telegram_notifications (tournament_id, type)
+      VALUES (NEW.id, 'registration_open');
+    END IF;
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS tournament_notify_registration_open_trigger ON public.tournaments;
+CREATE TRIGGER tournament_notify_registration_open_trigger
+  AFTER UPDATE OF status ON public.tournaments
+  FOR EACH ROW
+  EXECUTE PROCEDURE public.tournament_notify_registration_open();
+
 -- RLS: бот использует service role, анонам читать очередь не нужно
 ALTER TABLE public.tournament_telegram_notifications ENABLE ROW LEVEL SECURITY;
 

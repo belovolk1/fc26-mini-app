@@ -4945,11 +4945,11 @@
   color: var(--text-muted);
 }
 
-/* Модальное окно сетки турнира */
+/* Модальное окно сетки турнира — поверх футера */
 .bracket-modal-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 1000;
+  z-index: 10002;
   background: rgba(0,0,0,0.75);
   display: flex;
   align-items: center;
@@ -5235,6 +5235,10 @@
   border-radius: var(--strike-radius-sm, 8px);
   font-family: var(--strike-font-body);
 }
+.bracket-view-hint--participation {
+  border-left: 4px solid var(--strike-orange);
+  color: var(--strike-text);
+}
 .tournament-bracket .bracket-rounds-container {
   display: block;
 }
@@ -5440,7 +5444,7 @@
 .bracket-match-modal-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 1000;
+  z-index: 10003;
   background: rgba(0,0,0,0.7);
   display: flex;
   align-items: center;
