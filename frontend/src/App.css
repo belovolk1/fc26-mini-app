@@ -2477,6 +2477,8 @@
 .rating-last-table .profile-recent-table td {
   padding: 10px 8px;
   box-sizing: border-box;
+  vertical-align: middle;
+  line-height: 1.35;
 }
 .rating-details .profile-recent-table,
 .rating-last-table .profile-recent-table {
@@ -2491,7 +2493,9 @@
 .profile-recent-table td {
   padding: 12px 14px;
   text-align: left;
+  vertical-align: middle;
   border-bottom: 1px solid var(--border);
+  line-height: 1.35;
 }
 
 /* Внутри таблицы строки не должны быть grid-карточками — выравниваем по колонкам */
@@ -2553,12 +2557,23 @@
   background: rgba(141, 148, 158, 0.25);
   color: var(--text-muted);
 }
+/* Ячейка ELO — строчное содержимое, в одну линию с Score/Result/Date */
 .profile-recent-elo-cell {
-  display: flex;
-  align-items: center;
-  gap: 6px;
   white-space: nowrap;
   min-width: 4.5em;
+  font-size: inherit;
+  line-height: inherit;
+}
+.profile-recent-elo-cell .profile-elo-arrow {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+.profile-recent-elo-cell .profile-recent-elo-delta {
+  display: inline-block;
+  vertical-align: middle;
 }
 .profile-elo-arrow {
   width: 14px;
@@ -3305,7 +3320,9 @@
 .rating-table td {
   padding: 14px 20px;
   text-align: left;
+  vertical-align: middle;
   border-bottom: 1px solid var(--border);
+  line-height: 1.35;
 }
 
 .rating-table tbody tr:last-child td {
@@ -3400,18 +3417,42 @@
   letter-spacing: 0.02em;
 }
 
+/* ELO колонка — в одну линию с остальными (число + ELO + бейдж ранга) */
 .rating-elo-cell {
   font-weight: 800;
   font-size: 16px;
   color: var(--accent);
+  line-height: inherit;
+  white-space: nowrap;
+}
+.rating-elo-cell .rating-elo-number {
+  font-variant-numeric: tabular-nums;
+  display: inline-block;
+  vertical-align: middle;
+}
+.rating-elo-cell .rating-elo-unit {
+  font-weight: 600;
+  font-size: 0.9em;
+  opacity: 0.9;
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 6px;
+}
+.rating-elo-cell .elo-with-rank {
+  display: inline-block;
+  vertical-align: middle;
 }
 .app.strike-theme .rating-elo-cell {
   font-family: var(--strike-font);
   color: var(--strike-orange);
 }
+.app.strike-theme .rating-elo-cell .rating-elo-unit {
+  color: var(--strike-orange);
+}
 
 .rating-winrate-cell {
   font-weight: 700;
+  font-variant-numeric: tabular-nums;
   color: var(--success);
 }
 .app.strike-theme .rating-winrate-cell {
@@ -3423,10 +3464,17 @@
   font-size: 1.2em;
 }
 
+/* ELO, MATCHES, W% — выравнивание по правому краю (заголовки и ячейки) */
+.rating-table th:nth-child(4),
+.rating-table th:nth-child(5),
+.rating-table th:nth-child(6),
 .rating-table td:nth-child(4),
 .rating-table td:nth-child(5),
 .rating-table td:nth-child(6) {
   text-align: right;
+}
+.rating-table td:nth-child(5) {
+  font-variant-numeric: tabular-nums;
 }
 
 .rating-row-clickable {
@@ -3638,18 +3686,22 @@
 .rating-modal-body .rating-last-table .profile-recent-table th:nth-child(4),
 .rating-modal-body .rating-last-table .profile-recent-table td:nth-child(4) { width: 12%; }
 .rating-modal-body .rating-last-table .profile-recent-table th:nth-child(5),
-.rating-modal-body .rating-last-table .profile-recent-table td:nth-child(5) { width: 14%; min-width: 0; box-sizing: border-box; }
+.rating-modal-body .rating-last-table .profile-recent-table td:nth-child(5) { width: 14%; min-width: 4em; box-sizing: border-box; }
 .rating-modal-body .rating-last-table .profile-recent-table th:nth-child(6),
 .rating-modal-body .rating-last-table .profile-recent-table td:nth-child(6) { width: 22%; }
 .rating-modal-body .profile-recent-elo-cell {
-  min-width: 0;
-  max-width: 100%;
-  overflow: hidden;
-  justify-content: flex-start;
+  min-width: 3.5em;
+  overflow: visible;
+  white-space: nowrap;
+  font-size: inherit;
+  line-height: inherit;
+}
+.rating-modal-body .profile-recent-elo-cell .profile-elo-arrow {
+  vertical-align: middle;
 }
 .rating-modal-body .profile-recent-elo-cell .profile-recent-elo-delta {
-  overflow: hidden;
-  text-overflow: ellipsis;
+  overflow: visible;
+  vertical-align: middle;
 }
 
 .rating-details {
@@ -3806,6 +3858,16 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
+}
+.rating-modal-elo-value {
+  font-size: 28px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent);
+}
+.app.strike-theme .rating-modal-elo-value {
+  font-family: var(--strike-font);
+  color: var(--strike-orange);
 }
 .rating-elo-block-big .elo-with-rank {
   flex-direction: column;

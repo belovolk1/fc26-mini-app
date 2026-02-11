@@ -4555,7 +4555,9 @@ function App() {
                               {r.country_code ? (COUNTRIES.find((c) => c.code === r.country_code)?.flag ?? r.country_code) : '—'}
                             </td>
                             <td className="rating-elo-cell">
-                              <EloWithRank elo={r.elo ?? null} matchesCount={r.matches_count ?? 0} calibrationLabel={t.profileCalibrationLabel} rankLabel={getTranslatedRankLabel(getRankFromElo(r.elo ?? null))} compact />
+                              <span className="rating-elo-number">{r.elo ?? '—'}</span>
+                              <span className="rating-elo-unit"> ELO</span>
+                              <EloWithRank elo={r.elo ?? null} matchesCount={r.matches_count ?? 0} calibrationLabel={t.profileCalibrationLabel} rankLabel={getTranslatedRankLabel(getRankFromElo(r.elo ?? null))} compact showEloValue={false} />
                             </td>
                             <td>{r.matches_count}</td>
                             <td className="rating-winrate-cell">{r.win_rate != null ? `${r.win_rate}%` : '—'}</td>
@@ -4594,11 +4596,13 @@ function App() {
                         </div>
                         <div className="rating-elo-block-big">
                           <span className="rating-elo-label-small">{t.ratingElo}</span>
+                          <span className="rating-modal-elo-value">{selectedPlayerRow.elo ?? '—'} ELO</span>
                           <EloWithRank
                             elo={selectedPlayerRow.elo ?? null}
                             matchesCount={selectedPlayerRow.matches_count ?? 0}
                             calibrationLabel={t.profileCalibrationLabel}
                             rankLabel={getTranslatedRankLabel(getRankFromElo(selectedPlayerRow.elo ?? null))}
+                            showEloValue={false}
                           />
                         </div>
                       </div>
@@ -4660,16 +4664,17 @@ function App() {
                                     </span>
                                   </td>
                                   <td className="profile-recent-elo-cell">
-                                    {typeof match.elo_delta === 'number' ? (
-                                      <>
-                                        {match.elo_delta !== 0 && (match.elo_delta > 0 ? <IconEloUpSvg /> : <IconEloDownSvg />)}
-                                        <span className="profile-recent-elo-delta">
-                                          {match.elo_delta > 0 ? `+${match.elo_delta}` : match.elo_delta}
-                                        </span>
-                                      </>
-                                    ) : (
-                                      '—'
-                                    )}
+                                    {(() => {
+                                      const delta = typeof match.elo_delta === 'number' ? match.elo_delta : 0
+                                      return (
+                                        <>
+                                          {delta !== 0 && (delta > 0 ? <IconEloUpSvg /> : <IconEloDownSvg />)}
+                                          <span className="profile-recent-elo-delta">
+                                            {delta > 0 ? `+${delta}` : delta}
+                                          </span>
+                                        </>
+                                      )
+                                    })()}
                                   </td>
                                   <td className="profile-recent-date">
                                     {match.played_at
@@ -4817,16 +4822,17 @@ function App() {
                                       </span>
                                     </td>
                                     <td className="profile-recent-elo-cell">
-                                      {typeof match.elo_delta === 'number' ? (
-                                        <>
-                                          {match.elo_delta !== 0 && (match.elo_delta > 0 ? <IconEloUpSvg /> : <IconEloDownSvg />)}
-                                          <span className="profile-recent-elo-delta">
-                                            {match.elo_delta > 0 ? `+${match.elo_delta}` : match.elo_delta}
-                                          </span>
-                                        </>
-                                      ) : (
-                                        '—'
-                                      )}
+                                      {(() => {
+                                        const delta = typeof match.elo_delta === 'number' ? match.elo_delta : 0
+                                        return (
+                                          <>
+                                            {delta !== 0 && (delta > 0 ? <IconEloUpSvg /> : <IconEloDownSvg />)}
+                                            <span className="profile-recent-elo-delta">
+                                              {delta > 0 ? `+${delta}` : delta}
+                                            </span>
+                                          </>
+                                        )
+                                      })()}
                                     </td>
                                     <td className="profile-recent-date">
                                       {match.played_at
@@ -5012,16 +5018,17 @@ function App() {
                                                 </span>
                                               </td>
                                               <td className="profile-recent-elo-cell">
-                                                {typeof match.elo_delta === 'number' ? (
-                                                  <>
-                                                    {match.elo_delta !== 0 && (match.elo_delta > 0 ? <IconEloUpSvg /> : <IconEloDownSvg />)}
-                                                    <span className="profile-recent-elo-delta">
-                                                      {match.elo_delta > 0 ? `+${match.elo_delta}` : match.elo_delta}
-                                                    </span>
-                                                  </>
-                                                ) : (
-                                                  '—'
-                                                )}
+                                                {(() => {
+                                                  const delta = typeof match.elo_delta === 'number' ? match.elo_delta : 0
+                                                  return (
+                                                    <>
+                                                      {delta !== 0 && (delta > 0 ? <IconEloUpSvg /> : <IconEloDownSvg />)}
+                                                      <span className="profile-recent-elo-delta">
+                                                        {delta > 0 ? `+${delta}` : delta}
+                                                      </span>
+                                                    </>
+                                                  )
+                                                })()}
                                               </td>
                                               <td className="profile-recent-date">
                                                 {match.played_at

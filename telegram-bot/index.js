@@ -5,6 +5,9 @@ const { createClient } = require('@supabase/supabase-js')
 
 const PORT = Number(process.env.PORT) || 3000
 
+// Локально ставь ENABLE_TELEGRAM_POLLING=false в .env — polling не запустится, не будет 409 с ботом на Render
+const enablePolling = process.env.ENABLE_TELEGRAM_POLLING !== 'false' && process.env.ENABLE_TELEGRAM_POLLING !== '0'
+
 const token = process.env.TELEGRAM_BOT_TOKEN
 const supabaseUrl = process.env.SUPABASE_URL
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -15,14 +18,16 @@ if (!token || !supabaseUrl || !supabaseServiceKey) {
   process.exit(1)
 }
 
-const bot = new TelegramBot(token, { polling: true })
+const bot = new TelegramBot(token, { polling: false })
+const POLLING_409_RETRY_MS = 60 * 1000 // 1 мин — дать другому инстансу освободить getUpdates
 const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
 console.log('🤖 Бот запущен и готов к работе!')
 console.log('📋 Конфигурация:', {
   tokenLength: token?.length || 0,
   supabaseUrl: supabaseUrl ? '✓' : '✗',
-  supabaseKeyLength: supabaseServiceKey?.length || 0
+  supabaseKeyLength: supabaseServiceKey?.length || 0,
+  telegramPolling: enablePolling ? 'вкл (getUpdates)' : 'выкл (локалка)'
 })
 
 // Обработка команды /start
@@ -131,15 +136,26 @@ bot.on('message', async (msg) => {
   )
 })
 
-// Обработка ошибок
-bot.on('polling_error', (error) => {
-  console.error('❌ Ошибка polling:', error.message || error)
-  console.error('Полная ошибка:', JSON.stringify(error, null, 2))
-})
-
-// Логирование успешного подключения
-bot.on('polling_error', () => {
-  // Это событие срабатывает только при ошибках
+// Обработка ошибок polling (в т.ч. 409 — два инстанса бота)
+bot.on('polling_error', async (error) => {
+  const msg = error.message || String(error)
+  console.error('❌ Ошибка polling:', msg)
+  if (error.response && error.response.body) {
+    console.error('Полная ошибка:', JSON.stringify({ code: error.code, response: error.response.body }, null, 2))
+  }
+  // 409 = другой процесс уже держит getUpdates (деплой Render, два инстанса, локальный + Render)
+  if (msg.includes('409') || (error.response && error.response.statusCode === 409)) {
+    console.warn('⚠️ 409 Conflict: останавливаю polling, перезапуск через', POLLING_409_RETRY_MS / 1000, 'сек…')
+    try {
+      await bot.stopPolling()
+    } catch (e) {
+      // ignore
+    }
+    setTimeout(() => {
+      console.log('🔄 Перезапуск polling…')
+      bot.startPolling().catch((e) => console.error('Ошибка startPolling:', e.message))
+    }, POLLING_409_RETRY_MS)
+  }
 })
 
 // Проверка, что бот работает
@@ -404,4 +420,9 @@ const server = http.createServer((req, res) => {
 
 server.listen(PORT, () => {
   console.log('🌐 HTTP server listening on port', PORT, '(Render health check)')
+  if (enablePolling) {
+    bot.startPolling().catch((e) => console.error('Ошибка старта polling:', e.message))
+  } else {
+    console.log('⏸️ Telegram polling отключён (ENABLE_TELEGRAM_POLLING=false). Бот на Render продолжит работать без 409.')
+  }
 })
