@@ -2593,9 +2593,16 @@
 }
 
 .profile-recent-opponent,
-.profile-recent-score {
+.profile-recent-score,
+.profile-recent-event {
   font-weight: 700;
   color: var(--text);
+}
+.profile-recent-event {
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .profile-recent-result {
@@ -3009,7 +3016,8 @@
   border-left: 4px solid var(--strike-muted);
 }
 .app.strike-theme .profile-recent-opponent,
-.app.strike-theme .profile-recent-score {
+.app.strike-theme .profile-recent-score,
+.app.strike-theme .profile-recent-event {
   color: var(--strike-text);
 }
 .app.strike-theme .profile-recent-elo-delta {
@@ -3754,13 +3762,14 @@
   flex-direction: column;
   gap: 6px;
 }
-/* Когда открыто модальное окно рейтинга — main выше футера */
+/* Когда открыто модальное окно рейтинга или сетки турнира — футер ниже модалки */
 @media (max-width: 1023px) {
   .app.rating-modal-open .app-main {
     position: relative;
     z-index: 100;
   }
-  .app.rating-modal-open .site-footer {
+  .app.rating-modal-open .site-footer,
+  .app.bracket-modal-open .site-footer {
     position: relative;
     z-index: 0;
   }

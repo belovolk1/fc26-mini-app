@@ -23,9 +23,11 @@ const messages: Record<
     profileEloLabel: string
     profileMatchesLabel: string
     profileTableScore: string
+    profileTableEvent: string
     profileTableResult: string
     profileTableElo: string
     profileTableDate: string
+    profileEventLadder: string
     profileCalibrationLabel: string
     profileLoading: string
     profileTelegramTitle: string
@@ -158,6 +160,8 @@ const messages: Record<
     homeLearnMore: string
     homePlayNow: string
     homeInTournament: string
+    homeYouAreInTournament: string
+    homeGoToTournaments: string
     homeViewEvents: string
     homeViewStats: string
     homeViewLadder: string
@@ -279,9 +283,11 @@ const messages: Record<
     profileEloLabel: 'Global ELO rating',
     profileMatchesLabel: 'Matches played',
     profileTableScore: 'Score',
+    profileTableEvent: 'Event',
     profileTableResult: 'Result',
     profileTableElo: 'ELO',
     profileTableDate: 'Date',
+    profileEventLadder: 'Ladder',
     profileCalibrationLabel: 'Calibration: first 10 matches',
     profileLoading: 'Loading profile…',
     profileTelegramTitle: 'Telegram',
@@ -419,6 +425,8 @@ const messages: Record<
     homeLearnMore: 'LEARN MORE',
     homePlayNow: 'PLAY NOW',
     homeInTournament: 'IN TOURNAMENT',
+    homeYouAreInTournament: 'You are participating in tournament:',
+    homeGoToTournaments: 'Go to tournaments',
     homeViewEvents: 'VIEW EVENTS',
     homeViewStats: 'VIEW STATS',
     homeViewLadder: 'VIEW LADDER',
@@ -539,9 +547,11 @@ const messages: Record<
     profileEloLabel: 'Rating ELO global',
     profileMatchesLabel: 'Meciuri jucate',
     profileTableScore: 'Scor',
+    profileTableEvent: 'Eveniment',
     profileTableResult: 'Rezultat',
     profileTableElo: 'ELO',
     profileTableDate: 'Data',
+    profileEventLadder: 'Ladder',
     profileCalibrationLabel: 'Calibrare: primele 10 meciuri',
     profileLoading: 'Se încarcă profilul…',
     profileTelegramTitle: 'Telegram',
@@ -679,6 +689,8 @@ const messages: Record<
     homeLearnMore: 'AFLĂ MAI MULT',
     homePlayNow: 'JOACĂ ACUM',
     homeInTournament: 'ÎN TURNEU',
+    homeYouAreInTournament: 'Participați la turneu:',
+    homeGoToTournaments: 'Mergeți la turnee',
     homeViewEvents: 'VEZI EVENIMENTE',
     homeViewStats: 'VEZI STATISTICI',
     homeViewLadder: 'VEZI CLASAMENT',
@@ -799,9 +811,11 @@ const messages: Record<
     profileEloLabel: 'Общий рейтинг ELO',
     profileMatchesLabel: 'Матчей сыграно',
     profileTableScore: 'Счёт',
+    profileTableEvent: 'Событие',
     profileTableResult: 'Результат',
     profileTableElo: 'ELO',
     profileTableDate: 'Дата',
+    profileEventLadder: 'Ладдер',
     profileCalibrationLabel: 'Калибровка рейтинга: первые 10 матчей',
     profileLoading: 'Загружаем профиль…',
     profileTelegramTitle: 'Telegram',
@@ -939,6 +953,8 @@ const messages: Record<
     homeLearnMore: 'ПОДРОБНЕЕ',
     homePlayNow: 'ИГРАТЬ',
     homeInTournament: 'УЧАСТВУЮ В ТУРНИРЕ',
+    homeYouAreInTournament: 'Вы участвуете в турнире:',
+    homeGoToTournaments: 'Перейти к турнирам',
     homeViewEvents: 'СОБЫТИЯ',
     homeViewStats: 'СТАТИСТИКА',
     homeViewLadder: 'РЕЙТИНГ',
@@ -1423,7 +1439,7 @@ function App() {
   const [profileSaveLoading, setProfileSaveLoading] = useState(false)
   const [avatarUploading, setAvatarUploading] = useState(false)
   const [avatarUploadError, setAvatarUploadError] = useState<string | null>(null)
-  type RecentMatchRow = { match_id: number; opponent_id: string | null; opponent_name: string | null; my_score: number; opp_score: number; result: string; played_at: string | null; elo_delta?: number | null }
+  type RecentMatchRow = { match_id: string; match_type?: string; tournament_name?: string | null; opponent_id: string | null; opponent_name: string | null; my_score: number; opp_score: number; result: string; played_at: string | null; elo_delta?: number | null }
   const [recentMatches, setRecentMatches] = useState<RecentMatchRow[]>([])
   const [recentMatchesLoading, setRecentMatchesLoading] = useState(false)
   const [myProfileStats, setMyProfileStats] = useState<LeaderboardRow | null>(null)
@@ -3568,7 +3584,7 @@ function App() {
   ]
 
   return (
-    <div className={`app ${useMobileLayout ? 'app--mobile' : 'app--desktop'} strike-theme${activeView === 'rating' && selectedPlayerRow ? ' rating-modal-open' : ''}`}>
+    <div className={`app ${useMobileLayout ? 'app--mobile' : 'app--desktop'} strike-theme${activeView === 'rating' && selectedPlayerRow ? ' rating-modal-open' : ''}${selectedTournamentId ? ' bracket-modal-open' : ''}`}>
       <div className="site-header strike-header">
         <header className="app-header">
           <button
@@ -3814,11 +3830,11 @@ function App() {
             {myActiveTournamentRegistrations.length > 0 && (
               <section className="strike-tournament-banner">
                 <span className="strike-tournament-banner-text">
-                  Вы участвуете в турнире: {myActiveTournamentRegistrations[0].name}
+                  {t.homeYouAreInTournament} {myActiveTournamentRegistrations[0].name}
                   {myActiveTournamentRegistrations.length > 1 && ` (+${myActiveTournamentRegistrations.length - 1})`}
                 </span>
                 <button type="button" className="strike-btn strike-btn-secondary strike-tournament-banner-btn" onClick={() => setActiveView('tournaments')}>
-                  Перейти к турнирам
+                  {t.homeGoToTournaments}
                 </button>
               </section>
             )}
@@ -4612,6 +4628,7 @@ function App() {
                               <tr>
                                 <th>{t.profilePlayerLabel}</th>
                                 <th>{t.profileTableScore}</th>
+                                <th>{t.profileTableEvent}</th>
                                 <th>{t.profileTableResult}</th>
                                 <th>{t.profileTableElo}</th>
                                 <th>{t.profileTableDate}</th>
@@ -4624,6 +4641,7 @@ function App() {
                                   <td className="profile-recent-score">
                                     {match.my_score}:{match.opp_score}
                                   </td>
+                                  <td className="profile-recent-event">{match.match_type === 'tournament' && match.tournament_name ? match.tournament_name : t.profileEventLadder}</td>
                                   <td>
                                     <span className={`profile-result-pill profile-result-pill--${match.result}`}>
                                       {match.result === 'win' ? 'W' : match.result === 'loss' ? 'L' : 'D'}
@@ -4744,6 +4762,7 @@ function App() {
                               <tr>
                                 <th>{t.profilePlayerLabel}</th>
                                 <th>{t.profileTableScore}</th>
+                                <th>{t.profileTableEvent}</th>
                                 <th>{t.profileTableResult}</th>
                                 <th>{t.profileTableElo}</th>
                                 <th>{t.profileTableDate}</th>
@@ -4756,6 +4775,7 @@ function App() {
                                   <td className="profile-recent-score">
                                     {match.my_score}:{match.opp_score}
                                   </td>
+                                  <td className="profile-recent-event">{match.match_type === 'tournament' && match.tournament_name ? match.tournament_name : t.profileEventLadder}</td>
                                   <td>
                                     <span className={`profile-result-pill profile-result-pill--${match.result}`}>
                                       {match.result === 'win' ? 'W' : match.result === 'loss' ? 'L' : 'D'}
@@ -4971,6 +4991,7 @@ function App() {
                                           <tr>
                                             <th>{t.profilePlayerLabel}</th>
                                             <th>{t.profileTableScore}</th>
+                                            <th>{t.profileTableEvent}</th>
                                             <th>{t.profileTableResult}</th>
                                             <th>{t.profileTableElo}</th>
                                             <th>{t.profileTableDate}</th>
@@ -4981,6 +5002,7 @@ function App() {
                                             <tr key={match.match_id} className={`profile-recent-match profile-recent-match--${match.result}`}>
                                               <td className="profile-recent-opponent">{match.opponent_id ? <button type="button" className="player-name-link" onClick={() => openPlayerProfile(match.opponent_id!)}>{match.opponent_name ?? '—'}</button> : (match.opponent_name ?? '—')}</td>
                                               <td className="profile-recent-score">{match.my_score}:{match.opp_score}</td>
+                                              <td className="profile-recent-event">{match.match_type === 'tournament' && match.tournament_name ? match.tournament_name : t.profileEventLadder}</td>
                                               <td>
                                                 <span className={`profile-result-pill profile-result-pill--${match.result}`}>
                                                   {match.result === 'win' ? 'W' : match.result === 'loss' ? 'L' : 'D'}
@@ -5443,7 +5465,7 @@ function App() {
             {selectedTournamentId && (() => {
               const tr = tournamentsList.find((t) => t.id === selectedTournamentId)
               if (!tr || (tr.status !== 'ongoing' && tr.status !== 'finished')) return null
-              return (
+              return createPortal(
                 <div className="bracket-modal-backdrop" onClick={() => setSelectedTournamentId(null)} role="presentation">
                   <div className="bracket-modal-panel" onClick={(e) => e.stopPropagation()}>
                     <div className="bracket-modal-header">
@@ -5473,7 +5495,8 @@ function App() {
                       />
                     </div>
                   </div>
-                </div>
+                </div>,
+                document.body
               )
             })()}
           </section>

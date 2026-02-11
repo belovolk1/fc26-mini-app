@@ -392,11 +392,14 @@ as $$
   from ranked r;
 $$;
 
--- Последние 10 матчей игрока (для страницы профиля)
+-- Последние 10 матчей игрока: ладдер + сыгранные турнирные (для страницы профиля)
+-- match_id — text (ладдер: id::text, турнир: uuid::text). match_type: 'ladder'|'tournament'. tournament_name — null для ладдера.
 drop function if exists public.get_player_recent_matches(uuid);
 create or replace function public.get_player_recent_matches(p_player_id uuid)
 returns table (
-  match_id bigint,
+  match_id text,
+  match_type text,
+  tournament_name text,
   opponent_id uuid,
   opponent_name text,
   my_score int,
@@ -409,32 +412,68 @@ language sql
 security definer
 stable
 as $$
-  select
-    m.id,
-    (case when m.player_a_id = p_player_id then m.player_b_id else m.player_a_id end),
-    coalesce(
-      nullif(trim(
-        case when m.player_a_id = p_player_id then coalesce(pb.display_name, case when pb.username is not null and pb.username <> '' then '@' || pb.username else nullif(trim(coalesce(pb.first_name, '') || ' ' || coalesce(pb.last_name, '')), '') end)
-             else coalesce(pa.display_name, case when pa.username is not null and pa.username <> '' then '@' || pa.username else nullif(trim(coalesce(pa.first_name, '') || ' ' || coalesce(pa.last_name, '')), '') end)
-        end
-      ), ''),
-      '—'
-    )::text,
-    (case when m.player_a_id = p_player_id then m.score_a else m.score_b end)::int,
-    (case when m.player_a_id = p_player_id then m.score_b else m.score_a end)::int,
-    (case
-       when m.result = 'DRAW' then 'draw'
-       when (m.result = 'A_WIN' and m.player_a_id = p_player_id) or (m.result = 'B_WIN' and m.player_b_id = p_player_id) then 'win'
-       else 'loss'
-     end)::text,
-    m.played_at,
-    (case when m.player_a_id = p_player_id then m.elo_delta_a else m.elo_delta_b end)::int
-  from public.matches m
-  join public.players pa on pa.id = m.player_a_id
-  join public.players pb on pb.id = m.player_b_id
-  where (m.player_a_id = p_player_id or m.player_b_id = p_player_id)
-    and m.result is distinct from 'PENDING'
-  order by m.played_at desc nulls last
+  (
+    select
+      m.id::text,
+      'ladder'::text,
+      null::text,
+      (case when m.player_a_id = p_player_id then m.player_b_id else m.player_a_id end),
+      coalesce(
+        nullif(trim(
+          case when m.player_a_id = p_player_id then coalesce(pb.display_name, case when pb.username is not null and pb.username <> '' then '@' || pb.username else nullif(trim(coalesce(pb.first_name, '') || ' ' || coalesce(pb.last_name, '')), '') end)
+               else coalesce(pa.display_name, case when pa.username is not null and pa.username <> '' then '@' || pa.username else nullif(trim(coalesce(pa.first_name, '') || ' ' || coalesce(pa.last_name, '')), '') end)
+          end
+        ), ''),
+        '—'
+      )::text,
+      (case when m.player_a_id = p_player_id then m.score_a else m.score_b end)::int,
+      (case when m.player_a_id = p_player_id then m.score_b else m.score_a end)::int,
+      (case
+         when m.result = 'DRAW' then 'draw'
+         when (m.result = 'A_WIN' and m.player_a_id = p_player_id) or (m.result = 'B_WIN' and m.player_b_id = p_player_id) then 'win'
+         else 'loss'
+       end)::text,
+      m.played_at,
+      (case when m.player_a_id = p_player_id then m.elo_delta_a else m.elo_delta_b end)::int
+    from public.matches m
+    join public.players pa on pa.id = m.player_a_id
+    join public.players pb on pb.id = m.player_b_id
+    where (m.player_a_id = p_player_id or m.player_b_id = p_player_id)
+      and m.result is distinct from 'PENDING'
+  )
+  union all
+  (
+    select
+      tm.id::text,
+      'tournament'::text,
+      t.name,
+      (case when tm.player_a_id = p_player_id then tm.player_b_id else tm.player_a_id end),
+      coalesce(
+        nullif(trim(
+          case when tm.player_a_id = p_player_id then coalesce(pb.display_name, case when pb.username is not null and pb.username <> '' then '@' || pb.username else nullif(trim(coalesce(pb.first_name, '') || ' ' || coalesce(pb.last_name, '')), '') end)
+               else coalesce(pa.display_name, case when pa.username is not null and pa.username <> '' then '@' || pa.username else nullif(trim(coalesce(pa.first_name, '') || ' ' || coalesce(pa.last_name, '')), '') end)
+          end
+        ), ''),
+        '—'
+      )::text,
+      (case when tm.player_a_id = p_player_id then tm.score_a else tm.score_b end)::int,
+      (case when tm.player_a_id = p_player_id then tm.score_b else tm.score_a end)::int,
+      (case
+         when tm.winner_id is null then 'draw'
+         when tm.winner_id = p_player_id then 'win'
+         else 'loss'
+       end)::text,
+      tm.created_at,
+      null::int
+    from public.tournament_matches tm
+    join public.tournaments t on t.id = tm.tournament_id
+    left join public.players pa on pa.id = tm.player_a_id
+    left join public.players pb on pb.id = tm.player_b_id
+    where (tm.player_a_id = p_player_id or tm.player_b_id = p_player_id)
+      and tm.status in ('confirmed', 'finished', 'auto_win_a', 'auto_win_b', 'auto_no_show')
+      and tm.player_a_id is not null and tm.player_b_id is not null
+  )
+  order by played_at desc nulls last
   limit 10;
 $$;
 
