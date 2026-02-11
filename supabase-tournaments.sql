@@ -406,6 +406,7 @@ DECLARE
   v_t record;
   v_res jsonb;
   v_final_winner uuid;
+  v_exists boolean;
 BEGIN
   FOR v_t IN
     SELECT id, status, registration_start, registration_end, tournament_start, tournament_end
@@ -420,6 +421,22 @@ BEGIN
     IF v_t.status = 'registration' AND now() >= v_t.registration_end THEN
       SELECT tournament_start_bracket(v_t.id) INTO v_res;
     END IF;
+
+    -- За 15 минут до старта — уведомление «регистрация открыта» в Telegram
+    BEGIN
+      IF v_t.status = 'registration' AND now() >= v_t.tournament_start - interval '15 minutes' THEN
+        SELECT EXISTS(
+          SELECT 1 FROM tournament_telegram_notifications
+          WHERE tournament_id = v_t.id AND type = 'registration_open'
+        ) INTO v_exists;
+        IF NOT v_exists THEN
+          INSERT INTO tournament_telegram_notifications (tournament_id, type)
+          VALUES (v_t.id, 'registration_open');
+        END IF;
+      END IF;
+    EXCEPTION WHEN undefined_table OR undefined_column THEN
+      NULL;
+    END;
 
     IF v_t.status = 'ongoing' THEN
       PERFORM tournament_advance_due_matches(v_t.id);

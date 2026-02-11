@@ -10,7 +10,7 @@
 CREATE TABLE IF NOT EXISTS public.tournament_telegram_notifications (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   tournament_id uuid NOT NULL REFERENCES public.tournaments(id) ON DELETE CASCADE,
-  type text NOT NULL CHECK (type IN ('tournament_created', 'tournament_started', 'round_reminder')),
+  type text NOT NULL CHECK (type IN ('tournament_created', 'tournament_started', 'registration_open', 'round_reminder')),
   match_id uuid REFERENCES public.tournament_matches(id) ON DELETE CASCADE,
   created_at timestamptz NOT NULL DEFAULT now(),
   sent_at timestamptz
@@ -25,7 +25,7 @@ ALTER TABLE public.tournament_telegram_notifications
   DROP CONSTRAINT IF EXISTS tournament_telegram_notifications_type_check;
 ALTER TABLE public.tournament_telegram_notifications
   ADD CONSTRAINT tournament_telegram_notifications_type_check
-  CHECK (type IN ('tournament_created', 'tournament_started', 'round_reminder'));
+  CHECK (type IN ('tournament_created', 'tournament_started', 'registration_open', 'round_reminder'));
 
 COMMENT ON TABLE public.tournament_telegram_notifications IS 'Очередь уведомлений в Telegram: старт турнира (всем участникам), напоминание перед раундом (участникам матча). Обрабатывается ботом.';
 
