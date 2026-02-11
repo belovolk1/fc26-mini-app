@@ -56,6 +56,77 @@ CREATE TABLE IF NOT EXISTS public.tournament_matches (
 CREATE INDEX IF NOT EXISTS tournament_matches_tournament_id ON public.tournament_matches(tournament_id);
 CREATE INDEX IF NOT EXISTS tournament_matches_players ON public.tournament_matches(player_a_id, player_b_id);
 
+-- Колонки для изменения ELO по турнирному матчу (как в matches)
+ALTER TABLE public.tournament_matches ADD COLUMN IF NOT EXISTS elo_delta_a int;
+ALTER TABLE public.tournament_matches ADD COLUMN IF NOT EXISTS elo_delta_b int;
+
+-- Начислить ELO за турнирный матч (та же формула и K, что и для ладдера). Вызывается триггером.
+CREATE OR REPLACE FUNCTION public.tournament_match_apply_elo()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_elo_a int; v_elo_b int; v_matches_a bigint; v_matches_b bigint; v_k_a int; v_k_b int;
+  v_expected_a numeric; v_expected_b numeric; v_score_actual_a numeric; v_score_actual_b numeric;
+  v_new_elo_a int; v_new_elo_b int; v_default_elo int := 1200; v_delta_a int; v_delta_b int;
+  v_result text;
+BEGIN
+  IF NEW.player_a_id IS NULL OR NEW.player_b_id IS NULL OR NEW.elo_delta_a IS NOT NULL THEN
+    RETURN NEW;
+  END IF;
+
+  SELECT coalesce(elo, v_default_elo) INTO v_elo_a FROM players WHERE id = NEW.player_a_id;
+  SELECT coalesce(elo, v_default_elo) INTO v_elo_b FROM players WHERE id = NEW.player_b_id;
+  v_elo_a := greatest(coalesce(v_elo_a, v_default_elo), 0);
+  v_elo_b := greatest(coalesce(v_elo_b, v_default_elo), 0);
+
+  SELECT (SELECT count(*)::bigint FROM matches WHERE (player_a_id = NEW.player_a_id OR player_b_id = NEW.player_a_id) AND result IS DISTINCT FROM 'PENDING')
+       + (SELECT count(*)::bigint FROM tournament_matches WHERE (player_a_id = NEW.player_a_id OR player_b_id = NEW.player_a_id) AND status IN ('confirmed', 'finished', 'auto_win_a', 'auto_win_b', 'auto_no_show'))
+  INTO v_matches_a;
+  SELECT (SELECT count(*)::bigint FROM matches WHERE (player_a_id = NEW.player_b_id OR player_b_id = NEW.player_b_id) AND result IS DISTINCT FROM 'PENDING')
+       + (SELECT count(*)::bigint FROM tournament_matches WHERE (player_a_id = NEW.player_b_id OR player_b_id = NEW.player_b_id) AND status IN ('confirmed', 'finished', 'auto_win_a', 'auto_win_b', 'auto_no_show'))
+  INTO v_matches_b;
+
+  v_k_a := CASE WHEN v_matches_a <= 10 THEN 80 WHEN v_matches_a <= 30 THEN 60 WHEN v_matches_a <= 100 THEN 40 ELSE 30 END;
+  v_k_b := CASE WHEN v_matches_b <= 10 THEN 80 WHEN v_matches_b <= 30 THEN 60 WHEN v_matches_b <= 100 THEN 40 ELSE 30 END;
+
+  IF NEW.status = 'auto_win_a' THEN v_result := 'A_WIN';
+  ELSIF NEW.status = 'auto_win_b' THEN v_result := 'B_WIN';
+  ELSIF NEW.winner_id = NEW.player_a_id THEN v_result := 'A_WIN';
+  ELSIF NEW.winner_id = NEW.player_b_id THEN v_result := 'B_WIN';
+  ELSE v_result := 'DRAW'; END IF;
+
+  v_expected_a := 1.0 / (1.0 + power(10, (v_elo_b - v_elo_a) / 400.0));
+  v_expected_b := 1.0 - v_expected_a;
+  IF v_result = 'A_WIN' THEN v_score_actual_a := 1; v_score_actual_b := 0;
+  ELSIF v_result = 'B_WIN' THEN v_score_actual_a := 0; v_score_actual_b := 1;
+  ELSE v_score_actual_a := 0.5; v_score_actual_b := 0.5; END IF;
+
+  v_new_elo_a := greatest(round(v_elo_a + v_k_a * (v_score_actual_a - v_expected_a))::int, 0);
+  v_new_elo_b := greatest(round(v_elo_b + v_k_b * (v_score_actual_b - v_expected_b))::int, 0);
+  v_delta_a := v_new_elo_a - v_elo_a;
+  v_delta_b := v_new_elo_b - v_elo_b;
+
+  UPDATE players SET elo = v_new_elo_a WHERE id = NEW.player_a_id;
+  UPDATE players SET elo = v_new_elo_b WHERE id = NEW.player_b_id;
+  UPDATE tournament_matches SET elo_delta_a = v_delta_a, elo_delta_b = v_delta_b WHERE id = NEW.id;
+
+  RETURN NEW;
+END;
+$$;
+DROP TRIGGER IF EXISTS tournament_match_apply_elo_trigger ON public.tournament_matches;
+CREATE TRIGGER tournament_match_apply_elo_trigger
+  AFTER UPDATE ON public.tournament_matches
+  FOR EACH ROW
+  WHEN (
+    NEW.status IN ('confirmed', 'finished', 'auto_win_a', 'auto_win_b', 'auto_no_show')
+    AND NEW.player_a_id IS NOT NULL AND NEW.player_b_id IS NOT NULL
+    AND NEW.elo_delta_a IS NULL
+  )
+  EXECUTE PROCEDURE tournament_match_apply_elo();
+
 -- После подтверждения результата — продвинуть победителя в следующий раунд
 CREATE OR REPLACE FUNCTION public.tournament_match_after_confirm()
 RETURNS trigger

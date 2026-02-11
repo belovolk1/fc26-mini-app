@@ -224,14 +224,18 @@ as $$
     m.player_a_id,
     m.player_b_id,
     coalesce(
+      nullif(trim(pa.display_name), ''),
       case when pa.username is not null and pa.username <> '' then '@' || pa.username
         else nullif(trim(coalesce(pa.first_name, '') || ' ' || coalesce(pa.last_name, '')), '')
-      end, '—'
+      end,
+      '—'
     )::text,
     coalesce(
+      nullif(trim(pb.display_name), ''),
       case when pb.username is not null and pb.username <> '' then '@' || pb.username
         else nullif(trim(coalesce(pb.first_name, '') || ' ' || coalesce(pb.last_name, '')), '')
-      end, '—'
+      end,
+      '—'
     )::text,
     m.score_a,
     m.score_b,
@@ -464,7 +468,7 @@ as $$
          else 'loss'
        end)::text,
       tm.created_at,
-      null::int
+      (case when tm.player_a_id = p_player_id then tm.elo_delta_a else tm.elo_delta_b end)::int
     from public.tournament_matches tm
     join public.tournaments t on t.id = tm.tournament_id
     left join public.players pa on pa.id = tm.player_a_id

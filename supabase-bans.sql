@@ -19,6 +19,9 @@ comment on column public.user_bans.revoked_at is 'не NULL = бан снят д
 create index if not exists user_bans_player_active on public.user_bans (player_id) where revoked_at is null;
 
 alter table public.user_bans enable row level security;
+drop policy if exists "user_bans anon select" on public.user_bans;
+drop policy if exists "user_bans anon insert" on public.user_bans;
+drop policy if exists "user_bans anon update" on public.user_bans;
 create policy "user_bans anon select" on public.user_bans for select to anon using (true);
 create policy "user_bans anon insert" on public.user_bans for insert to anon with check (true);
 create policy "user_bans anon update" on public.user_bans for update to anon using (true) with check (true);
@@ -103,9 +106,9 @@ returns table (
 )
 language sql security definer stable as $$
   select b.id, b.player_id,
-    coalesce(nullif(trim(p.display_name), ''), p.username, '—')::text,
+    coalesce(nullif(trim(p.display_name), ''), case when coalesce(p.username, '') <> '' then '@' || p.username else nullif(trim(coalesce(p.first_name, '') || ' ' || coalesce(p.last_name, '')), '') end, '—')::text,
     p.username,
-    coalesce(nullif(trim(adm.display_name), ''), adm.username, '—')::text,
+    coalesce(nullif(trim(adm.display_name), ''), case when coalesce(adm.username, '') <> '' then '@' || adm.username else nullif(trim(coalesce(adm.first_name, '') || ' ' || coalesce(adm.last_name, '')), '') end, '—')::text,
     b.reason, b.created_at, b.expires_at, b.revoked_at,
     (b.revoked_at is null and (b.expires_at is null or b.expires_at > now()))
   from public.user_bans b
@@ -129,7 +132,7 @@ create or replace function public.get_players_for_admin(p_search text default nu
 returns table (id uuid, display_name text, username text)
 language sql security definer stable as $$
   select p.id,
-    coalesce(nullif(trim(p.display_name), ''), p.username, '—')::text,
+    coalesce(nullif(trim(p.display_name), ''), case when coalesce(p.username, '') <> '' then '@' || p.username else nullif(trim(coalesce(p.first_name, '') || ' ' || coalesce(p.last_name, '')), '') end, '—')::text,
     p.username
   from public.players p
   where p_search is null or p_search = ''

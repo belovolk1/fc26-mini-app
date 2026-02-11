@@ -22,6 +22,15 @@ create table if not exists public.match_reports (
 
 create index if not exists match_reports_status on public.match_reports(status);
 create index if not exists match_reports_created on public.match_reports(created_at desc);
+-- Удалить дубликаты (одна жалоба на матч от одного репортёра): оставляем самую раннюю по created_at
+delete from public.match_reports
+where id in (
+  select id from (
+    select id, row_number() over (partition by match_type, match_id, reporter_player_id order by created_at asc) as rn
+    from public.match_reports
+  ) t
+  where t.rn > 1
+);
 -- Одна жалоба на один матч от одного пользователя
 create unique index if not exists match_reports_one_per_match_reporter on public.match_reports (match_type, match_id, reporter_player_id);
 
@@ -48,6 +57,9 @@ create table if not exists public.report_telegram_notifications (
 alter table public.match_reports enable row level security;
 alter table public.report_resolution_notifications enable row level security;
 -- Политики для anon (гость) и authenticated (логин по JWT/Telegram) — иначе «new row violates row-level security policy»
+drop policy if exists "match_reports select" on public.match_reports;
+drop policy if exists "match_reports insert" on public.match_reports;
+drop policy if exists "match_reports update" on public.match_reports;
 create policy "match_reports select" on public.match_reports for select to anon using (true);
 create policy "match_reports insert" on public.match_reports for insert to anon with check (true);
 create policy "match_reports update" on public.match_reports for update to anon using (true) with check (true);
@@ -57,6 +69,9 @@ drop policy if exists "match_reports update auth" on public.match_reports;
 create policy "match_reports select auth" on public.match_reports for select to authenticated using (true);
 create policy "match_reports insert auth" on public.match_reports for insert to authenticated with check (true);
 create policy "match_reports update auth" on public.match_reports for update to authenticated using (true) with check (true);
+drop policy if exists "report_resolution_notifications select" on public.report_resolution_notifications;
+drop policy if exists "report_resolution_notifications insert" on public.report_resolution_notifications;
+drop policy if exists "report_resolution_notifications update" on public.report_resolution_notifications;
 create policy "report_resolution_notifications select" on public.report_resolution_notifications for select to anon using (true);
 create policy "report_resolution_notifications insert" on public.report_resolution_notifications for insert to anon with check (true);
 create policy "report_resolution_notifications update" on public.report_resolution_notifications for update to anon using (true) with check (true);
@@ -238,8 +253,8 @@ as $$
     r.message, r.screenshot_url, r.status, r.admin_comment, r.resolution, r.resolved_at, r.created_at,
     case when r.match_type = 'ladder' then (select m.player_a_id from public.matches m where m.id::text = r.match_id) else (select m.player_a_id from public.tournament_matches m where m.id::text = r.match_id) end,
     case when r.match_type = 'ladder' then (select m.player_b_id from public.matches m where m.id::text = r.match_id) else (select m.player_b_id from public.tournament_matches m where m.id::text = r.match_id) end,
-    case when r.match_type = 'ladder' then (select coalesce(nullif(trim(pa.display_name), ''), pa.username, '—') from public.matches m join public.players pa on pa.id = m.player_a_id where m.id::text = r.match_id) else (select coalesce(nullif(trim(pa.display_name), ''), pa.username, '—') from public.tournament_matches m join public.players pa on pa.id = m.player_a_id where m.id::text = r.match_id) end,
-    case when r.match_type = 'ladder' then (select coalesce(nullif(trim(pb.display_name), ''), pb.username, '—') from public.matches m join public.players pb on pb.id = m.player_b_id where m.id::text = r.match_id) else (select coalesce(nullif(trim(pb.display_name), ''), pb.username, '—') from public.tournament_matches m join public.players pb on pb.id = m.player_b_id where m.id::text = r.match_id) end,
+    case when r.match_type = 'ladder' then (select coalesce(nullif(trim(pa.display_name), ''), case when coalesce(pa.username, '') <> '' then '@' || pa.username else nullif(trim(coalesce(pa.first_name, '') || ' ' || coalesce(pa.last_name, '')), '') end, '—') from public.matches m join public.players pa on pa.id = m.player_a_id where m.id::text = r.match_id) else (select coalesce(nullif(trim(pa.display_name), ''), case when coalesce(pa.username, '') <> '' then '@' || pa.username else nullif(trim(coalesce(pa.first_name, '') || ' ' || coalesce(pa.last_name, '')), '') end, '—') from public.tournament_matches m join public.players pa on pa.id = m.player_a_id where m.id::text = r.match_id) end,
+    case when r.match_type = 'ladder' then (select coalesce(nullif(trim(pb.display_name), ''), case when coalesce(pb.username, '') <> '' then '@' || pb.username else nullif(trim(coalesce(pb.first_name, '') || ' ' || coalesce(pb.last_name, '')), '') end, '—') from public.matches m join public.players pb on pb.id = m.player_b_id where m.id::text = r.match_id) else (select coalesce(nullif(trim(pb.display_name), ''), case when coalesce(pb.username, '') <> '' then '@' || pb.username else nullif(trim(coalesce(pb.first_name, '') || ' ' || coalesce(pb.last_name, '')), '') end, '—') from public.tournament_matches m join public.players pb on pb.id = m.player_b_id where m.id::text = r.match_id) end,
     case when r.match_type = 'ladder' then (select (m.score_a::text || ' : ' || m.score_b::text) from public.matches m where m.id::text = r.match_id) else (select (m.score_a::text || ' : ' || m.score_b::text) from public.tournament_matches m where m.id::text = r.match_id) end
   from public.match_reports r
   join public.players rep on rep.id = r.reporter_player_id

@@ -19,6 +19,7 @@ const messages: Record<
     profileTileTitle: string
     profileTileText: string
     profileHeader: string
+    profileBackToMyProfile: string
     profilePlayerLabel: string
     profileEloLabel: string
     profileMatchesLabel: string
@@ -279,6 +280,7 @@ const messages: Record<
     profileTileTitle: 'Profile & stats',
     profileTileText: 'Your ELO, match history, win rate and achievements.',
     profileHeader: 'Player profile',
+    profileBackToMyProfile: 'My profile',
     profilePlayerLabel: 'Player',
     profileEloLabel: 'Global ELO rating',
     profileMatchesLabel: 'Matches played',
@@ -543,6 +545,7 @@ const messages: Record<
     profileTileTitle: 'Profil și statistici',
     profileTileText: 'ELO, istoric meciuri, procent victorii și realizări.',
     profileHeader: 'Profil jucător',
+    profileBackToMyProfile: 'Profilul meu',
     profilePlayerLabel: 'Jucător',
     profileEloLabel: 'Rating ELO global',
     profileMatchesLabel: 'Meciuri jucate',
@@ -807,6 +810,7 @@ const messages: Record<
     profileTileTitle: 'Профиль и статистика',
     profileTileText: 'Твой ELO, история матчей, винрейт и достижения.',
     profileHeader: 'Профиль игрока',
+    profileBackToMyProfile: 'Мой профиль',
     profilePlayerLabel: 'Игрок',
     profileEloLabel: 'Общий рейтинг ELO',
     profileMatchesLabel: 'Матчей сыграно',
@@ -2282,10 +2286,10 @@ function App() {
     })
   }, [activeView])
 
-  // Переход на страницу/профиль игрока по id (рейтинг + панель профиля)
+  // Переход на профиль игрока по id — открывается вкладка «Профиль» (как личный профиль)
   const openPlayerProfile = (playerId: string) => {
     window.location.hash = `player=${playerId}`
-    setActiveView('rating')
+    setActiveView('profile')
     setProfileFromHashLoading(true)
     supabase.rpc('get_player_profile', { p_player_id: playerId }).then(({ data, error }) => {
       setProfileFromHashLoading(false)
@@ -2294,13 +2298,13 @@ function App() {
     })
   }
 
-  // При загрузке с #player=uuid — открыть рейтинг и показать профиль игрока в той же вкладке
+  // При загрузке с #player=uuid — открыть вкладку «Профиль» и показать профиль этого игрока
   useEffect(() => {
     const hash = window.location.hash.slice(1)
     const m = hash.match(/player=([a-f0-9-]{36})/i)
     if (!m) return
     const uuid = m[1]
-    setActiveView('rating')
+    setActiveView('profile')
     setProfileFromHashLoading(true)
     supabase.rpc('get_player_profile', { p_player_id: uuid }).then(({ data, error }) => {
       setProfileFromHashLoading(false)
@@ -2965,12 +2969,13 @@ function App() {
       }
       supabase
         .from('players')
-        .select('id, display_name')
+        .select('id, display_name, username, first_name, last_name')
         .in('id', Array.from(ids))
         .then(({ data }) => {
           const map: Record<string, string> = {}
-          ;(data || []).forEach((p: { id: string; display_name: string | null }) => {
-            map[p.id] = p.display_name || p.id.slice(0, 8)
+          ;(data || []).forEach((p: { id: string; display_name: string | null; username: string | null; first_name: string | null; last_name: string | null }) => {
+            const name = (p.display_name?.trim() || (p.username ? `@${p.username}` : null) || [p.first_name, p.last_name].filter(Boolean).join(' ').trim() || '').trim()
+            map[p.id] = name || p.id.slice(0, 8)
           })
           setBracketPlayerNames(map)
         })
@@ -3569,6 +3574,10 @@ function App() {
   const useMobileLayout = !isWideScreen
 
   const closeNavAnd = (view: View) => {
+    if (view === 'profile') {
+      setSelectedPlayerRow(null)
+      window.location.hash = ''
+    }
     setActiveView(view)
     setNavOpen(false)
   }
@@ -3675,7 +3684,13 @@ function App() {
                 key={view}
                 type="button"
                 className={activeView === view ? 'nav-btn active' : 'nav-btn'}
-                onClick={() => setActiveView(view)}
+                onClick={() => {
+                  if (view === 'profile') {
+                    setSelectedPlayerRow(null)
+                    window.location.hash = ''
+                  }
+                  setActiveView(view)
+                }}
               >
                 {label}
                 {badge != null && badge > 0 && <span className="nav-badge">{badge}</span>}
@@ -4823,7 +4838,155 @@ function App() {
 
         {activeView === 'profile' && (
           <section className="panel profile-panel">
-            <h3 className="panel-title profile-panel-title">{t.profileHeader}</h3>
+            <h3 className="panel-title profile-panel-title">{selectedPlayerRow ? (selectedPlayerRow.display_name ?? '—') : t.profileHeader}</h3>
+
+            {selectedPlayerRow ? (
+              profileFromHashLoading ? (
+                <p className="panel-text">{t.profileLoading}</p>
+              ) : (
+                <div className="profile-page">
+                  <button
+                    type="button"
+                    className="profile-back-to-my strike-btn strike-btn-secondary"
+                    onClick={() => { setSelectedPlayerRow(null); window.location.hash = '' }}
+                  >
+                    ← {t.profileBackToMyProfile}
+                  </button>
+                  <div className="profile-main profile-main--full">
+                    <div className="profile-tab-panel">
+                      <div className="profile-rank-card profile-rank-card--wide">
+                        <div className="profile-rank-card-item profile-rank-card-avatar">
+                          {selectedPlayerRow.avatar_url ? (
+                            <img src={selectedPlayerRow.avatar_url} alt="" className="profile-rank-card-avatar-img" />
+                          ) : (
+                            <span className="profile-rank-card-avatar-placeholder">{(selectedPlayerRow.display_name || '?').charAt(0).toUpperCase()}</span>
+                          )}
+                        </div>
+                        <div className="profile-rank-card-item profile-rank-card-name-country">
+                          <span className="profile-rank-card-display-name">{selectedPlayerRow.display_name ?? '—'}</span>
+                          {selectedPlayerRow.country_code && (
+                            <span className="profile-rank-card-country">
+                              {COUNTRIES.find((c) => c.code === selectedPlayerRow.country_code)?.flag ?? '🌐'} {COUNTRIES.find((c) => c.code === selectedPlayerRow.country_code)?.name ?? selectedPlayerRow.country_code}
+                            </span>
+                          )}
+                        </div>
+                        <div className="profile-rank-card-item profile-rank-card-rank">
+                          <div className="profile-rank-badge-wrap">
+                            <ProfileRankBadgeSvg />
+                          </div>
+                          <span className="profile-rank-level profile-rank-level--label">
+                            <EloWithRank
+                              elo={selectedPlayerRow.elo ?? null}
+                              matchesCount={selectedPlayerRow.matches_count ?? 0}
+                              calibrationLabel={t.profileCalibrationLabel}
+                              rankLabel={getTranslatedRankLabel(getRankFromElo(selectedPlayerRow.elo ?? null))}
+                              compact
+                              showEloValue={false}
+                            />
+                          </span>
+                        </div>
+                        <div className="profile-rank-card-item profile-rank-card-elo">
+                          <span className="profile-elo-big">{selectedPlayerRow.elo ?? '—'} ELO</span>
+                          <p className="profile-rank-meta">{t.profileEloLabel}</p>
+                        </div>
+                        <div className="profile-rank-card-item profile-rank-card-matches">
+                          <p className="profile-matches-summary">
+                            {t.profileMatchesLabel}: {(selectedPlayerRow.matches_count ?? 0).toLocaleString()}
+                          </p>
+                        </div>
+                      </div>
+                        <h4 className="profile-stats-heading">{t.profileStatsSummary}</h4>
+                        <div className="profile-stats-grid">
+                          <div className="profile-stat-card">
+                            <span className="profile-stat-icon-wrap"><IconMatchesSvg /></span>
+                            <span className="profile-stat-value">{selectedPlayerRow.matches_count}</span>
+                            <span className="profile-stat-label">{t.ratingMatches}</span>
+                          </div>
+                          <div className="profile-stat-card">
+                            <span className="profile-stat-icon-wrap"><IconWinsSvg /></span>
+                            <span className="profile-stat-value">{selectedPlayerRow.wins}</span>
+                            <span className="profile-stat-label">{t.ratingWins}</span>
+                          </div>
+                          <div className="profile-stat-card">
+                            <span className="profile-stat-icon-wrap"><IconDrawsSvg /></span>
+                            <span className="profile-stat-value">{selectedPlayerRow.draws}</span>
+                            <span className="profile-stat-label">{t.ratingDraws}</span>
+                          </div>
+                          <div className="profile-stat-card">
+                            <span className="profile-stat-icon-wrap"><IconLossesSvg /></span>
+                            <span className="profile-stat-value">{selectedPlayerRow.losses}</span>
+                            <span className="profile-stat-label">{t.ratingLosses}</span>
+                          </div>
+                          <div className="profile-stat-card">
+                            <span className="profile-stat-icon-wrap"><IconGoalsSvg /></span>
+                            <span className="profile-stat-value">{selectedPlayerRow.goals_for} / {selectedPlayerRow.goals_against}</span>
+                            <span className="profile-stat-label">{t.ratingGoalsFor} / {t.ratingGoalsAgainst}</span>
+                          </div>
+                          <div className="profile-stat-card profile-stat-card-accent">
+                            <span className="profile-stat-icon-wrap"><IconWinRateSvg /></span>
+                            <span className="profile-stat-value">
+                              {selectedPlayerRow.win_rate != null ? `${selectedPlayerRow.win_rate}%` : '—'}
+                            </span>
+                            <span className="profile-stat-label">{t.ratingWinRate}</span>
+                          </div>
+                        </div>
+                        <h4 className="profile-stats-heading">{t.profileLast10Matches}</h4>
+                        {recentMatches.length === 0 ? (
+                          <p className="panel-text small">{t.profileRecentMatchesEmpty}</p>
+                        ) : (
+                          <div className="profile-recent-table-wrap">
+                            <table className="profile-recent-table">
+                              <thead>
+                                <tr>
+                                  <th>{t.profilePlayerLabel}</th>
+                                  <th>{t.profileTableScore}</th>
+                                  <th>{t.profileTableEvent}</th>
+                                  <th>{t.profileTableResult}</th>
+                                  <th>{t.profileTableElo}</th>
+                                  <th>{t.profileTableDate}</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {recentMatches.slice(0, 10).map((match) => (
+                                  <tr key={match.match_id} className={`profile-recent-match profile-recent-match--${match.result}`}>
+                                    <td className="profile-recent-opponent">{match.opponent_id ? <button type="button" className="player-name-link" onClick={() => openPlayerProfile(match.opponent_id!)}>{match.opponent_name ?? '—'}</button> : (match.opponent_name ?? '—')}</td>
+                                    <td className="profile-recent-score">{match.my_score}:{match.opp_score}</td>
+                                    <td className="profile-recent-event">{match.match_type === 'tournament' && match.tournament_name ? match.tournament_name : t.profileEventLadder}</td>
+                                    <td>
+                                      <span className={`profile-result-pill profile-result-pill--${match.result}`}>
+                                        {match.result === 'win' ? 'W' : match.result === 'loss' ? 'L' : 'D'}
+                                      </span>
+                                    </td>
+                                    <td className="profile-recent-elo-cell">
+                                      {typeof match.elo_delta === 'number' && match.elo_delta !== 0 ? (
+                                        <>
+                                          {match.elo_delta > 0 ? <IconEloUpSvg /> : <IconEloDownSvg />}
+                                          <span className="profile-recent-elo-delta">
+                                            {match.elo_delta > 0 ? `+${match.elo_delta}` : match.elo_delta}
+                                          </span>
+                                        </>
+                                      ) : (
+                                        '—'
+                                      )}
+                                    </td>
+                                    <td className="profile-recent-date">
+                                      {match.played_at
+                                        ? new Date(match.played_at).toLocaleDateString(undefined, { day: '2-digit', month: '2-digit', year: 'numeric' })
+                                        : '—'}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )
+            ) : (
+            <>
             {myBan && (
               <div className="profile-banned-banner" role="alert">
                 <p className="profile-banned-title">
@@ -4855,28 +5018,7 @@ function App() {
                   <p className="panel-text">{t.profileLoading}</p>
                 ) : (
                   <>
-                    <div className="profile-page-layout">
-                      <aside className="profile-sidebar">
-                        <div className="profile-avatar-wrap">
-                          {myAvatarUrl ? (
-                            <img src={myAvatarUrl} alt="" className="profile-avatar-img" />
-                          ) : (
-                            <div className="profile-avatar-placeholder">
-                              {(displayName || '?').charAt(0).toUpperCase()}
-            </div>
-                          )}
-            </div>
-                        <div className="profile-sidebar-info">
-                          <h2 className="profile-display-name">{displayName}</h2>
-                          {myCountryCode && (
-                            <p className="profile-country-badge">
-                              {COUNTRIES.find((c) => c.code === myCountryCode)?.flag ?? '🌐'}{' '}
-                              {COUNTRIES.find((c) => c.code === myCountryCode)?.name ?? myCountryCode}
-                            </p>
-                          )}
-                        </div>
-                      </aside>
-                      <div className="profile-main">
+                    <div className="profile-main profile-main--full">
                         {/* Табы профиля */}
                         <div className="profile-tabs">
                           <button
@@ -4906,8 +5048,23 @@ function App() {
                         <div className="profile-tab-content">
                           {profileActiveTab === 'overview' && (
                             <div className="profile-tab-panel">
-                              <div className="profile-rank-card profile-rank-card--ref">
-                                <div className="profile-rank-card-left">
+                              <div className="profile-rank-card profile-rank-card--wide">
+                                <div className="profile-rank-card-item profile-rank-card-avatar">
+                                  {myAvatarUrl ? (
+                                    <img src={myAvatarUrl} alt="" className="profile-rank-card-avatar-img" />
+                                  ) : (
+                                    <span className="profile-rank-card-avatar-placeholder">{(displayName || '?').charAt(0).toUpperCase()}</span>
+                                  )}
+                                </div>
+                                <div className="profile-rank-card-item profile-rank-card-name-country">
+                                  <span className="profile-rank-card-display-name">{displayName}</span>
+                                  {myCountryCode && (
+                                    <span className="profile-rank-card-country">
+                                      {COUNTRIES.find((c) => c.code === myCountryCode)?.flag ?? '🌐'} {COUNTRIES.find((c) => c.code === myCountryCode)?.name ?? myCountryCode}
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="profile-rank-card-item profile-rank-card-rank">
                                   <div className="profile-rank-badge-wrap">
                                     <ProfileRankBadgeSvg />
                                   </div>
@@ -4922,23 +5079,11 @@ function App() {
                                     />
                                   </span>
                                 </div>
-                                <div className="profile-rank-card-right">
-                                  <div className="profile-rank-card-identity">
-                                    <div className="profile-rank-card-avatar">
-                                      {myAvatarUrl ? (
-                                        <img src={myAvatarUrl} alt="" className="profile-rank-card-avatar-img" />
-                                      ) : (
-                                        <span className="profile-rank-card-avatar-placeholder">{(displayName || '?').charAt(0).toUpperCase()}</span>
-                                      )}
-                                    </div>
-                                    {myCountryCode && (
-                                      <span className="profile-rank-card-country">
-                                        {COUNTRIES.find((c) => c.code === myCountryCode)?.flag ?? '🌐'} {COUNTRIES.find((c) => c.code === myCountryCode)?.name ?? myCountryCode}
-                                      </span>
-                                    )}
-                                  </div>
+                                <div className="profile-rank-card-item profile-rank-card-elo">
                                   <span className="profile-elo-big">{myProfileStats?.elo ?? elo ?? '—'} ELO</span>
                                   <p className="profile-rank-meta">{t.profileEloLabel}</p>
+                                </div>
+                                <div className="profile-rank-card-item profile-rank-card-matches">
                                   <p className="profile-matches-summary">
                                     {t.profileMatchesLabel}: {(myProfileStats?.matches_count ?? matchesCount ?? 0).toLocaleString()}
                                   </p>
@@ -5125,7 +5270,6 @@ function App() {
                           )}
                         </div>
                       </div>
-                    </div>
                   </>
                 )}
       </div>
@@ -5160,6 +5304,8 @@ function App() {
             <p className="panel-hint">
               {t.profileHint}
             </p>
+            )}
+            </>
             )}
           </section>
         )}

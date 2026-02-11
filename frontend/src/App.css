@@ -1505,6 +1505,9 @@
 .profile-page {
   padding: 0;
 }
+.profile-back-to-my {
+  margin-bottom: 1rem;
+}
 
 .profile-page-layout {
   display: flex;
@@ -2260,6 +2263,79 @@
   color: var(--text-muted);
 }
 
+/* Основной блок профиля на всю ширину (без сайдбара) */
+.profile-main--full {
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Карточка ранга — все данные в одну строку по ширине блока */
+.profile-rank-card--wide {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px 28px;
+}
+.profile-rank-card--wide .profile-rank-card-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+.profile-rank-card--wide .profile-rank-card-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--bg-elevated);
+  border: 2px solid var(--border);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.profile-rank-card--wide .profile-rank-card-avatar .profile-rank-card-avatar-img,
+.profile-rank-card--wide .profile-rank-card-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.profile-rank-card--wide .profile-rank-card-name-country {
+  align-items: flex-start;
+  flex: 1;
+  min-width: 120px;
+}
+.profile-rank-card--wide .profile-rank-card-display-name {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+}
+.profile-rank-card--wide .profile-rank-card-rank {
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+.profile-rank-card--wide .profile-rank-card-elo .profile-rank-meta,
+.profile-rank-card--wide .profile-rank-card-matches .profile-matches-summary {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+@media (max-width: 639px) {
+  .profile-rank-card--wide {
+    justify-content: flex-start;
+  }
+  .profile-rank-card--wide .profile-rank-card-item {
+    align-items: flex-start;
+  }
+  .profile-rank-card--wide .profile-rank-card-name-country {
+    width: 100%;
+  }
+}
+
 /* Карточка ранга — layout как на референсе: слева бейдж + LEVEL, справа ELO */
 .profile-rank-card--ref {
   display: grid;
@@ -2895,6 +2971,12 @@
   box-shadow: none;
   padding: var(--strike-space-xl);
   margin-bottom: var(--strike-space-xl);
+}
+.app.strike-theme .profile-rank-card--wide .profile-rank-card-display-name {
+  color: var(--strike-text);
+}
+.app.strike-theme .profile-rank-card--wide .profile-rank-card-country {
+  color: var(--strike-muted);
 }
 .app.strike-theme .profile-rank-badge-svg {
   filter: drop-shadow(0 0 16px var(--strike-orange-glow));
@@ -4954,7 +5036,7 @@
   color: var(--text-muted);
 }
 
-/* Модальное окно сетки турнира — поверх футера */
+/* Модальное окно сетки турнира — поверх футера (рендер в body, задаём переменные темы) */
 .bracket-modal-backdrop {
   position: fixed;
   inset: 0;
@@ -4965,6 +5047,25 @@
   justify-content: center;
   padding: 16px;
   overflow: auto;
+  /* Переменные темы Strike для контента модалки (вне .app.strike-theme) */
+  --strike-bg: #0a0c0f;
+  --strike-card: #111419;
+  --strike-elevated: #171a1f;
+  --strike-border: #23272e;
+  --strike-border-subtle: #1a1d23;
+  --strike-text: #f5f7fa;
+  --strike-muted: #7d8590;
+  --strike-orange: #ff6b00;
+  --strike-orange-bright: #ff8533;
+  --strike-orange-glow: rgba(255, 107, 0, 0.4);
+  --strike-orange-soft: rgba(255, 107, 0, 0.15);
+  --strike-font: 'Outfit', sans-serif;
+  --strike-font-body: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --strike-radius: 10px;
+  --strike-radius-sm: 8px;
+  --strike-border-w: 1px;
+  --strike-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  --strike-shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.25);
 }
 .bracket-modal-panel {
   width: 100%;
@@ -4972,10 +5073,10 @@
   max-height: calc(100vh - 32px);
   display: flex;
   flex-direction: column;
-  background: var(--strike-card);
-  border: var(--strike-border-w, 1px) solid var(--strike-border);
-  border-radius: var(--strike-radius, 12px);
-  box-shadow: var(--strike-shadow, 0 4px 12px rgba(0,0,0,0.3));
+  background: var(--strike-card, #111419);
+  border: var(--strike-border-w, 1px) solid var(--strike-border, #23272e);
+  border-radius: var(--strike-radius, 10px);
+  box-shadow: var(--strike-shadow, 0 8px 32px rgba(0,0,0,0.5));
 }
 .bracket-modal-header {
   display: flex;
@@ -4983,8 +5084,10 @@
   justify-content: space-between;
   gap: 12px;
   padding: 16px 20px;
-  border-bottom: 1px solid var(--strike-border);
+  border-bottom: 1px solid var(--strike-border, #23272e);
   flex-shrink: 0;
+  background: var(--strike-elevated, #171a1f);
+  border-radius: var(--strike-radius, 10px) var(--strike-radius, 10px) 0 0;
 }
 .bracket-modal-title {
   margin: 0;
@@ -4992,8 +5095,8 @@
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--strike-text);
-  font-family: var(--strike-font);
+  color: var(--strike-text, #f5f7fa);
+  font-family: var(--strike-font, 'Outfit', sans-serif);
 }
 .bracket-modal-close {
   width: 36px;
@@ -5001,20 +5104,22 @@
   padding: 0;
   font-size: 24px;
   line-height: 1;
-  color: var(--strike-muted);
+  color: var(--strike-muted, #7d8590);
   background: none;
   border: none;
   cursor: pointer;
   border-radius: var(--strike-radius-sm, 8px);
 }
 .bracket-modal-close:hover {
-  color: var(--strike-text);
-  background: var(--strike-border-subtle);
+  color: var(--strike-text, #f5f7fa);
+  background: var(--strike-border-subtle, #1a1d23);
 }
 .bracket-modal-body {
   padding: 16px 20px 24px;
   overflow-y: auto;
   min-height: 0;
+  background: var(--strike-card, #111419);
+  color: var(--strike-text, #f5f7fa);
 }
 .bracket-modal-body .bracket-view {
   margin-top: 0;
@@ -5465,10 +5570,10 @@
   width: 100%;
   max-width: 400px;
   padding: 24px 24px 28px;
-  background: var(--strike-card);
-  border: var(--strike-border-w, 1px) solid var(--strike-border);
-  border-radius: var(--strike-radius, 12px);
-  box-shadow: var(--strike-shadow);
+  background: var(--strike-card, #111419);
+  border: var(--strike-border-w, 1px) solid var(--strike-border, #23272e);
+  border-radius: var(--strike-radius, 10px);
+  box-shadow: var(--strike-shadow, 0 8px 32px rgba(0,0,0,0.5));
 }
 .bracket-match-modal-title {
   margin: 0 0 12px;
@@ -5476,25 +5581,25 @@
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--strike-text);
-  font-family: var(--strike-font);
+  color: var(--strike-text, #f5f7fa);
+  font-family: var(--strike-font, 'Outfit', sans-serif);
 }
 .bracket-match-modal-score {
   font-size: 32px;
   font-weight: 800;
-  color: var(--strike-text);
+  color: var(--strike-text, #f5f7fa);
   margin: 0 0 8px;
-  font-family: var(--strike-font);
+  font-family: var(--strike-font, 'Outfit', sans-serif);
 }
 .bracket-match-modal-meta {
   margin: 0 0 20px;
   font-size: 13px;
-  color: var(--strike-muted);
-  font-family: var(--strike-font-body);
+  color: var(--strike-muted, #7d8590);
+  font-family: var(--strike-font-body, 'Plus Jakarta Sans', system-ui, sans-serif);
 }
 .bracket-match-modal-result {
   padding-top: 16px;
-  border-top: 1px solid var(--strike-border);
+  border-top: 1px solid var(--strike-border, #23272e);
 }
 .bracket-match-modal-result .bracket-match-card-result-title {
   margin-bottom: 8px;
@@ -5511,13 +5616,15 @@
   padding: 0;
   font-size: 24px;
   line-height: 1;
-  color: var(--strike-muted);
+  color: var(--strike-muted, #7d8590);
   background: none;
   border: none;
   cursor: pointer;
+  border-radius: var(--strike-radius-sm, 8px);
 }
 .bracket-match-modal-close:hover {
-  color: var(--strike-text);
+  color: var(--strike-text, #f5f7fa);
+  background: var(--strike-border-subtle, #1a1d23);
 }
 
 /* Модалка жалобы — поверх футера и всего контента */
