@@ -3074,13 +3074,13 @@ function App() {
                         <div key={m.id} className={`bracket-match-card ${matchStatusClass}`}>
                           <div className="bracket-match-card-row bracket-match-card-players">
                             {m.player_a_id ? (
-                              <button type="button" className={`player-name-link ${m.winner_id === m.player_a_id ? 'bracket-match-card-winner' : ''}`} onClick={() => onOpenPlayerProfile?.(m.player_a_id)}>{getPlayerName(m.player_a_id)}</button>
+                              <button type="button" className={`player-name-link ${m.winner_id === m.player_a_id ? 'bracket-match-card-winner' : ''}`} onClick={() => m.player_a_id && onOpenPlayerProfile?.(m.player_a_id)}>{getPlayerName(m.player_a_id)}</button>
                             ) : (
                               <span className={m.winner_id === m.player_a_id ? 'bracket-match-card-winner' : ''}>{getPlayerName(m.player_a_id)}</span>
                             )}
                             <span className="bracket-match-card-vs"> – </span>
                             {m.player_b_id ? (
-                              <button type="button" className={`player-name-link ${m.winner_id === m.player_b_id ? 'bracket-match-card-winner' : ''}`} onClick={() => onOpenPlayerProfile?.(m.player_b_id)}>{getPlayerName(m.player_b_id)}</button>
+                              <button type="button" className={`player-name-link ${m.winner_id === m.player_b_id ? 'bracket-match-card-winner' : ''}`} onClick={() => m.player_b_id && onOpenPlayerProfile?.(m.player_b_id)}>{getPlayerName(m.player_b_id)}</button>
                             ) : (
                               <span className={m.winner_id === m.player_b_id ? 'bracket-match-card-winner' : ''}>{getPlayerName(m.player_b_id)}</span>
                             )}
@@ -3170,9 +3170,9 @@ function App() {
             <div className="bracket-match-modal-backdrop" onClick={() => setMatchResultModalId(null)} role="presentation">
               <div className="bracket-match-modal" onClick={(e) => e.stopPropagation()}>
                 <h4 className="bracket-match-modal-title">
-                  {m.player_a_id ? <button type="button" className="player-name-link" onClick={() => onOpenPlayerProfile?.(m.player_a_id)}>{getPlayerName(m.player_a_id)}</button> : getPlayerName(m.player_a_id)}
+                  {m.player_a_id ? <button type="button" className="player-name-link" onClick={() => m.player_a_id && onOpenPlayerProfile?.(m.player_a_id)}>{getPlayerName(m.player_a_id)}</button> : getPlayerName(m.player_a_id)}
                   {' – '}
-                  {m.player_b_id ? <button type="button" className="player-name-link" onClick={() => onOpenPlayerProfile?.(m.player_b_id)}>{getPlayerName(m.player_b_id)}</button> : getPlayerName(m.player_b_id)}
+                  {m.player_b_id ? <button type="button" className="player-name-link" onClick={() => m.player_b_id && onOpenPlayerProfile?.(m.player_b_id)}>{getPlayerName(m.player_b_id)}</button> : getPlayerName(m.player_b_id)}
                 </h4>
                 <div className="bracket-match-modal-score">{m.score_a != null && m.score_b != null ? `${m.score_a} : ${m.score_b}` : '—'}</div>
                 <p className="bracket-match-modal-meta">{dateTimeStr} – {finished ? 'Confirmed' : m.status === 'score_submitted' ? 'Pending confirm' : 'Both ready'}</p>
@@ -4157,12 +4157,12 @@ function App() {
                   <li key={r.id} className={`admin-report-item admin-report-item--${r.status}`}>
                     <div className="admin-report-main">
                       <span className="admin-report-meta">
-                        {r.match_type} · {r.player_a_id ? <button type="button" className="player-name-link" onClick={() => openPlayerProfile(r.player_a_id)}>{r.player_a_name ?? '—'}</button> : (r.player_a_name ?? '—')}
+                        {r.match_type} · {r.player_a_id ? <button type="button" className="player-name-link" onClick={() => r.player_a_id && openPlayerProfile(r.player_a_id)}>{r.player_a_name ?? '—'}</button> : (r.player_a_name ?? '—')}
                         {' vs '}
-                        {r.player_b_id ? <button type="button" className="player-name-link" onClick={() => openPlayerProfile(r.player_b_id)}>{r.player_b_name ?? '—'}</button> : (r.player_b_name ?? '—')}
+                        {r.player_b_id ? <button type="button" className="player-name-link" onClick={() => r.player_b_id && openPlayerProfile(r.player_b_id)}>{r.player_b_name ?? '—'}</button> : (r.player_b_name ?? '—')}
                         {' '}({r.score_display ?? '—'})
                       </span>
-                      <span className="admin-report-reporter">Жалоба от: {r.reporter_player_id ? <button type="button" className="player-name-link" onClick={() => openPlayerProfile(r.reporter_player_id)}>{r.reporter_name ?? '—'}</button> : (r.reporter_name ?? '—')}</span>
+                      <span className="admin-report-reporter">Жалоба от: {r.reporter_player_id ? <button type="button" className="player-name-link" onClick={() => r.reporter_player_id && openPlayerProfile(r.reporter_player_id)}>{r.reporter_name ?? '—'}</button> : (r.reporter_name ?? '—')}</span>
                       <p className="admin-report-message">{r.message ?? '—'}</p>
                       {r.screenshot_url && <a href={r.screenshot_url} target="_blank" rel="noopener noreferrer" className="admin-report-screenshot">Скриншот</a>}
                       <span className="admin-report-date">{new Date(r.created_at).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })}</span>
