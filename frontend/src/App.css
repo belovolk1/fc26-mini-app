@@ -3450,6 +3450,17 @@
   color: var(--strike-orange);
 }
 
+.rating-rank-cell-only {
+  text-align: center;
+}
+.rating-rank-cell-only .elo-with-rank {
+  display: inline-flex;
+  justify-content: center;
+}
+.strike-top-rank-only .elo-with-rank {
+  display: inline-flex;
+}
+
 .rating-winrate-cell {
   font-weight: 700;
   font-variant-numeric: tabular-nums;
@@ -3464,16 +3475,34 @@
   font-size: 1.2em;
 }
 
-/* ELO, MATCHES, W% — выравнивание по правому краю (заголовки и ячейки) */
+/* Matches, W, D, L, W% — выравнивание по правому краю */
 .rating-table th:nth-child(4),
 .rating-table th:nth-child(5),
 .rating-table th:nth-child(6),
+.rating-table th:nth-child(7),
+.rating-table th:nth-child(8),
 .rating-table td:nth-child(4),
 .rating-table td:nth-child(5),
-.rating-table td:nth-child(6) {
+.rating-table td:nth-child(6),
+.rating-table td:nth-child(7),
+.rating-table td:nth-child(8) {
   text-align: right;
 }
-.rating-table td:nth-child(5) {
+.rating-table td:nth-child(4),
+.rating-table td:nth-child(5),
+.rating-table td:nth-child(6),
+.rating-table td:nth-child(7) {
+  font-variant-numeric: tabular-nums;
+}
+.rating-player-flag {
+  margin-right: 6px;
+  flex-shrink: 0;
+}
+.rating-player-country .fi,
+.profile-rank-card-country .fi {
+  margin-right: 4px;
+}
+.rating-num-cell {
   font-variant-numeric: tabular-nums;
 }
 
@@ -4272,12 +4301,31 @@
 }
 .rank-icon {
   display: inline-block;
-  width: 18px;
-  height: 18px;
+  width: 36px;
+  height: 36px;
   flex-shrink: 0;
   border-radius: 4px;
   background: var(--bg-elevated);
   border: 1px solid var(--border);
+}
+.rank-icon.rank-icon-svg {
+  width: auto;
+  height: auto;
+  background: none !important;
+  border: none !important;
+  border-radius: 0;
+  vertical-align: middle;
+}
+.elo-with-rank--icon-large {
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.profile-rank-card--wide .profile-rank-card-rank .elo-with-rank--icon-large {
+  align-items: center;
+}
+.profile-rank-card--wide .profile-rank-card-rank {
+  min-width: 64px;
 }
 .rank-icon--calibration {
   background: linear-gradient(135deg, var(--bg-elevated) 0%, var(--border) 100%);
@@ -4761,10 +4809,42 @@
 .tournaments-page-header {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
   gap: 16px;
   padding: 20px 24px 16px;
   flex-wrap: wrap;
+}
+.tournaments-page-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.app.strike-theme .tournaments-page-title {
+  font-family: var(--strike-font);
+  color: var(--strike-text);
+  font-size: 20px;
+  letter-spacing: 0.08em;
+}
+.tournaments-page-title-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.tournaments-page-icon {
+  width: 36px;
+  height: 36px;
+  color: var(--accent);
+}
+.app.strike-theme .tournaments-page-icon {
+  color: var(--strike-orange);
+  filter: drop-shadow(0 0 8px var(--strike-orange-glow));
 }
 .tournaments-page-header-actions {
   display: flex;
@@ -4989,6 +5069,43 @@
   color: var(--strike-orange);
   border-color: var(--strike-orange);
   background: rgba(255, 140, 66, 0.12);
+}
+
+/* Админка: тест рангов SVG */
+.admin-test-ranks-title {
+  margin: 20px 0 12px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.admin-test-ranks-title:first-child {
+  margin-top: 0;
+}
+.admin-test-ranks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  padding: 24px 0;
+  align-items: flex-start;
+}
+.admin-rank-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.admin-rank-svg {
+  border-radius: 50%;
+  background: var(--bg-main);
+  padding: 4px;
+  box-shadow: var(--shadow-sm);
+}
+.admin-rank-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 500;
 }
 
 /* Админка: список нарушений рейтинга */
@@ -5968,10 +6085,25 @@
   font-size: 40px;
   margin-bottom: 12px;
   line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+.strike-card-icon-svg {
+  width: 40px;
+  height: 40px;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+.app.strike-theme .strike-card-icon-svg {
+  color: var(--strike-orange);
 }
 .app.strike-theme .strike-card-icon {
   font-size: 40px;
   margin-bottom: var(--strike-space-md);
+  filter: drop-shadow(0 1px 4px var(--strike-orange-glow));
+}
+.app.strike-theme .strike-card-icon .strike-card-icon-svg {
   filter: drop-shadow(0 1px 4px var(--strike-orange-glow));
 }
 .strike-card-title {

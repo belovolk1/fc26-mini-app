@@ -1,9 +1,9 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import './App.css'
 import { supabase } from './supabaseClient'
 
-type View = 'home' | 'profile' | 'ladder' | 'tournaments' | 'matches' | 'rating' | 'admin' | 'news-detail'
+type View = 'home' | 'profile' | 'ladder' | 'tournaments' | 'matches' | 'rating' | 'admin' | 'news-detail' | 'test-ranks'
 type Lang = 'en' | 'ro' | 'ru'
 
 const messages: Record<
@@ -103,6 +103,7 @@ const messages: Record<
     navMatches: string
     navRating: string
     navAdmin: string
+    navTestRanks: string
     matchesHeader: string
     matchesIntro: string
     matchesAdminOnly: string
@@ -117,6 +118,7 @@ const messages: Record<
     ratingEmpty: string
     ratingRank: string
     ratingElo: string
+    ratingLevel: string
     ratingMatches: string
     ratingWins: string
     ratingDraws: string
@@ -271,6 +273,7 @@ const messages: Record<
       rating: 'Rating',
       admin: 'Admin',
       'news-detail': 'News',
+      'test-ranks': 'Test ranks',
     },
     quickPlayTitle: 'Quick play',
     quickPlayText:
@@ -369,6 +372,7 @@ const messages: Record<
     navMatches: 'Matches',
     navRating: 'Rating',
     navAdmin: 'Admin',
+    navTestRanks: 'Test ranks',
     matchesHeader: 'All matches',
     matchesIntro: 'Recently played matches.',
     matchesAdminOnly: 'This page is available only to administrators.',
@@ -383,6 +387,7 @@ const messages: Record<
     ratingEmpty: 'No players yet.',
     ratingRank: '#',
     ratingElo: 'ELO',
+    ratingLevel: 'Ranks',
     ratingMatches: 'Matches',
     ratingWins: 'W',
     ratingDraws: 'D',
@@ -536,6 +541,7 @@ const messages: Record<
       rating: 'Clasament',
       admin: 'Admin',
       'news-detail': 'Știri',
+      'test-ranks': 'Test ranguri',
     },
     quickPlayTitle: 'Joc rapid',
     quickPlayText:
@@ -634,6 +640,7 @@ const messages: Record<
     navMatches: 'Meciuri',
     navRating: 'Clasament',
     navAdmin: 'Admin',
+    navTestRanks: 'Test ranguri',
     matchesHeader: 'Toate meciurile',
     matchesIntro: 'Meciuri jucate recent.',
     matchesAdminOnly: 'Această pagină este disponibilă doar administratorilor.',
@@ -648,6 +655,7 @@ const messages: Record<
     ratingEmpty: 'Niciun jucător încă.',
     ratingRank: '#',
     ratingElo: 'ELO',
+    ratingLevel: 'Niveluri',
     ratingMatches: 'Meciuri',
     ratingWins: 'V',
     ratingDraws: 'E',
@@ -801,6 +809,7 @@ const messages: Record<
       rating: 'Рейтинг',
       admin: 'Админка',
       'news-detail': 'Новость',
+      'test-ranks': 'Тест рангов',
     },
     quickPlayTitle: 'Быстрая игра',
     quickPlayText:
@@ -899,6 +908,7 @@ const messages: Record<
     navMatches: 'Матчи',
     navRating: 'Рейтинг',
     navAdmin: 'Админ',
+    navTestRanks: 'Тест рангов',
     matchesHeader: 'Все матчи',
     matchesIntro: 'Недавно сыгранные матчи.',
     matchesAdminOnly: 'Эта страница доступна только администраторам.',
@@ -913,6 +923,7 @@ const messages: Record<
     ratingEmpty: 'Игроков пока нет.',
     ratingRank: '#',
     ratingElo: 'ELO',
+    ratingLevel: 'Ранги',
     ratingMatches: 'Матчей',
     ratingWins: 'П',
     ratingDraws: 'Н',
@@ -1077,6 +1088,20 @@ const COUNTRIES: { code: string; name: string; flag: string }[] = [
   { code: 'OTHER', name: 'Other', flag: '🌐' },
 ]
 
+/** Флаг страны через flag-icons (SVG), для десктопа. code — ISO 3166-1-alpha-2; для OTHER флаг не показываем. */
+function CountryFlag({ code, className, title }: { code: string; className?: string; title?: string }) {
+  if (!code || code === 'OTHER') return null
+  const lower = code.toLowerCase()
+  return (
+    <span
+      className={`fi fi-${lower} fis ${className ?? ''}`.trim()}
+      title={title}
+      aria-hidden
+      style={{ display: 'inline-block', width: '1.33em', height: '1em', verticalAlign: '-0.1em' }}
+    />
+  )
+}
+
 type TelegramUser = {
   id: number
   first_name: string
@@ -1214,6 +1239,30 @@ function showLobbyNotification(title: string, body: string) {
   }
 }
 
+/** Границы ELO по рангам: [level-1].min/max (level 1..9, level 10 = Elite 2001+). */
+const RANK_ELO_BOUNDS: { min: number; max: number }[] = [
+  { min: 1, max: 800 },
+  { min: 801, max: 950 },
+  { min: 951, max: 1100 },
+  { min: 1101, max: 1250 },
+  { min: 1251, max: 1400 },
+  { min: 1401, max: 1550 },
+  { min: 1551, max: 1700 },
+  { min: 1701, max: 1850 },
+  { min: 1851, max: 2000 },
+  { min: 2001, max: 9999 },
+]
+
+/** Прогресс внутри текущего ранга: 0 = только вошёл, 1 = у порога следующего. Для Elite возвращаем 1. */
+function getRankProgress(elo: number | null, level: number): number {
+  if (elo == null || level < 1 || level > 10) return 0
+  const bounds = RANK_ELO_BOUNDS[level - 1]
+  if (!bounds) return 0
+  const span = bounds.max - bounds.min
+  if (span <= 0) return 1
+  return Math.min(1, Math.max(0, (elo - bounds.min) / span))
+}
+
 /** Ранг по ELO: Level 1 (1–800) … Level 9 (1851–2000), Level 10 = Elite (2001+). */
 function getRankFromElo(elo: number | null): { level: number; isElite: boolean } | null {
   if (elo == null || elo < 1) return null
@@ -1236,7 +1285,123 @@ function getRankDisplayLabel(rank: { level: number; isElite: boolean } | null): 
   return `LEVEL ${rank.level}`
 }
 
-/** Блок ELO + ранг (или калибровка) + иконка ранга (заглушка под будущие иконки). rankLabel — переведённая подпись ранга (если не передана, используется английская). */
+/** Размеры иконки ранга по контексту (px). */
+const RANK_ICON_SIZES = { small: 24, medium: 36, large: 56 } as const
+
+/** Иконка ранга: калибровка (дуга-заглушка), Elite (круг + Eliterank.svg), 1–9 (круг + динамическая дуга по прогрессу до следующего ранга + цифра). */
+function RankIconSvg({
+  elo,
+  isCalibration,
+  rank,
+  title,
+  size: sizeProp,
+}: {
+  elo: number | null
+  isCalibration: boolean
+  rank: { level: number; isElite: boolean } | null
+  title: string
+  size?: keyof typeof RANK_ICON_SIZES | number
+}) {
+  const uid = useId().replace(/:/g, '')
+  const size = typeof sizeProp === 'number' ? sizeProp : RANK_ICON_SIZES[sizeProp ?? 'medium']
+  const viewSize = 48
+  const r = 18
+  const cx = 24
+  const cy = 24
+
+  if (isCalibration) {
+    return (
+      <svg
+        className="rank-icon rank-icon-svg rank-icon--calibration"
+        viewBox={`0 0 ${viewSize} ${viewSize}`}
+        width={size}
+        height={size}
+        aria-hidden
+        title={title}
+      >
+        <circle cx={cx} cy={cy} r={22} fill="var(--bg-elevated)" stroke="var(--border)" strokeWidth="1" strokeDasharray="4 3" />
+      </svg>
+    )
+  }
+
+  if (rank?.isElite) {
+    return (
+      <svg
+        className="rank-icon rank-icon-svg rank-icon--elite"
+        viewBox={`0 0 ${viewSize} ${viewSize}`}
+        width={size}
+        height={size}
+        aria-hidden
+        title={title}
+      >
+        <circle cx={cx} cy={cy} r={22} fill="var(--bg-elevated)" stroke="var(--border)" strokeWidth="1" />
+        <image href="/Eliterank.svg" x={8} y={8} width={32} height={32} preserveAspectRatio="xMidYMid meet" />
+      </svg>
+    )
+  }
+
+  const level = rank?.level ?? 1
+  const progress = getRankProgress(elo, level)
+  const arcPercent = 0.08 + progress * (0.95 - 0.08)
+  const startDeg = 150
+  const sweepDeg = 360 * arcPercent
+  const rad = (d: number) => (d - 90) * (Math.PI / 180)
+  const x1 = cx + r * Math.cos(rad(startDeg))
+  const y1 = cy + r * Math.sin(rad(startDeg))
+  const x2 = cx + r * Math.cos(rad(startDeg + sweepDeg))
+  const y2 = cy + r * Math.sin(rad(startDeg + sweepDeg))
+  const largeArc = sweepDeg > 180 ? 1 : 0
+  const arcPath = `M ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2}`
+
+  const colors: Record<number, string> = {
+    1: '#1e8449',
+    2: '#27ae60',
+    3: '#2ecc71',
+    4: '#b8860b',
+    5: '#d4a017',
+    6: '#e6a800',
+    7: '#f1c40f',
+    8: '#e67e22',
+    9: '#f39c12',
+    10: '#e74c3c',
+  }
+  const color = colors[level] ?? colors[1]
+
+  return (
+    <svg
+      className="rank-icon rank-icon-svg"
+      viewBox={`0 0 ${viewSize} ${viewSize}`}
+      width={size}
+      height={size}
+      aria-hidden
+      title={title}
+    >
+      <defs>
+        <filter id={`rank-arc-glow-${uid}`} x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="0.5" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+      </defs>
+      <circle cx={cx} cy={cy} r={22} fill="var(--bg-elevated)" stroke="var(--border)" strokeWidth="1" />
+      <path
+        d={arcPath}
+        fill="none"
+        stroke={color}
+        strokeWidth="4"
+        strokeLinecap="round"
+        filter={`url(#rank-arc-glow-${uid})`}
+      />
+      <text x={cx} y={cy + 4} textAnchor="middle" fill={color} fontSize="16" fontWeight="bold" fontFamily="system-ui, sans-serif">
+        {level}
+      </text>
+    </svg>
+  )
+}
+
+/** Блок ELO + ранг (или калибровка) + иконка ранга. rankLabel — переведённая подпись ранга. rankIconSize — размер иконки: small в таблицах, large в карточках профиля и главном ELO-блоке. */
 function EloWithRank({
   elo,
   matchesCount,
@@ -1244,6 +1409,7 @@ function EloWithRank({
   rankLabel: rankLabelProp,
   compact,
   showEloValue = true,
+  rankIconSize = 'medium',
 }: {
   elo: number | null
   matchesCount: number
@@ -1251,21 +1417,75 @@ function EloWithRank({
   rankLabel?: string
   compact?: boolean
   showEloValue?: boolean
+  rankIconSize?: keyof typeof RANK_ICON_SIZES
 }) {
   const isCalibration = matchesCount < 10
   const rank = getRankFromElo(elo)
   const rankLabel = rankLabelProp ?? (rank ? getRankDisplayLabel(rank) : '—')
-  const level = rank?.level ?? 0
-  const isElite = rank?.isElite ?? false
-  const iconClass = isCalibration ? 'rank-icon--calibration' : isElite ? 'rank-icon--elite' : `rank-icon--level-${level}`
   return (
-    <span className={`elo-with-rank ${compact ? 'elo-with-rank--compact' : ''} ${!showEloValue ? 'elo-with-rank--label-only' : ''}`}>
-      <span className={`rank-icon ${iconClass}`} aria-hidden title={isCalibration ? calibrationLabel : rankLabel} />
+    <span className={`elo-with-rank ${compact ? 'elo-with-rank--compact' : ''} ${!showEloValue ? 'elo-with-rank--label-only' : ''} ${rankIconSize === 'large' ? 'elo-with-rank--icon-large' : ''}`}>
+      <RankIconSvg
+        elo={elo}
+        isCalibration={isCalibration}
+        rank={rank}
+        title={isCalibration ? calibrationLabel : rankLabel}
+        size={rankIconSize}
+      />
       <span className="elo-with-rank-label">{isCalibration ? calibrationLabel : rankLabel}</span>
       {showEloValue && <span className="elo-with-rank-value">{elo ?? '—'} ELO</span>}
     </span>
   )
 }
+
+/* === Иконки карточек главной (Quick play, Tournaments, Profile, Rating) === */
+const HomeCardIconQuickPlay = () => (
+  <svg className="strike-card-icon-svg" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+    <path d="M22 4L12 22h8l-2 14 10-18h-8l2-14z" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+  </svg>
+)
+/** Кубок с двумя ручками, чашей, ножкой и базой — для карточки Tournaments на главной. */
+const HomeCardIconTournaments = () => (
+  <svg className="strike-card-icon-svg" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+    <path d="M12 10h16v10c0 4.5-3.5 7.5-8 8.5-4.5-1-8-4-8-8.5V10z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" fill="none" />
+    <path d="M12 16H7s0 5 5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+    <path d="M28 16h5s0 5-5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+    <path d="M20 28.5v5M16 36h8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    <path d="M17 36a1.5 1.5 0 0 0 3 0" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+  </svg>
+)
+
+/** Иконка кубка для заголовка страницы Tournaments — узнаваемый кубок с ручками, чашей, ножкой и базой. */
+const TournamentsPageIcon = () => (
+  <svg className="tournaments-page-icon" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+    {/* Чаша кубка */}
+    <path d="M14 12h20v12c0 5.5-4 9-10 10.5-6-1.5-10-5-10-10.5V12z" stroke="currentColor" strokeWidth="2.5" strokeLinejoin="round" fill="none" />
+    {/* Левый ручка */}
+    <path d="M14 18H8s0 6 6 6" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+    {/* Правый ручка */}
+    <path d="M34 18h6s0 6-6 6" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+    {/* Ножка и база */}
+    <path d="M24 34.5v6M18 44h12" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+    <path d="M20 44a2 2 0 0 0 4 0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+  </svg>
+)
+const HomeCardIconProfile = () => (
+  <svg className="strike-card-icon-svg" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+    <circle cx="20" cy="14" r="6" stroke="currentColor" strokeWidth="2" fill="none" />
+    <path d="M8 36c0-6.6 5.4-12 12-12s12 5.4 12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none" />
+  </svg>
+)
+const HomeCardIconRating = () => (
+  <svg className="strike-card-icon-svg" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+    <path d="M8 28V18h4v10H8zM18 28V12h4v16h-4zM28 28V8h4v20h-4z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+    <path d="M6 32h28" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+  </svg>
+)
+const HomeCardIconTestRanks = () => (
+  <svg className="strike-card-icon-svg" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+    <path d="M20 4l4 8 9 1.5-6.5 6 1.5 9-8-4-8 4 1.5-9-6.5-6 9-1.5L20 4z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" fill="none" />
+    <path d="M12 28l4 8 4-8 8-4-8-4-4-8-4 8-8 4 8 4z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" fill="none" />
+  </svg>
+)
 
 /* === SVG иконки для профиля (тематика: ранги, статы, матчи) === */
 const ProfileRankBadgeSvg = () => (
@@ -3586,9 +3806,10 @@ function App() {
     { view: 'home', label: t.navHome },
     { view: 'ladder', label: t.navPlay },
     { view: 'tournaments', label: t.navTournaments, badge: myActiveTournamentRegistrations.length || undefined },
-    ...(isAdminUser ? [{ view: 'matches' as View, label: t.navMatches }] : []),
+    { view: 'test-ranks', label: t.navTestRanks },
     { view: 'rating', label: t.navRating },
     { view: 'profile', label: t.navProfile },
+    ...(isAdminUser ? [{ view: 'matches' as View, label: t.navMatches }] : []),
     ...(isAdminUser ? [{ view: 'admin' as View, label: t.navAdmin }] : []),
   ]
 
@@ -3858,28 +4079,34 @@ function App() {
             <section className="strike-main">
               <div className="strike-cards">
                 <button type="button" className="strike-card strike-card-primary" onClick={() => setActiveView(hasActiveTournamentMatch ? 'tournaments' : 'ladder')}>
-                  <div className="strike-card-icon">⚡</div>
+                  <div className="strike-card-icon"><HomeCardIconQuickPlay /></div>
                   <h3 className="strike-card-title">{t.quickPlayTitle}</h3>
                   <p className="strike-card-text">{t.quickPlayText}</p>
                   <span className="strike-card-btn strike-btn strike-btn-primary">{hasActiveTournamentMatch ? t.homeInTournament : t.homePlayNow}</span>
             </button>
                 <button type="button" className="strike-card" onClick={() => setActiveView('tournaments')}>
-                  <div className="strike-card-icon">🏆</div>
+                  <div className="strike-card-icon"><HomeCardIconTournaments /></div>
                   <h3 className="strike-card-title">{t.tournamentsTitle}</h3>
                   <p className="strike-card-text">{t.tournamentsText}</p>
                   <span className="strike-card-btn strike-btn strike-btn-outline">{t.homeViewEvents}</span>
                 </button>
                 <button type="button" className="strike-card" onClick={() => setActiveView('profile')}>
-                  <div className="strike-card-icon">👤</div>
+                  <div className="strike-card-icon"><HomeCardIconProfile /></div>
                   <h3 className="strike-card-title">{t.profileTileTitle}</h3>
                   <p className="strike-card-text">{t.profileTileText}</p>
                   <span className="strike-card-btn strike-btn strike-btn-outline">{t.homeViewStats}</span>
                 </button>
                 <button type="button" className="strike-card" onClick={() => setActiveView('rating')}>
-                  <div className="strike-card-icon">📊</div>
+                  <div className="strike-card-icon"><HomeCardIconRating /></div>
                   <h3 className="strike-card-title">{t.ratingHeader}</h3>
                   <p className="strike-card-text">{t.ratingIntro}</p>
                   <span className="strike-card-btn strike-btn strike-btn-outline">{t.homeViewLadder}</span>
+                </button>
+                <button type="button" className="strike-card" onClick={() => setActiveView('test-ranks')}>
+                  <div className="strike-card-icon"><HomeCardIconTestRanks /></div>
+                  <h3 className="strike-card-title">{t.navTestRanks}</h3>
+                  <p className="strike-card-text">{t.viewTitle['test-ranks']}</p>
+                  <span className="strike-card-btn strike-btn strike-btn-outline">{t.navTestRanks}</span>
                 </button>
               </div>
               <aside className="strike-stats">
@@ -3895,6 +4122,7 @@ function App() {
                       matchesCount={myProfileStats?.matches_count ?? matchesCount ?? 0}
                       calibrationLabel={t.profileCalibrationLabel}
                       rankLabel={getTranslatedRankLabel(getRankFromElo(myProfileStats?.elo ?? elo ?? null))}
+                      rankIconSize="large"
                     />
                   </span>
                   <div className="strike-elo-bar">
@@ -3975,8 +4203,8 @@ function App() {
                         )}
                       </span>
                       <span className="strike-top-name">{r.display_name || '—'}</span>
-                      <span className="strike-top-elo">
-                        <EloWithRank elo={r.elo ?? null} matchesCount={r.matches_count ?? 0} calibrationLabel={t.profileCalibrationLabel} rankLabel={getTranslatedRankLabel(getRankFromElo(r.elo ?? null))} compact />
+                      <span className="strike-top-rank-only">
+                        <EloWithRank elo={r.elo ?? null} matchesCount={r.matches_count ?? 0} calibrationLabel={t.profileCalibrationLabel} rankLabel={getTranslatedRankLabel(getRankFromElo(r.elo ?? null))} compact showEloValue={false} />
                       </span>
                       {i === 0 && <span className="strike-top-crown">👑</span>}
                     </li>
@@ -4050,6 +4278,174 @@ function App() {
 
         {activeView !== 'home' && (
           <h2 className="view-title">{t.viewTitle[activeView]}</h2>
+        )}
+
+        {activeView === 'test-ranks' && (
+          <section className="panel">
+            <h3 className="panel-title">Тест рангов (SVG)</h3>
+            <p className="panel-text small">Примеры иконок рангов 1–10 и варианты Elite.</p>
+            <h4 className="admin-test-ranks-title">Elite — варианты</h4>
+            <div className="admin-test-ranks">
+              <div className="admin-rank-item">
+                <svg className="admin-rank-svg" viewBox="0 0 48 48" width={56} height={56} aria-hidden>
+                  <circle cx="24" cy="24" r="22" fill="var(--bg-elevated)" stroke="var(--border)" strokeWidth="1" />
+                  <image href="/Eliterank.svg" x="6" y="6" width="36" height="36" />
+                </svg>
+                <span className="admin-rank-label">Elite — феникс + венок</span>
+              </div>
+              <div className="admin-rank-item">
+                <svg className="admin-rank-svg" viewBox="0 0 48 48" width={56} height={56} aria-hidden>
+                  <defs>
+                    <linearGradient id="elite-v2-b" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#ffd700" />
+                      <stop offset="100%" stopColor="#ff8c00" />
+                    </linearGradient>
+                    <filter id="elite-v2-glow-b" x="-50%" y="-50%" width="200%" height="200%">
+                      <feGaussianBlur stdDeviation="0.6" result="blur" />
+                      <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                    </filter>
+                  </defs>
+                  <circle cx="24" cy="24" r="22" fill="var(--bg-elevated)" stroke="var(--border)" strokeWidth="1" />
+                  <path d="M26 10 L22 24 L28 24 L24 38 L30 24 L26 24 Z" fill="url(#elite-v2-b)" stroke="#ff8c00" strokeWidth="0.8" strokeLinejoin="round" filter="url(#elite-v2-glow-b)" />
+                </svg>
+                <span className="admin-rank-label">Elite — молния</span>
+              </div>
+              <div className="admin-rank-item">
+                <svg className="admin-rank-svg" viewBox="0 0 48 48" width={56} height={56} aria-hidden>
+                  <defs>
+                    <linearGradient id="elite-v2-c" x1="0%" y1="50%" x2="100%" y2="50%">
+                      <stop offset="0%" stopColor="#ffd700" />
+                      <stop offset="100%" stopColor="#ff8c00" />
+                    </linearGradient>
+                    <filter id="elite-v2-glow-c" x="-50%" y="-50%" width="200%" height="200%">
+                      <feGaussianBlur stdDeviation="0.5" result="blur" />
+                      <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                    </filter>
+                  </defs>
+                  <circle cx="24" cy="24" r="22" fill="var(--bg-elevated)" stroke="var(--border)" strokeWidth="1" />
+                  <path d="M12 24 Q18 14 24 18 Q30 14 36 24 Q30 34 24 30 Q18 34 12 24 Z" fill="none" stroke="url(#elite-v2-c)" strokeWidth="2" strokeLinejoin="round" filter="url(#elite-v2-glow-c)" />
+                  <path d="M16 24 Q22 18 24 20 Q26 18 32 24 Q26 30 24 28 Q22 30 16 24 Z" fill="none" stroke="url(#elite-v2-c)" strokeWidth="1.2" opacity="0.8" />
+                </svg>
+                <span className="admin-rank-label">Elite — крылья</span>
+              </div>
+              <div className="admin-rank-item">
+                <svg className="admin-rank-svg" viewBox="0 0 48 48" width={56} height={56} aria-hidden>
+                  <defs>
+                    <linearGradient id="elite-v2-d" x1="50%" y1="0%" x2="50%" y2="100%">
+                      <stop offset="0%" stopColor="#ffd700" />
+                      <stop offset="100%" stopColor="#cc5500" />
+                    </linearGradient>
+                    <filter id="elite-v2-glow-d" x="-50%" y="-50%" width="200%" height="200%">
+                      <feGaussianBlur stdDeviation="0.6" result="blur" />
+                      <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                    </filter>
+                  </defs>
+                  <circle cx="24" cy="24" r="22" fill="var(--bg-elevated)" stroke="var(--border)" strokeWidth="1" />
+                  <circle cx="24" cy="24" r="8" fill="url(#elite-v2-d)" stroke="#ff8c00" strokeWidth="0.8" filter="url(#elite-v2-glow-d)" />
+                  <path d="M24 8 L25 12 L24 11 L23 12 Z M24 40 L25 36 L24 37 L23 36 Z M8 24 L12 25 L11 24 L12 23 Z M40 24 L36 25 L37 24 L36 23 Z" fill="#ffd700" stroke="#ff8c00" strokeWidth="0.5" />
+                  <path d="M14 14 L16 18 L15 16 L18 16 Z M34 14 L32 18 L33 16 L30 16 Z M14 34 L16 30 L15 32 L18 32 Z M34 34 L32 30 L33 32 L30 32 Z" fill="#ffd700" stroke="#ff8c00" strokeWidth="0.5" opacity="0.9" />
+                </svg>
+                <span className="admin-rank-label">Elite — солнце</span>
+              </div>
+              <div className="admin-rank-item">
+                <svg className="admin-rank-svg" viewBox="0 0 48 48" width={56} height={56} aria-hidden>
+                  <defs>
+                    <linearGradient id="elite-v2-e" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="#ffd700" />
+                      <stop offset="100%" stopColor="#ff8c00" />
+                    </linearGradient>
+                    <filter id="elite-v2-glow-e" x="-50%" y="-50%" width="200%" height="200%">
+                      <feGaussianBlur stdDeviation="0.5" result="blur" />
+                      <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                    </filter>
+                  </defs>
+                  <circle cx="24" cy="24" r="22" fill="var(--bg-elevated)" stroke="var(--border)" strokeWidth="1" />
+                  <path d="M24 10 L27 20 L38 20 L29 26 L33 36 L24 30 L15 36 L19 26 L10 20 L21 20 Z" fill="url(#elite-v2-e)" stroke="#ff8c00" strokeWidth="0.6" strokeLinejoin="round" filter="url(#elite-v2-glow-e)" />
+                  <path d="M24 14 L26 21 L34 21 L28 25 L30 33 L24 29 L18 33 L20 25 L14 21 L22 21 Z" fill="none" stroke="url(#elite-v2-e)" strokeWidth="1" strokeLinejoin="round" opacity="0.7" />
+                </svg>
+                <span className="admin-rank-label">Elite — двойная звезда</span>
+              </div>
+              <div className="admin-rank-item">
+                <svg className="admin-rank-svg" viewBox="0 0 48 48" width={56} height={56} aria-hidden>
+                  <defs>
+                    <linearGradient id="elite-v2-f" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="#ffd700" />
+                      <stop offset="100%" stopColor="#cc5500" />
+                    </linearGradient>
+                    <filter id="elite-v2-glow-f" x="-50%" y="-50%" width="200%" height="200%">
+                      <feGaussianBlur stdDeviation="0.5" result="blur" />
+                      <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                    </filter>
+                  </defs>
+                  <circle cx="24" cy="24" r="22" fill="var(--bg-elevated)" stroke="var(--border)" strokeWidth="1" />
+                  <path d="M24 8 L26 12 L24 14 L22 12 Z" fill="url(#elite-v2-f)" stroke="#ff8c00" strokeWidth="0.6" filter="url(#elite-v2-glow-f)" />
+                  <path d="M24 14 L24 34 M18 22 L30 22" fill="none" stroke="url(#elite-v2-f)" strokeWidth="2" strokeLinecap="round" filter="url(#elite-v2-glow-f)" />
+                  <path d="M22 34 L26 34 L26 38 L22 38 Z" fill="url(#elite-v2-f)" stroke="#ff8c00" strokeWidth="0.6" filter="url(#elite-v2-glow-f)" />
+                </svg>
+                <span className="admin-rank-label">Elite — меч</span>
+              </div>
+              <div className="admin-rank-item">
+                <svg className="admin-rank-svg" viewBox="0 0 48 48" width={56} height={56} aria-hidden>
+                  <defs>
+                    <linearGradient id="elite-v2-g" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="#ffd700" />
+                      <stop offset="50%" stopColor="#ff8c00" />
+                      <stop offset="100%" stopColor="#cc5500" />
+                    </linearGradient>
+                    <filter id="elite-v2-glow-g" x="-50%" y="-50%" width="200%" height="200%">
+                      <feGaussianBlur stdDeviation="0.5" result="blur" />
+                      <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                    </filter>
+                  </defs>
+                  <circle cx="24" cy="24" r="22" fill="var(--bg-elevated)" stroke="var(--border)" strokeWidth="1" />
+                  <circle cx="24" cy="24" r="16" fill="none" stroke="url(#elite-v2-g)" strokeWidth="3" filter="url(#elite-v2-glow-g)" />
+                  <circle cx="24" cy="24" r="11" fill="none" stroke="url(#elite-v2-g)" strokeWidth="1.5" opacity="0.6" filter="url(#elite-v2-glow-g)" />
+                </svg>
+                <span className="admin-rank-label">Elite — полный круг</span>
+              </div>
+            </div>
+            <h4 className="admin-test-ranks-title">Ранги 1–10</h4>
+            <div className="admin-test-ranks">
+              {[10, 9, 8, 7, 6, 5, 4, 3, 2, 1].map((rank) => {
+                const colors: Record<number, string> = {
+                  10: '#e74c3c', 9: '#f39c12', 8: '#e67e22', 7: '#f1c40f', 6: '#e6a800', 5: '#d4a017', 4: '#b8860b',
+                  3: '#2ecc71', 2: '#27ae60', 1: '#1e8449',
+                }
+                const arcPercent = rank === 1 ? 0.08 : rank === 2 ? 0.18 : rank === 3 ? 0.28 : rank === 4 ? 0.38 : rank === 5 ? 0.48 : rank === 6 ? 0.58 : rank === 7 ? 0.68 : rank === 8 ? 0.78 : rank === 9 ? 0.88 : 0.95
+                const startDeg = 150
+                const sweepDeg = 360 * arcPercent
+                const r = 18
+                const cx = 24
+                const cy = 24
+                const rad = (d: number) => (d - 90) * Math.PI / 180
+                const x1 = cx + r * Math.cos(rad(startDeg))
+                const y1 = cy + r * Math.sin(rad(startDeg))
+                const x2 = cx + r * Math.cos(rad(startDeg + sweepDeg))
+                const y2 = cy + r * Math.sin(rad(startDeg + sweepDeg))
+                const largeArc = sweepDeg > 180 ? 1 : 0
+                const arcPath = `M ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2}`
+                return (
+                  <div key={rank} className="admin-rank-item">
+                    <svg className="admin-rank-svg" viewBox="0 0 48 48" width={56} height={56} aria-hidden>
+                      <defs>
+                        <filter id={`rank-glow-${rank}`} x="-50%" y="-50%" width="200%" height="200%">
+                          <feGaussianBlur stdDeviation="0.5" result="blur" />
+                          <feMerge>
+                            <feMergeNode in="blur" />
+                            <feMergeNode in="SourceGraphic" />
+                          </feMerge>
+                        </filter>
+                      </defs>
+                      <circle cx="24" cy="24" r="22" fill="var(--bg-elevated)" stroke="var(--border)" strokeWidth="1" />
+                      <path d={arcPath} fill="none" stroke={colors[rank]} strokeWidth="4" strokeLinecap="round" filter={`url(#rank-glow-${rank})`} />
+                      <text x="24" y="28" textAnchor="middle" fill={colors[rank]} fontSize="16" fontWeight="bold" fontFamily="system-ui, sans-serif">{rank}</text>
+                    </svg>
+                    <span className="admin-rank-label">Ранг {rank}</span>
+                  </div>
+                )
+              })}
+            </div>
+          </section>
         )}
 
         {activeView === 'news-detail' && (
@@ -4519,9 +4915,11 @@ function App() {
                         <tr>
                           <th>{t.ratingRank}</th>
                           <th>{t.profilePlayerLabel}</th>
-                          <th>{t.profileCountry}</th>
-                          <th>{t.ratingElo}</th>
+                          <th>{t.ratingLevel}</th>
                           <th>{t.ratingMatches}</th>
+                          <th>{t.ratingWins}</th>
+                          <th>{t.ratingDraws}</th>
+                          <th>{t.ratingLosses}</th>
                           <th>{t.ratingWinRate}</th>
                         </tr>
                       </thead>
@@ -4549,17 +4947,22 @@ function App() {
                                   <span>{(r.display_name ?? '?').charAt(0).toUpperCase()}</span>
                                 )}
                               </div>
+                              {r.country_code && (
+                                <CountryFlag
+                                  code={r.country_code}
+                                  className="rating-player-flag"
+                                  title={COUNTRIES.find((c) => c.code === r.country_code)?.name ?? r.country_code}
+                                />
+                              )}
                               <span className="rating-player-name">{r.display_name ?? '—'}</span>
                             </td>
-                            <td className="rating-country-cell">
-                              {r.country_code ? (COUNTRIES.find((c) => c.code === r.country_code)?.flag ?? r.country_code) : '—'}
-                            </td>
-                            <td className="rating-elo-cell">
-                              <span className="rating-elo-number">{r.elo ?? '—'}</span>
-                              <span className="rating-elo-unit"> ELO</span>
-                              <EloWithRank elo={r.elo ?? null} matchesCount={r.matches_count ?? 0} calibrationLabel={t.profileCalibrationLabel} rankLabel={getTranslatedRankLabel(getRankFromElo(r.elo ?? null))} compact showEloValue={false} />
+                            <td className="rating-rank-cell-only">
+                              <EloWithRank elo={r.elo ?? null} matchesCount={r.matches_count ?? 0} calibrationLabel={t.profileCalibrationLabel} rankLabel={getTranslatedRankLabel(getRankFromElo(r.elo ?? null))} compact showEloValue={false} rankIconSize="small" />
                             </td>
                             <td>{r.matches_count}</td>
+                            <td className="rating-num-cell">{r.wins}</td>
+                            <td className="rating-num-cell">{r.draws}</td>
+                            <td className="rating-num-cell">{r.losses}</td>
                             <td className="rating-winrate-cell">{r.win_rate != null ? `${r.win_rate}%` : '—'}</td>
                           </tr>
                         ))}
@@ -4590,7 +4993,7 @@ function App() {
                           <h2 className="rating-player-heading">{selectedPlayerRow.display_name ?? '—'}</h2>
                           {selectedPlayerRow.country_code && (
                             <span className="rating-player-country">
-                              {COUNTRIES.find((c) => c.code === selectedPlayerRow.country_code)?.flag ?? '🌐'}
+                              <CountryFlag code={selectedPlayerRow.country_code} title={COUNTRIES.find((c) => c.code === selectedPlayerRow.country_code)?.name ?? undefined} />
                             </span>
                           )}
                         </div>
@@ -4603,6 +5006,7 @@ function App() {
                             calibrationLabel={t.profileCalibrationLabel}
                             rankLabel={getTranslatedRankLabel(getRankFromElo(selectedPlayerRow.elo ?? null))}
                             showEloValue={false}
+                            rankIconSize="large"
                           />
                         </div>
                       </div>
@@ -4730,14 +5134,11 @@ function App() {
                           <span className="profile-rank-card-display-name">{selectedPlayerRow.display_name ?? '—'}</span>
                           {selectedPlayerRow.country_code && (
                             <span className="profile-rank-card-country">
-                              {COUNTRIES.find((c) => c.code === selectedPlayerRow.country_code)?.flag ?? '🌐'} {COUNTRIES.find((c) => c.code === selectedPlayerRow.country_code)?.name ?? selectedPlayerRow.country_code}
+                              <CountryFlag code={selectedPlayerRow.country_code} /> {COUNTRIES.find((c) => c.code === selectedPlayerRow.country_code)?.name ?? selectedPlayerRow.country_code}
                             </span>
                           )}
                         </div>
                         <div className="profile-rank-card-item profile-rank-card-rank">
-                          <div className="profile-rank-badge-wrap">
-                            <ProfileRankBadgeSvg />
-                          </div>
                           <span className="profile-rank-level profile-rank-level--label">
                             <EloWithRank
                               elo={selectedPlayerRow.elo ?? null}
@@ -4746,6 +5147,7 @@ function App() {
                               rankLabel={getTranslatedRankLabel(getRankFromElo(selectedPlayerRow.elo ?? null))}
                               compact
                               showEloValue={false}
+                              rankIconSize="large"
                             />
                           </span>
                         </div>
@@ -4924,14 +5326,11 @@ function App() {
                                   <span className="profile-rank-card-display-name">{displayName}</span>
                                   {myCountryCode && (
                                     <span className="profile-rank-card-country">
-                                      {COUNTRIES.find((c) => c.code === myCountryCode)?.flag ?? '🌐'} {COUNTRIES.find((c) => c.code === myCountryCode)?.name ?? myCountryCode}
+                                      <CountryFlag code={myCountryCode} /> {COUNTRIES.find((c) => c.code === myCountryCode)?.name ?? myCountryCode}
                                     </span>
                                   )}
                                 </div>
                                 <div className="profile-rank-card-item profile-rank-card-rank">
-                                  <div className="profile-rank-badge-wrap">
-                                    <ProfileRankBadgeSvg />
-                                  </div>
                                   <span className="profile-rank-level profile-rank-level--label">
                                     <EloWithRank
                                       elo={myProfileStats?.elo ?? elo ?? null}
@@ -4940,6 +5339,7 @@ function App() {
                                       rankLabel={getTranslatedRankLabel(getRankFromElo(myProfileStats?.elo ?? elo ?? null))}
                                       compact
                                       showEloValue={false}
+                                      rankIconSize="large"
                                     />
                                   </span>
                                 </div>
@@ -5431,6 +5831,10 @@ function App() {
         {activeView === 'tournaments' && (
           <section className="tournaments-page">
             <header className="tournaments-page-header">
+              <h2 className="tournaments-page-title">
+                <span className="tournaments-page-title-icon"><TournamentsPageIcon /></span>
+                {t.tournamentsHeader}
+              </h2>
               <div className="tournaments-page-header-actions">
                 {isAdminUser && (
                   <button type="button" className="tournaments-page-create-btn" onClick={() => setActiveView('admin')}>
