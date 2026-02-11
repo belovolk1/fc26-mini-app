@@ -418,13 +418,11 @@ BEGIN
       UPDATE tournaments SET status = 'registration' WHERE id = v_t.id;
     END IF;
 
-    IF v_t.status = 'registration' AND now() >= v_t.registration_end THEN
-      SELECT tournament_start_bracket(v_t.id) INTO v_res;
-    END IF;
-
-    -- За 15 минут до старта — уведомление «регистрация открыта» в Telegram
+    -- За 15 минут до старта — уведомление в Telegram (до закрытия регистрации; учитываем и только что открытую регистрацию)
     BEGIN
-      IF v_t.status = 'registration' AND now() >= v_t.tournament_start - interval '15 minutes' THEN
+      IF (v_t.status = 'registration' OR (v_t.status = 'draft' AND now() >= v_t.registration_start))
+         AND now() >= v_t.tournament_start - interval '15 minutes'
+         AND now() < v_t.tournament_start THEN
         SELECT EXISTS(
           SELECT 1 FROM tournament_telegram_notifications
           WHERE tournament_id = v_t.id AND type = 'registration_open'
@@ -437,6 +435,10 @@ BEGIN
     EXCEPTION WHEN undefined_table OR undefined_column THEN
       NULL;
     END;
+
+    IF v_t.status = 'registration' AND now() >= v_t.registration_end THEN
+      SELECT tournament_start_bracket(v_t.id) INTO v_res;
+    END IF;
 
     IF v_t.status = 'ongoing' THEN
       PERFORM tournament_advance_due_matches(v_t.id);
