@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>New project coming soon</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      color-scheme: dark light;
+      --bg: #050816;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --accent: #22c55e;
+      --accent-soft: rgba(34, 197, 94, 0.15);
+      --border: #1f2937;
+      --font-main: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at top, #1f2937 0, #020617 45%, #000 100%);
+      color: var(--text);
+      font-family: var(--font-main);
+      padding: 24px;
+    }
+
+    .card {
+      position: relative;
+      max-width: 560px;
+      width: 100%;
+      background: linear-gradient(145deg, rgba(15, 23, 42, 0.96), rgba(3, 7, 18, 0.98));
+      border-radius: 24px;
+      padding: 28px 24px 24px;
+      border: 1px solid var(--border);
+      box-shadow:
+        0 24px 70px rgba(15, 23, 42, 0.9),
+        0 0 0 1px rgba(148, 163, 184, 0.15);
+      backdrop-filter: blur(16px);
+      text-align: left;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+      border: 1px solid rgba(34, 197, 94, 0.3);
+    }
+
+    .badge-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--accent);
+      box-shadow: 0 0 10px rgba(34, 197, 94, 0.9);
+    }
+
+    .lang-switcher {
+      position: absolute;
+      top: 14px;
+      right: 16px;
+      display: inline-flex;
+      padding: 3px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(55, 65, 81, 0.9);
+      gap: 2px;
+    }
+
+    .lang-btn {
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      cursor: pointer;
+      font-family: var(--font-main);
+    }
+
+    .lang-btn.active {
+      background: var(--accent-soft);
+      color: var(--accent);
+    }
+
+    .lang-btn:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 1px;
+    }
+
+    h1 {
+      font-size: clamp(22px, 3vw, 26px);
+      line-height: 1.25;
+      margin-bottom: 10px;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+
+    .text-block {
+      font-size: 14px;
+      color: var(--text);
+      line-height: 1.6;
+      margin-bottom: 6px;
+    }
+
+    .timer-box {
+      margin-top: 16px;
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(55, 65, 81, 0.9);
+      display: inline-flex;
+      flex-direction: column;
+      gap: 4px;
+      font-family: "SF Mono", ui-monospace, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+
+    .timer-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+    }
+
+    .timer-value {
+      font-size: 17px;
+      color: var(--accent);
+    }
+  </style>
+</head>
+<body>
+  <main class="card" role="main">
+    <div class="lang-switcher" aria-label="Language selector">
+      <button class="lang-btn" data-lang="en" type="button">EN</button>
+      <button class="lang-btn" data-lang="ru" type="button">RU</button>
+      <button class="lang-btn" data-lang="ro" type="button">RO</button>
+    </div>
+
+    <div class="badge">
+      <span class="badge-dot" aria-hidden="true"></span>
+      <span id="badge-text">New project incoming</span>
+    </div>
+
+    <h1 id="title-text">A new football project is almost here.</h1>
+
+    <p class="subtitle" id="subtitle-text">
+      This version of the idea has reached its limit and did not find enough people.
+    </p>
+
+    <p class="text-block" id="body-main-text">
+      Thank you to everyone who participated, supported us and believed in this project.
+    </p>
+
+    <p class="text-block" id="body-future-text">
+      We are working on a new project that will be more dynamic, lightweight and exciting for competitions.
+    </p>
+
+    <div class="timer-box" aria-live="polite">
+      <span class="timer-label" id="timer-label-text">Time until launch</span>
+      <span id="countdown" class="timer-value">09d 00h 00m 00s</span>
+    </div>
+  </main>
+
+  <script>
+    (function () {
+      // ---------- ТЕКСТ НА 3 ЯЗЫКА (EN / RU / RO) ----------
+      var messages = {
+        en: {
+          badge: "New project incoming",
+          title: "A new football project is almost here.",
+          subtitle: "This version of the idea has reached its limit and did not find enough people.",
+          bodyMain: "Thank you to everyone who participated, supported us and believed in this project.",
+          bodyFuture: "We are working on a new project that will be more dynamic, lightweight and exciting for competitions.",
+          timerLabel: "Time until launch"
+        },
+        ru: {
+          badge: "Скоро новый проект",
+          title: "Новый футбольный проект почти готов.",
+          subtitle: "Эта версия идеи себя исчерпала и не нашла достаточное количество людей.",
+          bodyMain: "Спасибо всем, кто участвовал, поддерживал нас и верил в этот проект.",
+          bodyFuture: "Мы создаём новый проект — более динамичный, лёгкий и интересный для соревнований.",
+          timerLabel: "Время до запуска"
+        },
+        ro: {
+          badge: "Proiect nou în curând",
+          title: "Un nou proiect de fotbal este aproape gata.",
+          subtitle: "Această versiune a ideii și-a atins limita și nu a găsit suficienți oameni.",
+          bodyMain: "Vă mulțumim tuturor celor care au participat, ne-au susținut și au crezut în acest proiect.",
+          bodyFuture: "Lucrăm la un nou proiect, mai dinamic, mai ușor și mai interesant pentru competiții.",
+          timerLabel: "Timp rămas până la lansare"
+        }
+      };
+
+      var LANG_STORAGE_KEY = "launchPreferredLang";
+
+      function detectLang() {
+        try {
+          var stored = localStorage.getItem(LANG_STORAGE_KEY);
+          if (stored && messages[stored]) return stored;
+        } catch (e) {}
+
+        var lang = (navigator.language || navigator.userLanguage || "en").toLowerCase();
+        if (lang.startsWith("ru")) return "ru";
+        if (lang.startsWith("ro")) return "ro";
+        return "en";
+      }
+
+      function saveLang(lang) {
+        try {
+          localStorage.setItem(LANG_STORAGE_KEY, lang);
+        } catch (e) {}
+      }
+
+      function applyLang(lang) {
+        var dict = messages[lang] || messages.en;
+
+        var badgeEl = document.getElementById("badge-text");
+        var titleEl = document.getElementById("title-text");
+        var subtitleEl = document.getElementById("subtitle-text");
+        var bodyMainEl = document.getElementById("body-main-text");
+        var bodyFutureEl = document.getElementById("body-future-text");
+        var timerLabelEl = document.getElementById("timer-label-text");
+
+        if (badgeEl) badgeEl.textContent = dict.badge;
+        if (titleEl) titleEl.textContent = dict.title;
+        if (subtitleEl) subtitleEl.textContent = dict.subtitle;
+        if (bodyMainEl) bodyMainEl.textContent = dict.bodyMain;
+        if (bodyFutureEl) bodyFutureEl.textContent = dict.bodyFuture;
+        if (timerLabelEl) timerLabelEl.textContent = dict.timerLabel;
+
+        try {
+          document.documentElement.lang = lang;
+        } catch (e) {}
+
+        // Обновить активную кнопку
+        var btns = document.querySelectorAll(".lang-btn");
+        btns.forEach(function (btn) {
+          var bLang = btn.getAttribute("data-lang");
+          if (bLang === lang) {
+            btn.classList.add("active");
+          } else {
+            btn.classList.remove("active");
+          }
+        });
+      }
+
+      var currentLang = detectLang();
+      applyLang(currentLang);
+
+      // Обработчики для переключателя языка
+      var langButtons = document.querySelectorAll(".lang-btn");
+      langButtons.forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          var lang = btn.getAttribute("data-lang");
+          if (messages[lang]) {
+            currentLang = lang;
+            saveLang(lang);
+            applyLang(lang);
+          }
+        });
+      });
+
+      // ---------- ТАЙМЕР: 9 дней с момента первого захода (от «этого часа» + 9 дней) ----------
+      var NINE_DAYS_MS = 9 * 24 * 60 * 60 * 1000;
+      var END_TIME_KEY = "launchCountdownEnd";
+      var countdownEl = document.getElementById("countdown");
+
+      function getEndTimestamp() {
+        try {
+          var stored = localStorage.getItem(END_TIME_KEY);
+          if (stored) {
+            var ts = parseInt(stored, 10);
+            if (!isNaN(ts) && ts > 0) return ts;
+          }
+        } catch (e) {}
+        var end = Date.now() + NINE_DAYS_MS;
+        try {
+          localStorage.setItem(END_TIME_KEY, String(end));
+        } catch (e) {}
+        return end;
+      }
+
+      function formatTime(seconds) {
+        if (seconds < 0) seconds = 0;
+        var days = Math.floor(seconds / (24 * 60 * 60));
+        seconds -= days * 24 * 60 * 60;
+        var hours = Math.floor(seconds / (60 * 60));
+        seconds -= hours * 60 * 60;
+        var minutes = Math.floor(seconds / 60);
+        seconds -= minutes * 60;
+        var secs = Math.floor(seconds);
+
+        function pad(n) { return n < 10 ? "0" + n : "" + n; }
+
+        return (
+          pad(days) + "d " +
+          pad(hours) + "h " +
+          pad(minutes) + "m " +
+          pad(secs) + "s"
+        );
+      }
+
+      var endTs = getEndTimestamp();
+
+      function tick() {
+        var remaining = Math.floor((endTs - Date.now()) / 1000);
+        if (remaining < 0) remaining = 0;
+        if (countdownEl) {
+          countdownEl.textContent = formatTime(remaining);
+        }
+      }
+
+      tick();
+      setInterval(tick, 1000);
+    })();
+  </script>
+</body>
+</html>
