@@ -2285,8 +2285,8 @@
   min-width: 0;
 }
 .profile-rank-card--wide .profile-rank-card-avatar {
-  width: 48px;
-  height: 48px;
+  width: 88px;
+  height: 88px;
   border-radius: 50%;
   overflow: hidden;
   background: var(--bg-elevated);
@@ -2302,15 +2302,26 @@
   height: 100%;
   object-fit: cover;
 }
+.profile-rank-card--wide .profile-rank-card-avatar-placeholder {
+  font-size: 36px;
+}
 .profile-rank-card--wide .profile-rank-card-name-country {
   align-items: flex-start;
   flex: 1;
   min-width: 120px;
 }
 .profile-rank-card--wide .profile-rank-card-display-name {
-  font-size: 18px;
+  font-size: 26px;
   font-weight: 700;
   color: var(--text);
+}
+.profile-rank-card--wide .profile-rank-card-country {
+  font-size: 18px;
+  margin-top: 4px;
+}
+.profile-rank-card--wide .profile-rank-card-country .fi {
+  font-size: 1.2em;
+  margin-right: 6px;
 }
 .profile-rank-card--wide .profile-rank-card-rank {
   flex-direction: row;

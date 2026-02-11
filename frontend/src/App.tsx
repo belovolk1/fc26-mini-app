@@ -1832,6 +1832,7 @@ function App() {
   const [tournamentsStatusTab, setTournamentsStatusTab] = useState<'registration' | 'ongoing' | 'finished'>('registration')
   const [selectedTournamentId, setSelectedTournamentId] = useState<string | null>(null)
   const [matchesByTournamentId, setMatchesByTournamentId] = useState<Record<string, TournamentMatchRow[]>>({})
+  const [tournamentPlayerNames, setTournamentPlayerNames] = useState<Record<string, string>>({})
   const [tournamentRegistrations, setTournamentRegistrations] = useState<Set<string>>(new Set())
   const [myActiveTournamentRegistrations, setMyActiveTournamentRegistrations] = useState<{ id: string; name: string; status: string }[]>([])
   const [hasActiveTournamentMatch, setHasActiveTournamentMatch] = useState(false)
@@ -2979,6 +2980,33 @@ function App() {
       })
   }, [selectedTournamentId, matchesByTournamentId])
 
+  // Никнеймы участников турниров для карточек (победитель и призовые места)
+  useEffect(() => {
+    const ids = new Set<string>()
+    Object.values(matchesByTournamentId).forEach((matches) => {
+      matches.forEach((m) => {
+        if (m.player_a_id) ids.add(m.player_a_id)
+        if (m.player_b_id) ids.add(m.player_b_id)
+      })
+    })
+    if (ids.size === 0) {
+      setTournamentPlayerNames({})
+      return
+    }
+    supabase
+      .from('players')
+      .select('id, display_name, username, first_name, last_name')
+      .in('id', Array.from(ids))
+      .then(({ data }) => {
+        const map: Record<string, string> = {}
+        ;(data || []).forEach((p: { id: string; display_name: string | null; username: string | null; first_name: string | null; last_name: string | null }) => {
+          const name = (p.display_name?.trim() || (p.username ? `@${p.username}` : null) || [p.first_name, p.last_name].filter(Boolean).join(' ').trim() || '').trim()
+          map[p.id] = name || p.id.slice(0, 8)
+        })
+        setTournamentPlayerNames((prev) => ({ ...prev, ...map }))
+      })
+  }, [matchesByTournamentId])
+
   // Realtime: обновление без мерцания (silent)
   useEffect(() => {
     if (activeView !== 'tournaments' && activeView !== 'admin') return
@@ -3453,6 +3481,7 @@ function App() {
 
   const getTournamentPlayerName = (id: string | null) => {
     if (!id) return '—'
+    if (tournamentPlayerNames[id]) return tournamentPlayerNames[id]
     const r = leaderboard.find((x) => x.player_id === id)
     return r?.display_name || id.slice(0, 8)
   }
@@ -3899,14 +3928,6 @@ function App() {
             <div className="strike-header-user-info">
               <span className="app-user-name">{displayName}</span>
               <div className="strike-header-elo-wrap">
-                <div className="strike-header-elo-bar">
-                  <div
-                    className="strike-header-elo-bar-fill"
-                    style={{
-                      width: `${Math.min(100, Math.max(0, ((elo ?? 1200) - 800) / 12))}%`,
-                    }}
-                  />
-                </div>
                 <span className="strike-header-elo-value">
                   <EloWithRank
                     elo={elo}
@@ -4077,9 +4098,7 @@ function App() {
                   <p className="strike-stats-player-name">{displayName || (user.username ? `@${user.username}` : '')}</p>
                 )}
                 <div className="strike-elo-block">
-                  <span className="strike-elo-label">{t.ratingElo}</span>
                   <div className="strike-elo-block-row">
-                    <span className="strike-elo-value">{myProfileStats?.elo ?? elo ?? '—'}</span>
                     <EloWithRank
                       elo={myProfileStats?.elo ?? elo ?? null}
                       matchesCount={myProfileStats?.matches_count ?? matchesCount ?? 0}
@@ -4087,14 +4106,6 @@ function App() {
                       rankLabel={getTranslatedRankLabel(getRankFromElo(myProfileStats?.elo ?? elo ?? null))}
                       rankIconSize="large"
                       showEloValue={false}
-                    />
-                  </div>
-                  <div className="strike-elo-bar">
-                    <div
-                      className="strike-elo-bar-fill"
-                      style={{
-                        width: `${Math.min(100, Math.max(0, ((myProfileStats?.elo ?? elo ?? 1200) - 800) / 12))}%`,
-                      }}
                     />
                   </div>
                 </div>
