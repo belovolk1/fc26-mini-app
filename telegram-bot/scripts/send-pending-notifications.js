@@ -83,7 +83,7 @@ async function run() {
       const { data: players } = await supabase.from('players').select('telegram_id').not('telegram_id', 'is', null)
       telegramIds = (players || []).map((p) => p.telegram_id).filter(Boolean)
       const name = tour?.name || 'Tournament'
-      message = `📣 Осталось 15 минут на регистрацию!\n\nТурнир «${name}» начнётся через 15 минут. Успей зарегистрироваться в приложении.`
+      message = `📣 Only 15 minutes left to register!\n\nTournament «${name}» starts in 15 minutes. Register in the app or on the site.`
     } else if (row.type === 'round_reminder' && row.match_id) {
       const { data: match } = await supabase.from('tournament_matches').select('player_a_id, player_b_id').eq('id', row.match_id).single()
       if (!match || (!match.player_a_id && !match.player_b_id)) {
@@ -120,7 +120,7 @@ async function run() {
     const { data: players } = await supabase.from('players').select('telegram_id').not('telegram_id', 'is', null)
     const telegramIds = (players || []).map((p) => p.telegram_id).filter(Boolean)
     for (const row of cancelledRows) {
-      const message = `❌ Турнир «${row.tournament_name}» отменён: зарегистрировано меньше двух участников.`
+      const message = `❌ Tournament «${row.tournament_name}» has been cancelled: fewer than two participants registered.`
       for (const chatId of telegramIds) {
         try {
           await bot.sendMessage(String(chatId), message)
