@@ -1391,7 +1391,7 @@ function RankIconSvg({
   )
 }
 
-/** Блок ELO + ранг (или калибровка) + иконка ранга. rankLabel — переведённая подпись ранга. rankIconSize — размер иконки: small в таблицах, large в карточках профиля и главном ELO-блоке. */
+/** Блок ELO + ранг (или калибровка) + иконка ранга. rankLabel — переведённая подпись ранга. rankIconSize — размер иконки: small в таблицах, large в карточках профиля и главном ELO-блоке. showRankLabel — показывать ли текст ранга (LEVEL N). */
 function EloWithRank({
   elo,
   matchesCount,
@@ -1399,6 +1399,7 @@ function EloWithRank({
   rankLabel: rankLabelProp,
   compact,
   showEloValue = true,
+  showRankLabel = true,
   rankIconSize = 'medium',
 }: {
   elo: number | null
@@ -1407,6 +1408,7 @@ function EloWithRank({
   rankLabel?: string
   compact?: boolean
   showEloValue?: boolean
+  showRankLabel?: boolean
   rankIconSize?: keyof typeof RANK_ICON_SIZES
 }) {
   const isCalibration = matchesCount < 10
@@ -1421,7 +1423,7 @@ function EloWithRank({
         title={isCalibration ? calibrationLabel : rankLabel}
         size={rankIconSize}
       />
-      <span className="elo-with-rank-label">{isCalibration ? calibrationLabel : rankLabel}</span>
+      {showRankLabel && <span className="elo-with-rank-label">{isCalibration ? calibrationLabel : rankLabel}</span>}
       {showEloValue && <span className="elo-with-rank-value">{elo ?? '—'} ELO</span>}
     </span>
   )
@@ -1471,41 +1473,14 @@ const HomeCardIconRating = () => (
   </svg>
 )
 
-/* === SVG иконки для профиля (тематика: статы, матчи) === */
-const IconMatchesSvg = () => (
-  <svg className="profile-stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
-    <path d="M14.5 17.5L3 6V3h3l11.5 11.5M13 6l6-3 3 3-3 6-3-3" />
-    <path d="M9.5 17.5L21 9v3l-8.5 8.5-3-3z" />
-  </svg>
-)
-const IconWinsSvg = () => (
-  <svg className="profile-stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-    <path d="M12 2L15 9l7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1 3-7z" />
-  </svg>
-)
-const IconDrawsSvg = () => (
-  <svg className="profile-stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
-    <path d="M9 12h6M8 16h8M12 8v8M4 14h2M18 14h2M14 4v2M10 20v-2" />
-  </svg>
-)
-const IconLossesSvg = () => (
-  <svg className="profile-stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-  </svg>
-)
-const IconGoalsSvg = () => (
-  <svg className="profile-stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-    <path d="M12 19V5M5 12l7-7 7 7" />
-    <path d="M5 12h14" />
-  </svg>
-)
-const IconWinRateSvg = () => (
-  <svg className="profile-stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-    <circle cx="12" cy="12" r="10" />
-    <path d="M12 2a10 10 0 0 1 0 20" />
-    <path d="M12 2v10l5 5" />
-  </svg>
-)
+/* === Иконки для профиля из public/svg icons profile === */
+const PROFILE_ICONS_BASE = '/svg icons profile'
+const IconMatchesSvg = () => <img src={`${PROFILE_ICONS_BASE}/mathces played.svg`} alt="" className="profile-stat-icon" aria-hidden />
+const IconWinsSvg = () => <img src={`${PROFILE_ICONS_BASE}/wins.svg`} alt="" className="profile-stat-icon" aria-hidden />
+const IconDrawsSvg = () => <img src={`${PROFILE_ICONS_BASE}/draws.svg`} alt="" className="profile-stat-icon" aria-hidden />
+const IconLossesSvg = () => <img src={`${PROFILE_ICONS_BASE}/losses.svg`} alt="" className="profile-stat-icon" aria-hidden />
+const IconGoalsSvg = () => <img src={`${PROFILE_ICONS_BASE}/goals diferens.svg`} alt="" className="profile-stat-icon" aria-hidden />
+const IconWinRateSvg = () => <img src={`${PROFILE_ICONS_BASE}/winrate.svg`} alt="" className="profile-stat-icon" aria-hidden />
 const IconEloUpSvg = () => (
   <svg className="profile-elo-arrow" viewBox="0 0 16 16" fill="currentColor" aria-hidden><path d="M8 4l4 6H4l4-6z" /></svg>
 )
@@ -4746,24 +4721,28 @@ function App() {
                           >
                             <td className="rating-rank-cell">{r.rank}</td>
                             <td className="rating-player-cell">
-                              <div className="rating-player-avatar">
-                                {r.avatar_url ? (
-                                  <img src={r.avatar_url} alt="" />
-                                ) : (
-                                  <span>{(r.display_name ?? '?').charAt(0).toUpperCase()}</span>
-                                )}
+                              <div className="rating-player-cell-inner">
+                                <div className="rating-player-avatar">
+                                  {r.avatar_url ? (
+                                    <img src={r.avatar_url} alt="" />
+                                  ) : (
+                                    <span>{(r.display_name ?? '?').charAt(0).toUpperCase()}</span>
+                                  )}
+                                </div>
+                                <div className="rating-player-info">
+                                  {r.country_code && (
+                                    <CountryFlag
+                                      code={r.country_code}
+                                      className="rating-player-flag"
+                                      title={COUNTRIES.find((c) => c.code === r.country_code)?.name ?? r.country_code}
+                                    />
+                                  )}
+                                  <span className="rating-player-name">{r.display_name ?? '—'}</span>
+                                </div>
                               </div>
-                              {r.country_code && (
-                                <CountryFlag
-                                  code={r.country_code}
-                                  className="rating-player-flag"
-                                  title={COUNTRIES.find((c) => c.code === r.country_code)?.name ?? r.country_code}
-                                />
-                              )}
-                              <span className="rating-player-name">{r.display_name ?? '—'}</span>
                             </td>
                             <td className="rating-rank-cell-only">
-                              <EloWithRank elo={r.elo ?? null} matchesCount={r.matches_count ?? 0} calibrationLabel={t.profileCalibrationLabel} rankLabel={getTranslatedRankLabel(getRankFromElo(r.elo ?? null))} compact showEloValue={false} rankIconSize="small" />
+                              <EloWithRank elo={r.elo ?? null} matchesCount={r.matches_count ?? 0} calibrationLabel={t.profileCalibrationLabel} rankLabel={getTranslatedRankLabel(getRankFromElo(r.elo ?? null))} compact showEloValue={false} showRankLabel={false} rankIconSize="medium" />
                             </td>
                             <td>{r.matches_count}</td>
                             <td className="rating-num-cell">{r.wins}</td>

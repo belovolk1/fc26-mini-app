@@ -2439,6 +2439,7 @@
 .profile-stat-icon {
   width: 24px;
   height: 24px;
+  object-fit: contain;
 }
 
 /* Таблица последних матчей + пилюли W/L/D */
@@ -3039,6 +3040,7 @@
 .app.strike-theme .profile-stat-icon {
   width: 22px;
   height: 22px;
+  object-fit: contain;
 }
 .app.strike-theme .profile-recent-table th,
 .app.strike-theme .profile-recent-table td {
@@ -3380,9 +3382,19 @@
 }
 
 .rating-player-cell {
+  /* ячейка остаётся table-cell — линия под строкой на одном уровне со всеми колонками */
+}
+.rating-player-cell-inner {
   display: flex;
   align-items: center;
   gap: 12px;
+}
+
+.rating-player-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
 }
 
 .rating-player-avatar {
@@ -3421,6 +3433,7 @@
   color: var(--text);
   font-weight: 700;
   font-size: 15px;
+  line-height: 1.25;
 }
 .app.strike-theme .rating-player-name {
   font-family: var(--strike-font-body);
@@ -3488,11 +3501,13 @@
 
 /* Matches, W, D, L, W% — выравнивание по правому краю */
 .rating-table th:nth-child(4),
+.rating-table td:nth-child(4) {
+  text-align: center;
+}
 .rating-table th:nth-child(5),
 .rating-table th:nth-child(6),
 .rating-table th:nth-child(7),
 .rating-table th:nth-child(8),
-.rating-table td:nth-child(4),
 .rating-table td:nth-child(5),
 .rating-table td:nth-child(6),
 .rating-table td:nth-child(7),
@@ -3506,8 +3521,11 @@
   font-variant-numeric: tabular-nums;
 }
 .rating-player-flag {
-  margin-right: 6px;
   flex-shrink: 0;
+  vertical-align: middle;
+}
+.rating-player-info .rating-player-flag {
+  margin-right: 0;
 }
 .rating-player-country .fi,
 .profile-rank-card-country .fi {
@@ -3581,6 +3599,26 @@
   }
   .rating-table {
     min-width: 480px;
+  }
+  .rating-table .rating-player-cell {
+    vertical-align: middle;
+    padding-right: 20px;
+  }
+  .rating-player-info {
+    align-items: center;
+    flex: 1;
+    min-width: 0;
+  }
+  .rating-player-info .fi {
+    vertical-align: middle !important;
+    align-self: center;
+  }
+  .rating-player-name {
+    align-self: center;
+  }
+  .rating-table td.rating-rank-cell-only,
+  .rating-table th:nth-child(3) {
+    padding-left: 20px;
   }
 }
 .rating-leaderboard {
@@ -4663,6 +4701,109 @@
 .app.strike-theme .nav-drawer-badge {
   background: var(--strike-orange);
   color: #fff;
+}
+
+/* Гамбургер-меню в стиле модалок и табов (strike-theme) */
+.app.strike-theme .nav-drawer-backdrop {
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.app.strike-theme .nav-drawer {
+  background: var(--strike-card);
+  border-right: var(--strike-border-w) solid var(--strike-border);
+  box-shadow: var(--strike-shadow), 4px 0 24px rgba(0, 0, 0, 0.35);
+}
+@media (max-width: 768px) {
+  .app.strike-theme .nav-drawer {
+    border-right: none;
+    box-shadow: var(--strike-shadow);
+  }
+}
+.app.strike-theme .nav-drawer-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--strike-border);
+  background: var(--strike-elevated);
+}
+.app.strike-theme .nav-drawer-title {
+  font-family: var(--strike-font);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--strike-text);
+}
+.app.strike-theme .nav-drawer-close {
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: transparent;
+  color: var(--strike-muted);
+  border-radius: var(--strike-radius-sm);
+}
+.app.strike-theme .nav-drawer-close:hover {
+  color: var(--strike-text);
+  background: var(--strike-border-subtle);
+}
+.app.strike-theme .nav-drawer-user {
+  padding: 16px 20px;
+  background: var(--strike-card);
+  border-bottom: 1px solid var(--strike-border);
+}
+.app.strike-theme .nav-drawer-user-name {
+  font-family: var(--strike-font-body);
+  font-weight: 700;
+  color: var(--strike-text);
+}
+.app.strike-theme .nav-drawer-user-elo {
+  color: var(--strike-muted);
+  font-size: 13px;
+}
+.app.strike-theme .nav-drawer-lang {
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--strike-border);
+  background: var(--strike-card);
+}
+.app.strike-theme .nav-drawer-lang .lang-btn {
+  font-family: var(--strike-font-body);
+  border-radius: var(--strike-radius-sm);
+  border: 1px solid var(--strike-border);
+  background: var(--strike-card);
+  color: var(--strike-muted);
+}
+.app.strike-theme .nav-drawer-lang .lang-btn.active {
+  background: var(--strike-orange-soft);
+  border-color: var(--strike-orange);
+  color: var(--strike-orange);
+}
+.app.strike-theme .nav-drawer-links {
+  padding: 12px;
+  background: var(--strike-bg);
+}
+.app.strike-theme .nav-drawer-btn {
+  width: calc(100% - 24px);
+  margin: 0 12px 8px;
+  padding: 14px 18px;
+  font-family: var(--strike-font-body);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--strike-text);
+  background: var(--strike-card);
+  border: var(--strike-border-w) solid var(--strike-border);
+  border-radius: var(--strike-radius);
+  box-shadow: var(--strike-shadow-sm);
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+}
+.app.strike-theme .nav-drawer-btn:hover {
+  background: var(--strike-elevated);
+  border-color: var(--strike-border);
+  box-shadow: var(--strike-shadow-sm);
+}
+.app.strike-theme .nav-drawer-btn.active {
+  background: var(--strike-orange-soft);
+  border-color: var(--strike-orange);
+  color: var(--strike-orange);
+  box-shadow: 0 0 0 1px rgba(255, 107, 0, 0.2);
 }
 
 /* ========== Карточка турнира v2 — верхняя полоса, одна колонка, редакционный стиль ========== */
