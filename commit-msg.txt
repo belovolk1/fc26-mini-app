@@ -1,8 +1,0 @@
-Редизайн, единый профиль, без Mini App и бота
-
-- Дизайн: современный минималистичный UI, сохранена цветовая гамма
-- Профиль: единый макет для своего и чужого
-- Убраны Mini App и Telegram-бот, вход только через виджет/OAuth
-- Добавлен display_name, данные Telegram хранятся для админа
-- SQL: колонка players.display_name
-- Удалены telegram-bot и telegram-bot-contact-handler.md
