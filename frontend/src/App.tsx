@@ -281,6 +281,11 @@ const messages: Record<
     pagePrivacyBody: string
     pageContactBody: string
     contactEmailLabel: string
+    siteTitle: string
+    metaDescription: string
+    metaKeywords: string
+    metaOgTitle: string
+    metaOgDescription: string
   }
 > = {
   en: {
@@ -491,6 +496,11 @@ const messages: Record<
     pagePrivacyBody: 'We store your Telegram user ID, username and name to identify your profile. Match results, ELO and tournament data are stored to run the ladder and events. We do not sell your data. Data is processed on servers in the EU. You can request deletion of your data by contacting us. By logging in with Telegram you accept this policy.',
     pageContactBody: 'For support, suggestions or reports please contact us via Telegram: write to the bot or to the community group linked on this site. You can also reach us by email. We respond as soon as possible. For tournament and technical issues, include your username and a short description.',
     contactEmailLabel: 'Email',
+    siteTitle: 'FC Area — FC 26 rating & tournaments | Ladder, ELO, online matches',
+    metaDescription: 'FC Area — FC 26 rating and tournaments online. Ladder, ELO, Ultimate Team and Original Teams matches. Find opponents, play and track your stats.',
+    metaKeywords: 'FC 26, FC 26 rating, FC 26 tournaments, ladder, ELO, online matches, Ultimate Team, Original Teams, football, FIFA, player stats',
+    metaOgTitle: 'FC Area — FC 26 rating & tournaments | Ladder, ELO, online matches',
+    metaOgDescription: 'FC Area — FC 26 rating and tournaments online. Ladder, ELO, Ultimate Team and Original Teams matches. Find opponents, play and track your stats.',
     bracketRound1: 'Final',
     bracketRound2: 'Semi-final',
     bracketRound3: 'Quarter-final',
@@ -782,6 +792,11 @@ const messages: Record<
     pagePrivacyBody: 'Stocăm ID-ul de utilizator Telegram, username-ul și numele pentru identificarea profilului. Rezultatele meciurilor, ELO și datele turneelor sunt stocate pentru a rula ladder-ul și evenimentele. Nu vindem datele tale. Procesarea se face pe servere din UE. Poți solicita ștergerea datelor contactându-ne. Prin autentificare cu Telegram accepți această politică.',
     pageContactBody: 'Pentru suport, sugestii sau raportări contactează-ne prin Telegram: scrie botului sau grupului comunității linkat pe acest site. Ne poți contacta și pe email. Răspundem cât mai curând. Pentru probleme tehnice sau de turnee, include username-ul și o scurtă descriere.',
     contactEmailLabel: 'Email',
+    siteTitle: 'FC Area — rating și turnee FC 26 | Ladder, ELO, meciuri online',
+    metaDescription: 'FC Area — rating și turnee FC 26 online. Ladder, ELO, meciuri Ultimate Team și Original Teams. Găsește adversari, joacă și urmărește statisticile.',
+    metaKeywords: 'FC 26, rating FC 26, turnee FC 26, ladder, ELO, meciuri online, Ultimate Team, Original Teams, fotbal, FIFA, statistici jucători',
+    metaOgTitle: 'FC Area — rating și turnee FC 26 | Ladder, ELO, meciuri online',
+    metaOgDescription: 'FC Area — rating și turnee FC 26 online. Ladder, ELO, meciuri Ultimate Team și Original Teams. Găsește adversari, joacă și urmărește statisticile.',
     bracketRound1: 'Finală',
     bracketRound2: 'Semi-finală',
     bracketRound3: 'Sferturi',
@@ -1073,6 +1088,11 @@ const messages: Record<
     pagePrivacyBody: 'Мы храним ваш Telegram ID, имя пользователя и имя для идентификации профиля. Результаты матчей, ELO и данные турниров хранятся для работы ладдера и мероприятий. Мы не продаём ваши данные. Обработка данных выполняется на серверах в ЕС. Вы можете запросить удаление данных, связавшись с нами. Вход через Telegram означает принятие этой политики.',
     pageContactBody: 'По вопросам поддержки, предложений или жалоб пишите нам в Telegram: в бота или в группу сообщества, указанную на сайте. Также можно написать на email. Мы отвечаем в кратчайшие сроки. При технических или турнирных вопросах укажите username и краткое описание.',
     contactEmailLabel: 'Эл. почта',
+    siteTitle: 'FC Area — рейтинг и турниры FC 26 | Ладдер, ELO, матчи онлайн',
+    metaDescription: 'FC Area — рейтинг и турниры FC 26 онлайн. Ладдер, ELO, матчи Ultimate Team и Original Teams. Ищи соперников, играй и следи за статистикой.',
+    metaKeywords: 'FC 26, рейтинг FC 26, турниры FC 26, ладдер, ELO, матчи онлайн, Ultimate Team, Original Teams, футбол, FIFA, статистика игроков',
+    metaOgTitle: 'FC Area — рейтинг и турниры FC 26 | Ладдер, ELO, матчи онлайн',
+    metaOgDescription: 'FC Area — рейтинг и турниры FC 26 онлайн. Ладдер, ELO, матчи Ultimate Team и Original Teams. Ищи соперников, играй и следи за статистикой.',
     bracketRound1: 'Финал',
     bracketRound2: '1/2 финала',
     bracketRound3: '1/4 финала',
@@ -1996,6 +2016,21 @@ function App() {
 
     setLang(detected)
   }, [user])
+
+  useEffect(() => {
+    const m = messages[lang]
+    document.title = m.siteTitle
+    const rootHtml = document.documentElement
+    if (rootHtml) rootHtml.setAttribute('lang', lang === 'ru' ? 'ru' : lang === 'ro' ? 'ro' : 'en')
+    const desc = document.querySelector('meta[name="description"]')
+    if (desc) desc.setAttribute('content', m.metaDescription)
+    const kw = document.querySelector('meta[name="keywords"]')
+    if (kw) kw.setAttribute('content', m.metaKeywords)
+    const ogTitle = document.querySelector('meta[property="og:title"]')
+    if (ogTitle) ogTitle.setAttribute('content', m.metaOgTitle)
+    const ogDesc = document.querySelector('meta[property="og:description"]')
+    if (ogDesc) ogDesc.setAttribute('content', m.metaOgDescription)
+  }, [lang])
 
   const t = messages[lang]
   const getTranslatedRankLabel = (rank: { level: number; isElite: boolean } | null) =>
@@ -4615,7 +4650,6 @@ function App() {
                     <article className="strike-news-card">
                       <div className="strike-news-thumb" />
                       <h4 className="strike-news-card-title">{t.homeNewsTitle1}</h4>
-                      <p className="strike-news-card-desc">{t.homeNewsDesc1}</p>
                       <span className="strike-news-date">—</span>
                     </article>
                   )}
@@ -4645,7 +4679,6 @@ function App() {
                         {n.image_url ? <img src={n.image_url} alt="" referrerPolicy="no-referrer" /> : null}
                       </div>
                       <h4 className="strike-news-card-title">{getNewsTitle(n, lang)}</h4>
-                      <p className="strike-news-card-desc">{getNewsBody(n, lang) || '—'}</p>
                       <span className="strike-news-date">
                         {formatNewsDate(n.created_at)}
                       </span>
