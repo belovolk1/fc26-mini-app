@@ -2614,6 +2614,30 @@
     grid-template-columns: repeat(3, 1fr);
     gap: 18px;
   }
+  .profile-stat-card {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-rows: auto auto;
+    align-items: center;
+    column-gap: 18px;
+    text-align: left;
+    padding: 20px 22px;
+  }
+  .profile-stat-icon-wrap {
+    grid-row: 1 / -1;
+    margin-bottom: 0;
+  }
+  .profile-stat-value {
+    grid-column: 2;
+  }
+  .profile-stat-label {
+    grid-column: 2;
+    margin-top: 4px;
+  }
+  .profile-stat-icon {
+    width: 44px;
+    height: 44px;
+  }
 }
 
 .profile-stat-card {
@@ -2662,6 +2686,142 @@
   font-size: 13px;
   color: var(--text-muted);
   margin-top: 6px;
+}
+
+/* График рейтинга между Statistics и Last 10 matches */
+.profile-rating-chart {
+  margin: 24px 0 32px;
+  padding: 20px;
+  background: var(--bg-elevated);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+.profile-rating-chart .profile-stats-heading {
+  margin-bottom: 12px;
+}
+.profile-rating-chart-periods {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.profile-rating-chart-period-btn {
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: var(--bg-card);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s, color 0.2s;
+}
+.profile-rating-chart-period-btn:hover {
+  color: var(--text);
+  border-color: var(--border-hover);
+}
+.profile-rating-chart-period-btn.active {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: rgba(244, 117, 33, 0.12);
+}
+.profile-rating-chart-svg-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 640px;
+  overflow: visible;
+  border-radius: var(--radius-sm);
+}
+.profile-rating-chart-tooltip {
+  position: absolute;
+  transform: translate(-50%, -100%);
+  margin-top: -10px;
+  padding: 8px 12px;
+  background: var(--bg-elevated);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  pointer-events: none;
+  z-index: 10;
+  white-space: nowrap;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.profile-rating-chart-tooltip-date {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+.profile-rating-chart-tooltip-elo {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--accent);
+}
+.profile-rating-chart-point-hit {
+  cursor: pointer;
+}
+.profile-rating-chart-point-dot {
+  fill: var(--accent);
+  stroke: var(--bg-card, #fff);
+  stroke-width: 2px;
+}
+.app.strike-theme .profile-rating-chart-point-dot {
+  fill: var(--strike-orange);
+  stroke: var(--strike-card);
+}
+.app.strike-theme .profile-rating-chart-tooltip {
+  background: var(--strike-elevated);
+  border-color: var(--strike-border);
+  box-shadow: var(--strike-shadow);
+}
+.app.strike-theme .profile-rating-chart-tooltip-date {
+  color: var(--strike-muted);
+  font-family: var(--strike-font-body);
+}
+.app.strike-theme .profile-rating-chart-tooltip-elo {
+  color: var(--strike-orange);
+  font-family: var(--strike-font);
+}
+.profile-rating-chart-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.profile-rating-chart-axis {
+  fill: var(--text-muted);
+  font-weight: 600;
+}
+
+.app.strike-theme .profile-rating-chart {
+  background: var(--strike-elevated);
+  border: var(--strike-border-w) solid var(--strike-border);
+  border-radius: var(--strike-radius-sm);
+}
+.app.strike-theme .profile-rating-chart-period-btn {
+  background: var(--strike-card);
+  border-color: var(--strike-border);
+  color: var(--strike-muted);
+  font-family: var(--strike-font-body);
+}
+.app.strike-theme .profile-rating-chart-period-btn:hover {
+  color: var(--strike-text);
+  border-color: var(--strike-border);
+}
+.app.strike-theme .profile-rating-chart-period-btn.active {
+  color: var(--strike-orange);
+  border-color: var(--strike-orange);
+  background: var(--strike-orange-soft);
+}
+.app.strike-theme .profile-rating-chart-axis {
+  fill: var(--strike-muted);
+}
+.app.strike-theme .profile-rating-chart-svg [stroke="var(--accent)"] {
+  stroke: var(--strike-orange);
+}
+.app.strike-theme .profile-rating-chart-svg stop {
+  stop-color: var(--strike-orange);
 }
 
 .profile-recent-matches {
@@ -3041,6 +3201,12 @@
   width: 22px;
   height: 22px;
   object-fit: contain;
+}
+@media (min-width: 1024px) {
+  .app.strike-theme .profile-stat-icon {
+    width: 44px;
+    height: 44px;
+  }
 }
 .app.strike-theme .profile-recent-table th,
 .app.strike-theme .profile-recent-table td {

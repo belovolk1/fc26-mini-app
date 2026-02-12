@@ -142,6 +142,12 @@ const messages: Record<
     profileStatsSummary: string
     profileMatchesWins: string
     profileLast10Matches: string
+    profileRatingChart: string
+    profileChartHours: string
+    profileChartDays: string
+    profileChartWeeks: string
+    profileChartMonths: string
+    profileChartYears: string
     profileUploadAvatar: string
     profileResultWin: string
     profileResultLoss: string
@@ -408,6 +414,12 @@ const messages: Record<
     profileStatsSummary: 'Statistics',
     profileMatchesWins: 'matches, {pct}% wins',
     profileLast10Matches: 'Last 10 matches',
+    profileRatingChart: 'Rating history',
+    profileChartHours: 'Hours',
+    profileChartDays: 'Days',
+    profileChartWeeks: 'Weeks',
+    profileChartMonths: 'Months',
+    profileChartYears: 'Years',
     profileUploadAvatar: 'Upload avatar',
     profileResultWin: 'Win',
     profileResultLoss: 'Loss',
@@ -673,6 +685,12 @@ const messages: Record<
     profileStatsSummary: 'Statistici',
     profileMatchesWins: 'meciuri, {pct}% victorii',
     profileLast10Matches: 'Ultimele 10 meciuri',
+    profileRatingChart: 'Istoricul ratingului',
+    profileChartHours: 'Ore',
+    profileChartDays: 'Zile',
+    profileChartWeeks: 'Săptămâni',
+    profileChartMonths: 'Luni',
+    profileChartYears: 'Ani',
     profileUploadAvatar: 'Încarcă avatar',
     profileResultWin: 'Victorie',
     profileResultLoss: 'Înfrângere',
@@ -938,6 +956,12 @@ const messages: Record<
     profileStatsSummary: 'Статистика',
     profileMatchesWins: 'матчей, {pct}% побед',
     profileLast10Matches: 'Последние 10 матчей',
+    profileRatingChart: 'История рейтинга',
+    profileChartHours: 'Часы',
+    profileChartDays: 'Дни',
+    profileChartWeeks: 'Недели',
+    profileChartMonths: 'Месяцы',
+    profileChartYears: 'Годы',
     profileUploadAvatar: 'Загрузить аватар',
     profileResultWin: 'Победа',
     profileResultLoss: 'Поражение',
@@ -1059,6 +1083,51 @@ const messages: Record<
 
 const WIDGET_USER_KEY = 'fc_area_telegram_user'
 const PROFILE_INTRO_SEEN_PREFIX = 'fc_area_profile_intro_seen_'
+
+type ChartPoint = { t: number; elo: number }
+function buildRatingChartData(
+  matches: { played_at: string | null; elo_delta?: number | null }[],
+  currentElo: number | null,
+  period: 'hours' | 'days' | 'weeks' | 'months' | 'years'
+): { points: ChartPoint[]; minElo: number; maxElo: number; minT: number; maxT: number } {
+  const elo = currentElo ?? 1200
+  const sorted = [...matches].filter((m) => m.played_at != null).sort((a, b) => new Date(b.played_at!).getTime() - new Date(a.played_at!).getTime())
+  const points: ChartPoint[] = []
+  let running = elo
+  for (const m of sorted) {
+    const t = new Date(m.played_at!).getTime()
+    points.push({ t, elo: running })
+    running -= m.elo_delta ?? 0
+  }
+  points.reverse()
+  if (points.length > 0) points.push({ t: Date.now(), elo })
+  else points.push({ t: Date.now(), elo }, { t: Date.now() - 86400000, elo })
+
+  const key = (p: ChartPoint) => {
+    const d = new Date(p.t)
+    if (period === 'hours') return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}-${d.getHours()}`
+    if (period === 'days') return d.toISOString().slice(0, 10)
+    if (period === 'weeks') {
+      const mon = new Date(d); mon.setHours(0, 0, 0, 0); const day = mon.getDay(); const diff = (day === 0 ? -6 : 1) - day; mon.setDate(mon.getDate() + diff)
+      return mon.toISOString().slice(0, 10)
+    }
+    if (period === 'months') return d.toISOString().slice(0, 7)
+    return `${d.getFullYear()}`
+  }
+  const byKey = new Map<string, ChartPoint>()
+  for (const p of points) {
+    const k = key(p)
+    const existing = byKey.get(k)
+    if (!existing || p.t > existing.t) byKey.set(k, p)
+  }
+  const aggregated = Array.from(byKey.values()).sort((a, b) => a.t - b.t)
+  const minElo = Math.min(...aggregated.map((p) => p.elo))
+  const maxElo = Math.max(...aggregated.map((p) => p.elo))
+  const minT = Math.min(...aggregated.map((p) => p.t))
+  const maxT = Math.max(...aggregated.map((p) => p.t))
+  const padElo = Math.max(20, (maxElo - minElo) * 0.1) || 20
+  return { points: aggregated, minElo: minElo - padElo, maxElo: maxElo + padElo, minT, maxT }
+}
 
 const COUNTRIES: { code: string; name: string; flag: string }[] = [
   { code: 'RU', name: 'Russia', flag: '🇷🇺' },
@@ -1487,6 +1556,116 @@ const IconEloUpSvg = () => (
 const IconEloDownSvg = () => (
   <svg className="profile-elo-arrow" viewBox="0 0 16 16" fill="currentColor" aria-hidden><path d="M8 12l4-6H4l4 6z" /></svg>
 )
+
+const RATING_CHART_PERIODS = ['hours', 'days', 'weeks', 'months', 'years'] as const
+type RatingChartPeriod = (typeof RATING_CHART_PERIODS)[number]
+
+function formatChartTooltipDate(t: number, period: RatingChartPeriod): string {
+  const d = new Date(t)
+  if (period === 'hours') return d.toLocaleString(undefined, { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+  if (period === 'days' || period === 'weeks') return d.toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' })
+  if (period === 'months') return d.toLocaleDateString(undefined, { month: 'short', year: 'numeric' })
+  return d.getFullYear().toString()
+}
+
+function ProfileRatingChart({
+  matches,
+  currentElo,
+  labels,
+}: {
+  matches: { played_at: string | null; elo_delta?: number | null }[]
+  currentElo: number | null
+  labels: { title: string; hours: string; days: string; weeks: string; months: string; years: string }
+}) {
+  const [period, setPeriod] = useState<RatingChartPeriod>('days')
+  const [hoveredPoint, setHoveredPoint] = useState<number | null>(null)
+  const [pinnedByClick, setPinnedByClick] = useState(false)
+  const { points, minElo, maxElo, minT, maxT } = buildRatingChartData(matches, currentElo, period)
+  const w = 640
+  const h = 220
+  const pad = { left: 44, right: 16, top: 12, bottom: 28 }
+  const plotW = w - pad.left - pad.right
+  const plotH = h - pad.top - pad.bottom
+  const scaleX = (t: number) => pad.left + ((t - minT) / (maxT - minT || 1)) * plotW
+  const scaleY = (elo: number) => pad.top + plotH - ((elo - minElo) / (maxElo - minElo || 1)) * plotH
+  const pathD = points.length < 2 ? '' : points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${scaleX(p.t)} ${scaleY(p.elo)}`).join(' ')
+  const hovered = hoveredPoint != null ? points[hoveredPoint] : null
+  return (
+    <div className="profile-rating-chart">
+      <h4 className="profile-stats-heading">{labels.title}</h4>
+      <div className="profile-rating-chart-periods">
+        {RATING_CHART_PERIODS.map((p) => (
+          <button
+            key={p}
+            type="button"
+            className={`profile-rating-chart-period-btn ${period === p ? 'active' : ''}`}
+            onClick={() => setPeriod(p)}
+          >
+            {labels[p]}
+          </button>
+        ))}
+      </div>
+      <div className="profile-rating-chart-svg-wrap">
+        {hovered != null && (
+          <div
+            className="profile-rating-chart-tooltip"
+            style={{
+              left: `${(scaleX(hovered.t) / w) * 100}%`,
+              top: `${(scaleY(hovered.elo) / h) * 100}%`,
+            }}
+          >
+            <span className="profile-rating-chart-tooltip-date">{formatChartTooltipDate(hovered.t, period)}</span>
+            <span className="profile-rating-chart-tooltip-elo">{Math.round(hovered.elo)} ELO</span>
+          </div>
+        )}
+        <svg className="profile-rating-chart-svg" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="xMidYMid meet">
+          <defs>
+            <linearGradient id="profile-rating-chart-gradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.35" />
+              <stop offset="100%" stopColor="var(--accent)" stopOpacity="0" />
+            </linearGradient>
+          </defs>
+          <rect
+            x={pad.left}
+            y={pad.top}
+            width={plotW}
+            height={plotH}
+            fill="transparent"
+            className="profile-rating-chart-bg-hit"
+            onClick={() => { setHoveredPoint(null); setPinnedByClick(false) }}
+          />
+          {pathD && (
+            <>
+              <path fill="url(#profile-rating-chart-gradient)" d={`${pathD} L ${scaleX(points[points.length - 1].t)} ${pad.top + plotH} L ${scaleX(points[0].t)} ${pad.top + plotH} Z`} />
+              <path d={pathD} fill="none" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+            </>
+          )}
+          {points.map((p, i) => (
+            <g
+              key={i}
+              onMouseEnter={() => setHoveredPoint(i)}
+              onMouseLeave={() => { if (!pinnedByClick) setHoveredPoint(null) }}
+              onClick={(e) => {
+                e.stopPropagation()
+                setHoveredPoint((prev) => {
+                  const next = prev === i ? null : i
+                  setPinnedByClick(next !== null)
+                  return next
+                })
+              }}
+              className="profile-rating-chart-point-hit"
+            >
+              <circle cx={scaleX(p.t)} cy={scaleY(p.elo)} r={5} className="profile-rating-chart-point-dot" />
+              <circle cx={scaleX(p.t)} cy={scaleY(p.elo)} r={12} fill="transparent" />
+            </g>
+          ))}
+          <text x={pad.left - 8} y={pad.top} textAnchor="end" className="profile-rating-chart-axis" fontSize="11">{Math.round(maxElo)}</text>
+          <text x={pad.left - 8} y={pad.top + plotH} textAnchor="end" className="profile-rating-chart-axis" fontSize="11">{Math.round(minElo)}</text>
+        </svg>
+      </div>
+    </div>
+  )
+}
 
 function App() {
   const [activeView, setActiveView] = useState<View>('home')
@@ -4981,6 +5160,11 @@ function App() {
                             <span className="profile-stat-label">{t.ratingWinRate}</span>
                           </div>
                         </div>
+                        <ProfileRatingChart
+                          matches={recentMatches}
+                          currentElo={selectedPlayerRow.elo ?? null}
+                          labels={{ title: t.profileRatingChart, hours: t.profileChartHours, days: t.profileChartDays, weeks: t.profileChartWeeks, months: t.profileChartMonths, years: t.profileChartYears }}
+                        />
                         <h4 className="profile-stats-heading">{t.profileLast10Matches}</h4>
                         {recentMatches.length === 0 ? (
                           <p className="panel-text small">{t.profileRecentMatchesEmpty}</p>
@@ -5175,6 +5359,11 @@ function App() {
                                       <span className="profile-stat-label">{t.ratingWinRate}</span>
                                     </div>
                                   </div>
+                                  <ProfileRatingChart
+                                    matches={myRecentMatches}
+                                    currentElo={myProfileStats?.elo ?? null}
+                                    labels={{ title: t.profileRatingChart, hours: t.profileChartHours, days: t.profileChartDays, weeks: t.profileChartWeeks, months: t.profileChartMonths, years: t.profileChartYears }}
+                                  />
                                   <h4 className="profile-stats-heading">{t.profileLast10Matches}</h4>
                                   {myRecentMatches.length === 0 ? (
                                     <p className="panel-text small">{t.profileRecentMatchesEmpty}</p>
