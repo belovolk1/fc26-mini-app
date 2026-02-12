@@ -4071,7 +4071,8 @@ function App() {
   const useMobileLayout = !isWideScreen
 
   const closeNavAnd = (view: View) => {
-    if (view === 'profile') setSelectedPlayerRow(null)
+    setSelectedPlayerRow(null)
+    setSelectedNews(null)
     if (view === 'tournaments') setSelectedTournamentId(null)
     window.location.hash = ''
     setActiveView(view)
