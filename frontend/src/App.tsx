@@ -5,7 +5,7 @@ import { MatchChat } from './MatchChat'
 import { supabase } from './supabaseClient'
 import { useMatchChat } from './useMatchChat'
 
-type View = 'home' | 'profile' | 'ladder' | 'tournaments' | 'tournament-detail' | 'matches' | 'rating' | 'admin' | 'news-detail'
+type View = 'home' | 'profile' | 'ladder' | 'tournaments' | 'tournament-detail' | 'matches' | 'rating' | 'admin' | 'news-detail' | 'about' | 'terms' | 'privacy' | 'contact'
 type Lang = 'en' | 'ro' | 'ru'
 
 const messages: Record<
@@ -145,6 +145,7 @@ const messages: Record<
     profileMatchesWins: string
     profileLast10Matches: string
     profileRatingChart: string
+    profileRatingChartAfter10: string
     profileChartHours: string
     profileChartDays: string
     profileChartWeeks: string
@@ -275,6 +276,11 @@ const messages: Record<
     profileBannedForever: string
     profileBannedReason: string
     ladderBannedNoSearch: string
+    pageAboutBody: string
+    pageTermsBody: string
+    pagePrivacyBody: string
+    pageContactBody: string
+    contactEmailLabel: string
   }
 > = {
   en: {
@@ -290,10 +296,14 @@ const messages: Record<
       rating: 'Rating',
       admin: 'Admin',
       'news-detail': 'News',
+      about: 'About Us',
+      terms: 'Terms of Service',
+      privacy: 'Privacy Policy',
+      contact: 'Contact',
     },
     quickPlayTitle: 'Quick play',
     quickPlayText:
-      'Find an opponent for Ultimate Team (FC 26) or Original Teams. Play within 40 minutes and submit the result.',
+      'Find an opponent for Ultimate Team (FC 26) or Original Teams. Play and submit the result.',
     tournamentsTitle: 'Tournaments',
     tournamentsText: 'Register for cups and leagues. Play‑offs and double round formats.',
     profileTileTitle: 'Profile & stats',
@@ -427,6 +437,7 @@ const messages: Record<
     profileMatchesWins: 'matches, {pct}% wins',
     profileLast10Matches: 'Last 10 matches',
     profileRatingChart: 'Rating history',
+    profileRatingChartAfter10: 'Will be shown after 10 matches.',
     profileChartHours: 'Hours',
     profileChartDays: 'Days',
     profileChartWeeks: 'Weeks',
@@ -475,6 +486,11 @@ const messages: Record<
     footerTerms: 'Terms of Service',
     footerPrivacy: 'Privacy Policy',
     footerContact: 'Contact',
+    pageAboutBody: 'FC Area is a platform for FC 26 players: ladder matchmaking, ELO rating, and tournaments. Play ranked matches in Ultimate Team or Original Teams mode, take part in cups and leagues, track your stats and climb the leaderboard. The service is designed for the community of football simulation fans.',
+    pageTermsBody: 'By using FC Area you agree to play fair: submit correct match results, respect opponents and follow tournament rules. We reserve the right to restrict access for cheating, fraud or abusive behaviour. Tournament prizes and format are described in each event. The service is provided as is; we are not liable for connection issues or third-party platform availability.',
+    pagePrivacyBody: 'We store your Telegram user ID, username and name to identify your profile. Match results, ELO and tournament data are stored to run the ladder and events. We do not sell your data. Data is processed on servers in the EU. You can request deletion of your data by contacting us. By logging in with Telegram you accept this policy.',
+    pageContactBody: 'For support, suggestions or reports please contact us via Telegram: write to the bot or to the community group linked on this site. You can also reach us by email. We respond as soon as possible. For tournament and technical issues, include your username and a short description.',
+    contactEmailLabel: 'Email',
     bracketRound1: 'Final',
     bracketRound2: 'Semi-final',
     bracketRound3: 'Quarter-final',
@@ -571,6 +587,10 @@ const messages: Record<
       rating: 'Clasament',
       admin: 'Admin',
       'news-detail': 'Știri',
+      about: 'Despre noi',
+      terms: 'Termeni și condiții',
+      privacy: 'Confidențialitate',
+      contact: 'Contact',
     },
     quickPlayTitle: 'Joc rapid',
     quickPlayText:
@@ -708,6 +728,7 @@ const messages: Record<
     profileMatchesWins: 'meciuri, {pct}% victorii',
     profileLast10Matches: 'Ultimele 10 meciuri',
     profileRatingChart: 'Istoricul ratingului',
+    profileRatingChartAfter10: 'Va fi afișat după 10 meciuri.',
     profileChartHours: 'Ore',
     profileChartDays: 'Zile',
     profileChartWeeks: 'Săptămâni',
@@ -756,6 +777,11 @@ const messages: Record<
     footerTerms: 'Termeni și condiții',
     footerPrivacy: 'Confidențialitate',
     footerContact: 'Contact',
+    pageAboutBody: 'FC Area este o platformă pentru jucătorii FC 26: matchmaking ladder, rating ELO și turnee. Joacă meciuri ranked în modul Ultimate Team sau Original Teams, participă la cupe și ligi, urmărește statisticile și urcă în clasament. Serviciul este conceput pentru comunitatea fanilor simulării de fotbal.',
+    pageTermsBody: 'Utilizând FC Area accepti să joci corect: trimite rezultate reale, respectă adversarii și respectă regulile turneelor. Ne rezervăm dreptul de a restricționa accesul pentru trișare, fraudă sau comportament abuziv. Premiile și formatul turneelor sunt descrise la fiecare eveniment. Serviciul este furnizat ca atare; nu răspundem pentru probleme de conexiune sau disponibilitatea platformelor terțe.',
+    pagePrivacyBody: 'Stocăm ID-ul de utilizator Telegram, username-ul și numele pentru identificarea profilului. Rezultatele meciurilor, ELO și datele turneelor sunt stocate pentru a rula ladder-ul și evenimentele. Nu vindem datele tale. Procesarea se face pe servere din UE. Poți solicita ștergerea datelor contactându-ne. Prin autentificare cu Telegram accepți această politică.',
+    pageContactBody: 'Pentru suport, sugestii sau raportări contactează-ne prin Telegram: scrie botului sau grupului comunității linkat pe acest site. Ne poți contacta și pe email. Răspundem cât mai curând. Pentru probleme tehnice sau de turnee, include username-ul și o scurtă descriere.',
+    contactEmailLabel: 'Email',
     bracketRound1: 'Finală',
     bracketRound2: 'Semi-finală',
     bracketRound3: 'Sferturi',
@@ -852,6 +878,10 @@ const messages: Record<
       rating: 'Рейтинг',
       admin: 'Админка',
       'news-detail': 'Новость',
+      about: 'О нас',
+      terms: 'Условия использования',
+      privacy: 'Политика конфиденциальности',
+      contact: 'Контакты',
     },
     quickPlayTitle: 'Быстрая игра',
     quickPlayText:
@@ -989,6 +1019,7 @@ const messages: Record<
     profileMatchesWins: 'матчей, {pct}% побед',
     profileLast10Matches: 'Последние 10 матчей',
     profileRatingChart: 'История рейтинга',
+    profileRatingChartAfter10: 'Будет показана после 10 матчей.',
     profileChartHours: 'Часы',
     profileChartDays: 'Дни',
     profileChartWeeks: 'Недели',
@@ -1037,6 +1068,11 @@ const messages: Record<
     footerTerms: 'Условия использования',
     footerPrivacy: 'Конфиденциальность',
     footerContact: 'Контакты',
+    pageAboutBody: 'FC Area — платформа для игроков FC 26: ладдер, рейтинг ELO и турниры. Играйте рейтинговые матчи в режиме Ultimate Team или Original Teams, участвуйте в кубках и лигах, следите за статистикой и поднимайтесь в таблице. Сервис создан для сообщества любителей футбольной симуляции.',
+    pageTermsBody: 'Используя FC Area, вы соглашаетесь играть честно: вносить верные результаты матчей, уважать соперников и соблюдать правила турниров. Мы оставляем за собой право ограничивать доступ за читы, мошенничество или оскорбительное поведение. Призы и формат турниров указаны в описании каждого события. Сервис предоставляется «как есть»; мы не несём ответственности за сбои связи или доступность сторонних платформ.',
+    pagePrivacyBody: 'Мы храним ваш Telegram ID, имя пользователя и имя для идентификации профиля. Результаты матчей, ELO и данные турниров хранятся для работы ладдера и мероприятий. Мы не продаём ваши данные. Обработка данных выполняется на серверах в ЕС. Вы можете запросить удаление данных, связавшись с нами. Вход через Telegram означает принятие этой политики.',
+    pageContactBody: 'По вопросам поддержки, предложений или жалоб пишите нам в Telegram: в бота или в группу сообщества, указанную на сайте. Также можно написать на email. Мы отвечаем в кратчайшие сроки. При технических или турнирных вопросах укажите username и краткое описание.',
+    contactEmailLabel: 'Эл. почта',
     bracketRound1: 'Финал',
     bracketRound2: '1/2 финала',
     bracketRound3: '1/4 финала',
@@ -1443,8 +1479,9 @@ function RankIconSvg({
   const level = rank?.level ?? 1
   const progress = getRankProgress(elo, level)
   const arcPercent = 0.08 + progress * (0.95 - 0.08)
-  const startDeg = 150
-  const sweepDeg = 360 * arcPercent
+  // Дуга по часовой стрелке: старт в 12:00 (центр сверху) → вправо вниз → низ → вверх по левой → до верхнего левого сектора
+  const startDeg = 0
+  const sweepDeg = 315 * arcPercent
   const rad = (d: number) => (d - 90) * (Math.PI / 180)
   const x1 = cx + r * Math.cos(rad(startDeg))
   const y1 = cy + r * Math.sin(rad(startDeg))
@@ -1829,6 +1866,7 @@ function App() {
   const [myProfileStatsLoading, setMyProfileStatsLoading] = useState(false)
   const lastLobbyMatchIdRef = useRef<number | null>(null)
   const widgetContainerRef = useRef<HTMLDivElement>(null)
+  const ladderWidgetContainerRef = useRef<HTMLDivElement>(null)
 
   const ladderChat = useMatchChat({
     type: 'ladder',
@@ -1915,15 +1953,17 @@ function App() {
     return `https://oauth.telegram.org/auth?bot_id=${encodeURIComponent(telegramBotId.trim())}&origin=${encodeURIComponent(origin)}&request_access=write`
   }, [telegramBotId])
 
-  const showWidget = !widgetUser && activeView === 'profile' && !telegramLoginUrl
+  const showWidgetProfile = !widgetUser && activeView === 'profile' && !telegramLoginUrl
+  const showWidgetLadder = !widgetUser && activeView === 'ladder' && !telegramLoginUrl
+  const showWidget = showWidgetProfile || showWidgetLadder
   useLayoutEffect(() => {
     if (!showWidget) {
       widgetContainerRef.current?.replaceChildren()
+      ladderWidgetContainerRef.current?.replaceChildren()
       return
     }
-    const el = widgetContainerRef.current
+    const el = showWidgetProfile ? widgetContainerRef.current : ladderWidgetContainerRef.current
     if (!el) return
-    // Уже есть виджет (iframe) или скрипт ещё грузится — не пересоздаём
     if (el.querySelector('iframe') || el.querySelector('script[src*="telegram-widget"]')) return
     const botUsername = (import.meta.env.VITE_TELEGRAM_BOT_USERNAME as string) || 'fcarea_bot'
     const authUrlBase = (import.meta.env.VITE_APP_URL as string) || (window.location.origin + window.location.pathname)
@@ -1939,8 +1979,9 @@ function App() {
     el.appendChild(script)
     return () => {
       widgetContainerRef.current?.replaceChildren()
+      ladderWidgetContainerRef.current?.replaceChildren()
     }
-  }, [showWidget])
+  }, [showWidget, showWidgetProfile, showWidgetLadder])
 
   const user = widgetUser
 
@@ -2040,6 +2081,7 @@ function App() {
   const [adminTourPrizePool, setAdminTourPrizePool] = useState<{ place: number; elo_bonus: number }[]>([{ place: 1, elo_bonus: 50 }, { place: 2, elo_bonus: 30 }])
   const [adminTourSending, setAdminTourSending] = useState(false)
   const [adminTourResult, setAdminTourResult] = useState<string | null>(null)
+  const ignoreNextHashChangeRef = useRef(false)
 
   useEffect(() => {
     const hash = window.location.hash
@@ -2072,7 +2114,19 @@ function App() {
   }, [])
 
   useEffect(() => {
+    const hash = window.location.hash.slice(1)
+    if (hash === 'about') setActiveView('about')
+    else if (hash === 'terms') setActiveView('terms')
+    else if (hash === 'privacy') setActiveView('privacy')
+    else if (hash === 'contact') setActiveView('contact')
+  }, [])
+
+  useEffect(() => {
     const onHashChange = () => {
+      if (ignoreNextHashChangeRef.current) {
+        ignoreNextHashChangeRef.current = false
+        return
+      }
       const hash = window.location.hash.slice(1)
       const playerMatch = hash.match(/player=([a-f0-9-]{36})/i)
       const newsMatch = hash.match(/^news=(.+)$/)
@@ -2098,6 +2152,14 @@ function App() {
       } else if (tourMatch) {
         setSelectedTournamentId(tourMatch[1])
         setActiveView('tournament-detail')
+      } else if (hash === 'about') {
+        setActiveView('about')
+      } else if (hash === 'terms') {
+        setActiveView('terms')
+      } else if (hash === 'privacy') {
+        setActiveView('privacy')
+      } else if (hash === 'contact') {
+        setActiveView('contact')
       } else if (!hash || hash === '') {
         setSelectedPlayerRow(null)
         setSelectedNews(null)
@@ -2108,15 +2170,25 @@ function App() {
     return () => window.removeEventListener('hashchange', onHashChange)
   }, [])
 
-  // Синхронизация URL (hash) с текущим экраном: при переходе на home/rating/tournaments и т.д. очищаем hash,
-  // чтобы после ручного обновления страницы показывался текущий экран, а не страница из старого hash.
+  // Синхронизация URL с экраном: глубокие ссылки выставляем, при переходе на home/rating/турниры и т.д. — очищаем hash.
+  // Не очищаем только если тип deep link в URL совпадает с экраном (загрузка по прямой ссылке); иначе после F5 — текущий экран.
   useEffect(() => {
     let desired = ''
-    if (activeView === 'profile' && selectedPlayerRow?.player_id) desired = `player=${selectedPlayerRow.player_id}`
+    if (activeView === 'about') desired = 'about'
+    else if (activeView === 'terms') desired = 'terms'
+    else if (activeView === 'privacy') desired = 'privacy'
+    else if (activeView === 'contact') desired = 'contact'
+    else if (activeView === 'profile' && selectedPlayerRow?.player_id) desired = `player=${selectedPlayerRow.player_id}`
     else if (activeView === 'news-detail' && selectedNews?.id) desired = `news=${selectedNews.id}`
     else if (activeView === 'tournament-detail' && selectedTournamentId) desired = `tournament=${selectedTournamentId}`
     const current = window.location.hash.slice(1)
+    const isDeepLink = /^(player=|news=|tournament=)/.test(current)
+    const urlMatchesView = (current.startsWith('player=') && activeView === 'profile') || (current.startsWith('news=') && activeView === 'news-detail') || (current.startsWith('tournament=') && activeView === 'tournament-detail') || (current === 'about' && activeView === 'about') || (current === 'terms' && activeView === 'terms') || (current === 'privacy' && activeView === 'privacy') || (current === 'contact' && activeView === 'contact')
+    const likelyInitialLoad = isDeepLink && activeView === 'home'
+    if (desired === '' && isDeepLink && (urlMatchesView || likelyInitialLoad)) return
+    if (desired === '' && current === '') return
     if (current !== desired) {
+      ignoreNextHashChangeRef.current = true
       window.location.hash = desired
     }
   }, [activeView, selectedPlayerRow?.player_id, selectedNews?.id, selectedTournamentId])
@@ -2692,6 +2764,7 @@ function App() {
 
   // Переход на профиль игрока по id — открывается вкладка «Профиль» (как личный профиль)
   const openPlayerProfile = (playerId: string) => {
+    ignoreNextHashChangeRef.current = true
     window.location.hash = `player=${playerId}`
     setActiveView('profile')
     setProfileFromHashLoading(true)
@@ -2785,6 +2858,13 @@ function App() {
     if (diffDays === 1) return 'Yesterday'
     if (diffDays < 7) return `${diffDays} days ago`
     return d.toLocaleDateString(undefined, { day: '2-digit', month: '2-digit', year: 'numeric' })
+  }
+
+  const NAME_LOADING = '…'
+  const NameOrSpinner = ({ name }: { name: string | null }) => {
+    if (name == null || name === '') return null
+    if (name === NAME_LOADING) return <span className="strike-name-loading" title={t.profileLoading}><span className="strike-name-loading-spinner" aria-hidden /></span>
+    return <>{name}</>
   }
 
   const fetchNews = () => {
@@ -3065,15 +3145,23 @@ function App() {
     if (activeView === 'home' || activeView === 'tournaments' || activeView === 'tournament-detail' || activeView === 'admin') fetchTournaments(true)
   }, [activeView, playerId])
 
-  // Если вкладки «Регистрация» и «Идёт турнир» пустые — автоматом открывать «Завершён»
+  // При переходе на страницу Tournaments выбираем вкладку: сначала Registration open, если пусто — Ongoing, если оба пусты — Finished
+  const prevActiveViewRef = useRef<View>(activeView)
   useEffect(() => {
+    if (activeView !== 'tournaments') {
+      prevActiveViewRef.current = activeView
+      return
+    }
     if (tournamentsLoading) return
+    const justNavigatedToTournaments = prevActiveViewRef.current !== 'tournaments'
+    prevActiveViewRef.current = 'tournaments'
+    if (!justNavigatedToTournaments) return
     const countReg = tournamentsList.filter((t) => t.status === 'registration').length
     const countOngoing = tournamentsList.filter((t) => t.status === 'ongoing').length
-    if (countReg === 0 && countOngoing === 0) {
-      setTournamentsStatusTab('finished')
-    }
-  }, [tournamentsLoading, tournamentsList])
+    if (countReg > 0) setTournamentsStatusTab('registration')
+    else if (countOngoing > 0) setTournamentsStatusTab('ongoing')
+    else setTournamentsStatusTab('finished')
+  }, [activeView, tournamentsLoading, tournamentsList])
 
   // Участие в турнирах (registration/ongoing) — показывать вне страницы турниров
   useEffect(() => {
@@ -3195,7 +3283,7 @@ function App() {
       })
   }, [selectedTournamentId, matchesByTournamentId])
 
-  // Никнеймы участников турниров для карточек (победитель и призовые места)
+  // Никнеймы участников турниров для карточек (победитель и призовые места). Запрашиваем только тех, кого ещё нет в кэше — иначе при поступлении матчей по одному турниру делали бы повторные тяжёлые запросы.
   useEffect(() => {
     const ids = new Set<string>()
     Object.values(matchesByTournamentId).forEach((matches) => {
@@ -3208,10 +3296,12 @@ function App() {
       setTournamentPlayerNames({})
       return
     }
+    const idsToFetch = Array.from(ids).filter((id) => !tournamentPlayerNames[id])
+    if (idsToFetch.length === 0) return
     supabase
       .from('players')
       .select('id, display_name, username, first_name, last_name')
-      .in('id', Array.from(ids))
+      .in('id', idsToFetch)
       .then(({ data }) => {
         const map: Record<string, string> = {}
         ;(data || []).forEach((p: { id: string; display_name: string | null; username: string | null; first_name: string | null; last_name: string | null }) => {
@@ -3220,7 +3310,7 @@ function App() {
         })
         setTournamentPlayerNames((prev) => ({ ...prev, ...map }))
       })
-  }, [matchesByTournamentId, t])
+  }, [matchesByTournamentId, t, tournamentPlayerNames])
 
   // Realtime: обновление без мерцания (silent)
   useEffect(() => {
@@ -3374,8 +3464,9 @@ function App() {
     onMatchConfirmed?: () => void
     onOpenPlayerProfile?: (playerId: string) => void
     myActiveMatch?: TournamentMatchRow | null
+    initialPlayerNames?: Record<string, string>
   }) {
-    const { matches, playerId: pid, lang: bracketLang, onMatchUpdated, onMatchConfirmed, onOpenPlayerProfile, myActiveMatch } = props
+    const { matches, playerId: pid, lang: bracketLang, onMatchUpdated, onMatchConfirmed, onOpenPlayerProfile, myActiveMatch, initialPlayerNames } = props
     const [matchMessage, setMatchMessage] = useState<string | null>(null)
     const [savingMatchId, setSavingMatchId] = useState<string | null>(null)
     const [scoreInputs, setScoreInputs] = useState<Record<string, { a: string; b: string }>>({})
@@ -3398,6 +3489,7 @@ function App() {
 
     const getPlayerName = (id: string | null) => {
       if (!id) return '—'
+      if (initialPlayerNames?.[id]) return initialPlayerNames[id]
       if (bracketPlayerNames[id]) return bracketPlayerNames[id]
       return '…'
     }
@@ -3412,19 +3504,21 @@ function App() {
         setBracketPlayerNames({})
         return
       }
+      const idsToFetch = Array.from(ids).filter((id) => !(initialPlayerNames?.[id] ?? bracketPlayerNames[id]))
+      if (idsToFetch.length === 0) return
       supabase
         .from('players')
         .select('id, display_name, username, first_name, last_name')
-        .in('id', Array.from(ids))
+        .in('id', idsToFetch)
         .then(({ data }) => {
           const map: Record<string, string> = {}
           ;(data || []).forEach((p: { id: string; display_name: string | null; username: string | null; first_name: string | null; last_name: string | null }) => {
             const name = (p.display_name?.trim() || (p.username ? `@${p.username}` : null) || [p.first_name, p.last_name].filter(Boolean).join(' ').trim() || '').trim()
             map[p.id] = name || t.guestName
           })
-          setBracketPlayerNames(map)
+          setBracketPlayerNames((prev) => ({ ...prev, ...map }))
         })
-    }, [matches, t])
+    }, [matches, t, initialPlayerNames, bracketPlayerNames])
 
     const rounds = useMemo(() => {
       const byRound: Record<number, TournamentMatchRow[]> = {}
@@ -3563,21 +3657,23 @@ function App() {
                       const canConfirm = isInMatch && m.status === 'score_submitted' && m.score_submitted_by !== pid
                       const finished = ['confirmed', 'finished', 'auto_win_a', 'auto_win_b', 'auto_no_show'].includes(m.status)
                       const inp = scoreInputs[m.id] ?? { a: String(m.score_a ?? ''), b: String(m.score_b ?? '') }
-                      const readyLabel = m.status === 'ready_a' ? `${t.bracketReadyLabel} ${getPlayerName(m.player_a_id)}` : m.status === 'ready_b' ? `${t.bracketReadyLabel} ${getPlayerName(m.player_b_id)}` : m.status === 'both_ready' ? t.bracketBothReady : m.status
+                      const nA = getPlayerName(m.player_a_id)
+                      const nB = getPlayerName(m.player_b_id)
+                      const readyLabel = m.status === 'ready_a' ? (nA === NAME_LOADING ? t.bracketReadyLabel : `${t.bracketReadyLabel} ${nA}`) : m.status === 'ready_b' ? (nB === NAME_LOADING ? t.bracketReadyLabel : `${t.bracketReadyLabel} ${nB}`) : m.status === 'both_ready' ? t.bracketBothReady : m.status
                       const matchStatusClass = finished ? 'bracket-match-card--confirmed' : m.status === 'score_submitted' ? 'bracket-match-card--score-submitted' : m.status === 'both_ready' ? 'bracket-match-card--both-ready' : m.status === 'ready_a' || m.status === 'ready_b' ? 'bracket-match-card--ready' : 'bracket-match-card--scheduled'
                       return (
                         <div key={m.id} className={`bracket-match-card ${matchStatusClass}`}>
                           <div className="bracket-match-card-row bracket-match-card-players">
                             {m.player_a_id ? (
-                              <button type="button" className={`player-name-link ${m.winner_id === m.player_a_id ? 'bracket-match-card-winner' : ''}`} onClick={() => m.player_a_id && onOpenPlayerProfile?.(m.player_a_id)}>{getPlayerName(m.player_a_id)}</button>
+                              <button type="button" className={`player-name-link ${m.winner_id === m.player_a_id ? 'bracket-match-card-winner' : ''}`} onClick={() => m.player_a_id && onOpenPlayerProfile?.(m.player_a_id)}><NameOrSpinner name={getPlayerName(m.player_a_id)} /></button>
                             ) : (
-                              <span className={m.winner_id === m.player_a_id ? 'bracket-match-card-winner' : ''}>{getPlayerName(m.player_a_id)}</span>
+                              <span className={m.winner_id === m.player_a_id ? 'bracket-match-card-winner' : ''}><NameOrSpinner name={getPlayerName(m.player_a_id)} /></span>
                             )}
                             <span className="bracket-match-card-vs"> – </span>
                             {m.player_b_id ? (
-                              <button type="button" className={`player-name-link ${m.winner_id === m.player_b_id ? 'bracket-match-card-winner' : ''}`} onClick={() => m.player_b_id && onOpenPlayerProfile?.(m.player_b_id)}>{getPlayerName(m.player_b_id)}</button>
+                              <button type="button" className={`player-name-link ${m.winner_id === m.player_b_id ? 'bracket-match-card-winner' : ''}`} onClick={() => m.player_b_id && onOpenPlayerProfile?.(m.player_b_id)}><NameOrSpinner name={getPlayerName(m.player_b_id)} /></button>
                             ) : (
-                              <span className={m.winner_id === m.player_b_id ? 'bracket-match-card-winner' : ''}>{getPlayerName(m.player_b_id)}</span>
+                              <span className={m.winner_id === m.player_b_id ? 'bracket-match-card-winner' : ''}><NameOrSpinner name={getPlayerName(m.player_b_id)} /></span>
                             )}
                           </div>
                           <div className="bracket-match-card-score">
@@ -3665,9 +3761,9 @@ function App() {
             <div className="bracket-match-modal-backdrop" onClick={() => setMatchResultModalId(null)} role="presentation">
               <div className="bracket-match-modal" onClick={(e) => e.stopPropagation()}>
                 <h4 className="bracket-match-modal-title">
-                  {m.player_a_id ? <button type="button" className="player-name-link" onClick={() => m.player_a_id && onOpenPlayerProfile?.(m.player_a_id)}>{getPlayerName(m.player_a_id)}</button> : getPlayerName(m.player_a_id)}
+                  {m.player_a_id ? <button type="button" className="player-name-link" onClick={() => m.player_a_id && onOpenPlayerProfile?.(m.player_a_id)}><NameOrSpinner name={getPlayerName(m.player_a_id)} /></button> : <NameOrSpinner name={getPlayerName(m.player_a_id)} />}
                   {' – '}
-                  {m.player_b_id ? <button type="button" className="player-name-link" onClick={() => m.player_b_id && onOpenPlayerProfile?.(m.player_b_id)}>{getPlayerName(m.player_b_id)}</button> : getPlayerName(m.player_b_id)}
+                  {m.player_b_id ? <button type="button" className="player-name-link" onClick={() => m.player_b_id && onOpenPlayerProfile?.(m.player_b_id)}><NameOrSpinner name={getPlayerName(m.player_b_id)} /></button> : <NameOrSpinner name={getPlayerName(m.player_b_id)} />}
                 </h4>
                 <div className="bracket-match-modal-score">{m.score_a != null && m.score_b != null ? `${m.score_a} : ${m.score_b}` : '—'}</div>
                 <p className="bracket-match-modal-meta">{dateTimeStr} – {finished ? 'Confirmed' : m.status === 'score_submitted' ? 'Pending confirm' : 'Both ready'}</p>
@@ -3851,7 +3947,7 @@ function App() {
               <div className="tournament-card-ref-results">
                 {winnerName && (
                   <p className="tournament-card-ref-winner">
-                    {t.tournamentWinner} <strong className="tournament-card-ref-winner-name">{winnerName}</strong>
+                    {t.tournamentWinner} <strong className="tournament-card-ref-winner-name"><NameOrSpinner name={winnerName} /></strong>
                   </p>
                 )}
                 {prizePool.length > 0 && standings.length > 0 && (
@@ -3862,7 +3958,7 @@ function App() {
                       const elo = prize.elo_bonus ?? 0
                       return (
                         <li key={prize.place} className="tournament-card-ref-prize-item">
-                          {prize.place}. {name} <em>+{elo} ELO</em>
+                          {prize.place}. <NameOrSpinner name={name} /> <em>+{elo} ELO</em>
                         </li>
                       )
                     })}
@@ -3893,6 +3989,7 @@ function App() {
                   onClick={() => {
                     setSelectedTournamentId(tr.id)
                     setActiveView('tournament-detail')
+                    ignoreNextHashChangeRef.current = true
                     window.location.hash = `tournament=${tr.id}`
                   }}
                 >
@@ -4084,6 +4181,7 @@ function App() {
     setSelectedPlayerRow(null)
     setSelectedNews(null)
     if (view === 'tournaments') setSelectedTournamentId(null)
+    ignoreNextHashChangeRef.current = true
     window.location.hash = ''
     setActiveView(view)
     setNavOpen(false)
@@ -4106,7 +4204,7 @@ function App() {
           <button
             type="button"
             className="app-header-main app-header-main--clickable"
-            onClick={() => { setActiveView('home'); setSelectedNews(null); setNavOpen(false); window.location.hash = '' }}
+            onClick={() => { ignoreNextHashChangeRef.current = true; window.location.hash = ''; setActiveView('home'); setSelectedNews(null); setNavOpen(false) }}
             aria-label={t.navHome}
           >
             <img src="/Logo.svg" alt="" className="strike-logo-icon" aria-hidden />
@@ -4191,13 +4289,7 @@ function App() {
                 key={view}
                 type="button"
                 className={activeView === view || (view === 'tournaments' && activeView === 'tournament-detail') ? 'nav-btn active' : 'nav-btn'}
-                onClick={() => {
-                  if (view === 'profile') {
-                    setSelectedPlayerRow(null)
-                    window.location.hash = ''
-                  }
-                  setActiveView(view)
-                }}
+                onClick={() => closeNavAnd(view)}
               >
                 {label}
                 {badge != null && badge > 0 && <span className="nav-badge">{badge}</span>}
@@ -4350,8 +4442,8 @@ function App() {
                 </span>
                 <button type="button" className="strike-btn strike-btn-secondary strike-tournament-banner-btn" onClick={() => {
                   const tid = myActiveTournamentRegistrations.find((r) => r.status === 'ongoing')?.id ?? myActiveTournamentRegistrations[0]?.id
-                  if (tid) { setSelectedTournamentId(tid); setActiveView('tournament-detail'); window.location.hash = `tournament=${tid}` }
-                  else { setActiveView('tournaments'); window.location.hash = '' }
+                  if (tid) { setSelectedTournamentId(tid); setActiveView('tournament-detail'); ignoreNextHashChangeRef.current = true; window.location.hash = `tournament=${tid}` }
+                  else { ignoreNextHashChangeRef.current = true; window.location.hash = ''; setActiveView('tournaments') }
                 }}>
                   {t.homeGoToTournaments}
                 </button>
@@ -4364,8 +4456,8 @@ function App() {
                 <button type="button" className="strike-card strike-card-primary" onClick={() => {
                   if (hasActiveTournamentMatch) {
                     const tid = myActiveTournamentRegistrations.find((r) => r.status === 'ongoing')?.id
-                    if (tid) { setSelectedTournamentId(tid); setActiveView('tournament-detail'); window.location.hash = `tournament=${tid}` }
-                    else { setActiveView('tournaments'); window.location.hash = '' }
+                    if (tid) { setSelectedTournamentId(tid); setActiveView('tournament-detail'); ignoreNextHashChangeRef.current = true; window.location.hash = `tournament=${tid}` }
+                    else { ignoreNextHashChangeRef.current = true; window.location.hash = ''; setActiveView('tournaments') }
                   } else setActiveView('ladder')
                 }}>
                   <div className="strike-card-icon"><HomeCardIconQuickPlay /></div>
@@ -4376,8 +4468,8 @@ function App() {
                 <button type="button" className="strike-card" onClick={() => {
                   if (hasActiveTournamentMatch) {
                     const tid = myActiveTournamentRegistrations.find((r) => r.status === 'ongoing')?.id
-                    if (tid) { setSelectedTournamentId(tid); setActiveView('tournament-detail'); window.location.hash = `tournament=${tid}` }
-                    else { setActiveView('tournaments'); window.location.hash = '' }
+                    if (tid) { setSelectedTournamentId(tid); setActiveView('tournament-detail'); ignoreNextHashChangeRef.current = true; window.location.hash = `tournament=${tid}` }
+                    else { ignoreNextHashChangeRef.current = true; window.location.hash = ''; setActiveView('tournaments') }
                   } else setActiveView('tournaments')
                 }}>
                   <div className="strike-card-icon"><HomeCardIconTournaments /></div>
@@ -4513,6 +4605,7 @@ function App() {
                       onClick={() => {
                         setSelectedNews(n)
                         setActiveView('news-detail')
+                        ignoreNextHashChangeRef.current = true
                         window.location.hash = `news=${n.id}`
                       }}
                       onKeyDown={(e) => {
@@ -4520,6 +4613,7 @@ function App() {
                           e.preventDefault()
                           setSelectedNews(n)
                           setActiveView('news-detail')
+                          ignoreNextHashChangeRef.current = true
                           window.location.hash = `news=${n.id}`
                         }
                       }}
@@ -4541,22 +4635,21 @@ function App() {
             {/* Footer */}
             <footer className="strike-footer">
               <div className="strike-footer-links">
-                <a href="#about" className="strike-footer-link">{t.footerAbout}</a>
-                <a href="#terms" className="strike-footer-link">{t.footerTerms}</a>
-                <a href="#privacy" className="strike-footer-link">{t.footerPrivacy}</a>
-                <a href="#contact" className="strike-footer-link">{t.footerContact}</a>
+                <button type="button" className="strike-footer-link" onClick={() => { ignoreNextHashChangeRef.current = true; window.location.hash = 'about'; setActiveView('about') }}>{t.footerAbout}</button>
+                <button type="button" className="strike-footer-link" onClick={() => { ignoreNextHashChangeRef.current = true; window.location.hash = 'terms'; setActiveView('terms') }}>{t.footerTerms}</button>
+                <button type="button" className="strike-footer-link" onClick={() => { ignoreNextHashChangeRef.current = true; window.location.hash = 'privacy'; setActiveView('privacy') }}>{t.footerPrivacy}</button>
+                <button type="button" className="strike-footer-link" onClick={() => { ignoreNextHashChangeRef.current = true; window.location.hash = 'contact'; setActiveView('contact') }}>{t.footerContact}</button>
               </div>
               <div className="strike-footer-social">
-                <span className="strike-social-icon" aria-label="Twitter">𝕏</span>
-                <span className="strike-social-icon" aria-label="Facebook">f</span>
-                <span className="strike-social-icon" aria-label="Instagram">📷</span>
-                <span className="strike-social-icon" aria-label="YouTube">▶</span>
+                <a href="https://x.com/fc_area_com" target="_blank" rel="noopener noreferrer" className="strike-social-icon" aria-label="Twitter">𝕏</a>
+                <a href="https://www.facebook.com/profile.php?id=61583408475935" target="_blank" rel="noopener noreferrer" className="strike-social-icon" aria-label="Facebook">f</a>
+                <a href="https://www.instagram.com/fcarea_com/" target="_blank" rel="noopener noreferrer" className="strike-social-icon" aria-label="Instagram">📷</a>
               </div>
             </footer>
           </>
         )}
 
-        {activeView !== 'home' && activeView !== 'tournament-detail' && (
+        {activeView !== 'home' && activeView !== 'tournament-detail' && activeView !== 'about' && activeView !== 'terms' && activeView !== 'privacy' && activeView !== 'contact' && (
           <h2 className="view-title">{t.viewTitle[activeView]}</h2>
         )}
 
@@ -4565,7 +4658,7 @@ function App() {
             <button
               type="button"
               className="news-detail-back"
-              onClick={() => { setActiveView('home'); setSelectedNews(null); window.location.hash = '' }}
+              onClick={() => { ignoreNextHashChangeRef.current = true; window.location.hash = ''; setActiveView('home'); setSelectedNews(null) }}
             >
               ← {t.newsBack}
             </button>
@@ -4589,6 +4682,27 @@ function App() {
                 </div>
               </article>
             )}
+          </section>
+        )}
+
+        {(activeView === 'about' || activeView === 'terms' || activeView === 'privacy' || activeView === 'contact') && (
+          <section className="panel static-page-panel">
+            <button
+              type="button"
+              className="news-detail-back"
+              onClick={() => { ignoreNextHashChangeRef.current = true; window.location.hash = ''; setActiveView('home') }}
+            >
+              ← {t.newsBack}
+            </button>
+            <h2 className="static-page-title">{t.viewTitle[activeView]}</h2>
+            <div className="static-page-body">
+              <p className="panel-text">{activeView === 'about' && t.pageAboutBody}{activeView === 'terms' && t.pageTermsBody}{activeView === 'privacy' && t.pagePrivacyBody}{activeView === 'contact' && t.pageContactBody}</p>
+              {activeView === 'contact' && (
+                <p className="panel-text static-page-contact-email">
+                  {t.contactEmailLabel}: <a href="mailto:kamindous@gmail.com">kamindous@gmail.com</a>
+                </p>
+              )}
+            </div>
           </section>
         )}
 
@@ -5232,7 +5346,7 @@ function App() {
                   <button
                     type="button"
                     className="profile-back-to-my strike-btn strike-btn-secondary"
-                    onClick={() => { setSelectedPlayerRow(null); window.location.hash = '' }}
+                    onClick={() => { ignoreNextHashChangeRef.current = true; window.location.hash = ''; setSelectedPlayerRow(null) }}
                   >
                     ← {t.profileBackToMyProfile}
                   </button>
@@ -5312,11 +5426,18 @@ function App() {
                             <span className="profile-stat-label">{t.ratingWinRate}</span>
                           </div>
                         </div>
-                        <ProfileRatingChart
-                          matches={recentMatches}
-                          currentElo={selectedPlayerRow.elo ?? null}
-                          labels={{ title: t.profileRatingChart, hours: t.profileChartHours, days: t.profileChartDays, weeks: t.profileChartWeeks, months: t.profileChartMonths, years: t.profileChartYears }}
-                        />
+                        {selectedPlayerRow.matches_count >= 10 ? (
+                          <ProfileRatingChart
+                            matches={recentMatches}
+                            currentElo={selectedPlayerRow.elo ?? null}
+                            labels={{ title: t.profileRatingChart, hours: t.profileChartHours, days: t.profileChartDays, weeks: t.profileChartWeeks, months: t.profileChartMonths, years: t.profileChartYears }}
+                          />
+                        ) : (
+                          <div className="profile-rating-chart profile-rating-chart--placeholder">
+                            <h4 className="profile-stats-heading">{t.profileRatingChart}</h4>
+                            <p className="profile-rating-chart-after-hint">{t.profileRatingChartAfter10}</p>
+                          </div>
+                        )}
                         <h4 className="profile-stats-heading">{t.profileLast10Matches}</h4>
                         {recentMatches.length === 0 ? (
                           <p className="panel-text small">{t.profileRecentMatchesEmpty}</p>
@@ -5511,11 +5632,18 @@ function App() {
                                       <span className="profile-stat-label">{t.ratingWinRate}</span>
                                     </div>
                                   </div>
-                                  <ProfileRatingChart
-                                    matches={myRecentMatches}
-                                    currentElo={myProfileStats?.elo ?? null}
-                                    labels={{ title: t.profileRatingChart, hours: t.profileChartHours, days: t.profileChartDays, weeks: t.profileChartWeeks, months: t.profileChartMonths, years: t.profileChartYears }}
-                                  />
+                                  {(myProfileStats?.matches_count ?? matchesCount ?? 0) >= 10 ? (
+                                    <ProfileRatingChart
+                                      matches={myRecentMatches}
+                                      currentElo={myProfileStats?.elo ?? null}
+                                      labels={{ title: t.profileRatingChart, hours: t.profileChartHours, days: t.profileChartDays, weeks: t.profileChartWeeks, months: t.profileChartMonths, years: t.profileChartYears }}
+                                    />
+                                  ) : (
+                                    <div className="profile-rating-chart profile-rating-chart--placeholder">
+                                      <h4 className="profile-stats-heading">{t.profileRatingChart}</h4>
+                                      <p className="profile-rating-chart-after-hint">{t.profileRatingChartAfter10}</p>
+                                    </div>
+                                  )}
                                   <h4 className="profile-stats-heading">{t.profileLast10Matches}</h4>
                                   {myRecentMatches.length === 0 ? (
                                     <p className="panel-text small">{t.profileRecentMatchesEmpty}</p>
@@ -5684,18 +5812,9 @@ function App() {
                   ) : (
                     <div ref={widgetContainerRef} className="profile-telegram-widget" />
                   )}
-                  <p className="panel-hint profile-telegram-setdomain-one">
-                    {t.profileTelegramSetDomainOne}{' '}
-                    <strong className="profile-telegram-domain">{typeof window !== 'undefined' ? window.location.host : ''}</strong>
-                  </p>
             </div>
             )}
 
-            {user && (
-            <p className="panel-hint">
-              {t.profileHint}
-            </p>
-            )}
             </>
             )}
           </section>
@@ -5707,7 +5826,16 @@ function App() {
             {t.ladderText && <p className="panel-text">{t.ladderText}</p>}
 
             {!user && (
-              <p className="panel-error">{t.ladderLoginRequired}</p>
+              <div className="ladder-login-block">
+                <p className="panel-text ladder-login-hint">{t.ladderLoginRequired}</p>
+                {telegramLoginUrl ? (
+                  <a href={telegramLoginUrl} className="strike-btn strike-btn-primary telegram-login-fallback" rel="noopener noreferrer">
+                    {t.profileTelegramLoginButton}
+                  </a>
+                ) : (
+                  <div ref={ladderWidgetContainerRef} className="ladder-telegram-widget" />
+                )}
+              </div>
             )}
 
             {user && !playerId && (
@@ -5721,8 +5849,8 @@ function App() {
                 <p className="panel-text panel-error">{t.ladderInTournamentBlock}</p>
                 <button type="button" className="strike-btn strike-btn-primary" onClick={() => {
                   const tid = myActiveTournamentRegistrations.find((r) => r.status === 'ongoing')?.id
-                  if (tid) { setSelectedTournamentId(tid); setActiveView('tournament-detail'); window.location.hash = `tournament=${tid}` }
-                  else { setActiveView('tournaments'); window.location.hash = '' }
+                  if (tid) { setSelectedTournamentId(tid); setActiveView('tournament-detail'); ignoreNextHashChangeRef.current = true; window.location.hash = `tournament=${tid}` }
+                  else { ignoreNextHashChangeRef.current = true; window.location.hash = ''; setActiveView('tournaments') }
                 }}>
                   {t.navTournaments}
                 </button>
@@ -5929,10 +6057,6 @@ function App() {
         {activeView === 'tournaments' && (
           <section className="tournaments-page">
             <header className="tournaments-page-header">
-              <h2 className="tournaments-page-title">
-                <span className="tournaments-page-title-icon"><TournamentsPageIcon /></span>
-                {t.tournamentsHeader}
-              </h2>
               <div className="tournaments-page-header-actions">
                 {isAdminUser && (
                   <button type="button" className="tournaments-page-create-btn" onClick={() => setActiveView('admin')}>
@@ -5992,6 +6116,7 @@ function App() {
                         playerId={playerId}
                         leaderboard={leaderboard}
                         lang={lang}
+                        initialPlayerNames={tournamentPlayerNames}
                         onOpenPlayerProfile={openPlayerProfile}
                         onRefresh={async () => {
                           fetchTournaments(true)
@@ -6028,7 +6153,7 @@ function App() {
           return (
             <section className="tournament-detail-page">
               <header className="tournament-detail-header">
-                <button type="button" className="tournament-detail-back" onClick={() => { setActiveView('tournaments'); setSelectedTournamentId(null); window.location.hash = '' }}>
+                <button type="button" className="tournament-detail-back" onClick={() => { ignoreNextHashChangeRef.current = true; window.location.hash = ''; setActiveView('tournaments'); setSelectedTournamentId(null) }}>
                   ← {t.tournamentDetailBack}
                 </button>
                 <h2 className="tournament-detail-title">{tr.name}</h2>
@@ -6040,6 +6165,7 @@ function App() {
                   playerId={playerId}
                   leaderboard={leaderboard}
                   lang={lang}
+                  initialPlayerNames={tournamentPlayerNames}
                   onOpenPlayerProfile={openPlayerProfile}
                   myActiveMatch={myActiveMatch}
                   onRefresh={async () => {

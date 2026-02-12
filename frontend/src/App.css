@@ -914,6 +914,42 @@
   }
 }
 
+/* Статические страницы (About, Terms, Privacy, Contact) */
+.static-page-panel {
+  max-width: 720px;
+  margin: 0 auto;
+}
+.static-page-title {
+  margin: 0 0 16px;
+  font-size: 20px;
+  font-weight: 700;
+}
+.static-page-body {
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+.app.strike-theme .static-page-title {
+  font-family: var(--strike-font);
+  color: var(--strike-text);
+}
+.app.strike-theme .static-page-body {
+  color: var(--strike-muted);
+}
+.static-page-contact-email {
+  margin-top: 12px;
+}
+.static-page-body a {
+  color: var(--accent);
+  text-decoration: none;
+}
+.static-page-body a:hover {
+  text-decoration: underline;
+}
+.app.strike-theme .static-page-body a {
+  color: var(--strike-orange);
+}
+
 .panel-title {
   margin: 0 0 16px;
   font-size: 22px;
@@ -1125,6 +1161,23 @@
   border: 2px solid var(--border);
   border-radius: var(--radius);
   box-shadow: var(--shadow-sm);
+}
+
+.ladder-login-block {
+  margin: 16px 0 0;
+  padding: 20px 0;
+}
+.ladder-login-hint {
+  margin: 0 0 16px;
+  color: var(--text-muted);
+}
+.ladder-telegram-widget {
+  margin: 0;
+  min-height: 48px;
+}
+.app.strike-theme .ladder-login-hint {
+  color: var(--strike-muted);
+  font-family: var(--strike-font-body);
 }
 
 .ladder-mode-label {
@@ -1925,6 +1978,8 @@
   padding: 0;
   max-width: 100%;
   min-height: 60vh;
+  border-radius: var(--radius);
+  overflow: hidden;
 }
 .tournaments-page-loading,
 .tournaments-page-empty {
@@ -2696,6 +2751,17 @@
   border: 2px solid var(--border);
   border-radius: var(--radius-sm);
 }
+.profile-rating-chart--placeholder {
+  min-height: 80px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.profile-rating-chart-after-hint {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-muted);
+}
 .profile-rating-chart .profile-stats-heading {
   margin-bottom: 12px;
 }
@@ -2798,6 +2864,10 @@
   background: var(--strike-elevated);
   border: var(--strike-border-w) solid var(--strike-border);
   border-radius: var(--strike-radius-sm);
+}
+.app.strike-theme .profile-rating-chart-after-hint {
+  color: var(--strike-muted);
+  font-family: var(--strike-font-body);
 }
 .app.strike-theme .profile-rating-chart-period-btn {
   background: var(--strike-card);
@@ -3201,6 +3271,7 @@
   width: 22px;
   height: 22px;
   object-fit: contain;
+  filter: drop-shadow(0 1px 4px var(--strike-orange-glow));
 }
 @media (min-width: 1024px) {
   .app.strike-theme .profile-stat-icon {
@@ -5124,6 +5195,9 @@
 /* Цвета референса test-strike: #15151A, #1E1E24, #222228, #2A2A32, #ff6b00, #a0a0a8 */
 .app.strike-theme .tournaments-page {
   background: #15151A;
+  border: var(--strike-border-w) solid var(--strike-border);
+  border-radius: var(--strike-radius);
+  box-shadow: var(--strike-shadow-sm);
   min-height: 60vh;
 }
 /* Шапка страницы турниров: Create Tournament справа */
@@ -6894,6 +6968,31 @@
   font-family: var(--strike-font-body);
   color: var(--strike-muted);
 }
+
+/* Кружок загрузки вместо «…» при подгрузке имён игроков в турнирах/сетке */
+.strike-name-loading {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+}
+.strike-name-loading-spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: strike-name-spin 0.7s linear infinite;
+}
+.app.strike-theme .strike-name-loading-spinner {
+  border-color: var(--strike-border);
+  border-top-color: var(--strike-orange);
+}
+@keyframes strike-name-spin {
+  to { transform: rotate(360deg); }
+}
+
 .strike-top-item {
   display: flex;
   align-items: center;
@@ -7205,6 +7304,11 @@
   font-size: 14px;
   color: var(--text-muted);
   text-decoration: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  font: inherit;
 }
 .app.strike-theme .strike-footer-link {
   font-family: var(--strike-font-body);
@@ -7225,10 +7329,17 @@
 .strike-social-icon {
   font-size: 18px;
   color: var(--text-muted);
-  cursor: default;
+  text-decoration: none;
+  cursor: pointer;
+}
+.strike-social-icon:hover {
+  color: var(--accent);
 }
 .app.strike-theme .strike-social-icon {
   color: var(--strike-muted);
+}
+.app.strike-theme .strike-social-icon:hover {
+  color: var(--strike-orange);
 }
 @media (max-width: 767px) {
   .strike-header-user {
