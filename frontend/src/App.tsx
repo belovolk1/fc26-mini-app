@@ -2189,9 +2189,21 @@ function App() {
 
   const refetchHeaderElo = async () => {
     if (!playerId) return
-    const { data } = await supabase.from('players').select('elo').eq('id', playerId).single()
-    if (data != null && typeof (data as { elo?: number }).elo === 'number') {
-      setElo((data as { elo: number }).elo)
+    const [eloRes, countRes, profileRes, leaderboardRes] = await Promise.all([
+      supabase.from('players').select('elo').eq('id', playerId).single(),
+      supabase.rpc('get_my_matches_count', { p_player_id: playerId }),
+      supabase.rpc('get_player_profile', { p_player_id: playerId }),
+      supabase.rpc('get_leaderboard'),
+    ])
+    if (eloRes.data != null && typeof (eloRes.data as { elo?: number }).elo === 'number') {
+      setElo((eloRes.data as { elo: number }).elo)
+    }
+    if (!countRes.error && countRes.data != null) setMatchesCount(Number(countRes.data))
+    if (!profileRes.error && Array.isArray(profileRes.data) && profileRes.data[0]) {
+      setMyProfileStats(profileRes.data[0] as LeaderboardRow)
+    }
+    if (!leaderboardRes.error && Array.isArray(leaderboardRes.data)) {
+      setLeaderboard(leaderboardRes.data as LeaderboardRow[])
     }
   }
 
