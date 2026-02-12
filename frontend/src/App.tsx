@@ -2062,6 +2062,56 @@ function App() {
   }, [])
 
   useEffect(() => {
+    const hash = window.location.hash.slice(1)
+    const tourMatch = hash.match(/^tournament=([a-f0-9-]{36})$/i)
+    if (tourMatch) {
+      const id = tourMatch[1]
+      setSelectedTournamentId(id)
+      setActiveView('tournament-detail')
+    }
+  }, [])
+
+  useEffect(() => {
+    const onHashChange = () => {
+      const hash = window.location.hash.slice(1)
+      const playerMatch = hash.match(/player=([a-f0-9-]{36})/i)
+      const newsMatch = hash.match(/^news=(.+)$/)
+      const tourMatch = hash.match(/^tournament=([a-f0-9-]{36})$/i)
+      if (playerMatch) {
+        const uuid = playerMatch[1]
+        setActiveView('profile')
+        setProfileFromHashLoading(true)
+        supabase.rpc('get_player_profile', { p_player_id: uuid }).then(({ data, error }) => {
+          setProfileFromHashLoading(false)
+          if (!error && Array.isArray(data) && data.length > 0) setSelectedPlayerRow(data[0] as LeaderboardRow)
+          else setSelectedPlayerRow(null)
+        })
+      } else if (newsMatch) {
+        const id = newsMatch[1].trim()
+        setActiveView('news-detail')
+        setSelectedNews(null)
+        setNewsDetailLoading(true)
+        supabase.from('news').select('id, title, body, image_url, created_at').eq('id', id).single().then(({ data, error }) => {
+          setNewsDetailLoading(false)
+          if (!error && data) setSelectedNews(data as NewsRow)
+        })
+      } else if (tourMatch) {
+        setSelectedTournamentId(tourMatch[1])
+        setActiveView('tournament-detail')
+      } else if (!hash || hash === '') {
+        setSelectedPlayerRow(null)
+        setSelectedNews(null)
+        setSelectedTournamentId(null)
+        if (activeView === 'tournament-detail') setActiveView('tournaments')
+        else if (activeView === 'news-detail') setActiveView('home')
+        else if (activeView === 'profile') setActiveView('home')
+      }
+    }
+    window.addEventListener('hashchange', onHashChange)
+    return () => window.removeEventListener('hashchange', onHashChange)
+  }, [activeView])
+
+  useEffect(() => {
     const loadProfile = async () => {
       if (!user) return
       setLoadingProfile(true)
@@ -3833,6 +3883,7 @@ function App() {
                   onClick={() => {
                     setSelectedTournamentId(tr.id)
                     setActiveView('tournament-detail')
+                    window.location.hash = `tournament=${tr.id}`
                   }}
                 >
                   <span className="tournament-card-ref-btn-icon tournament-card-ref-btn-icon--bracket" aria-hidden="true">⊂⊃</span>
@@ -4020,11 +4071,9 @@ function App() {
   const useMobileLayout = !isWideScreen
 
   const closeNavAnd = (view: View) => {
-    if (view === 'profile') {
-      setSelectedPlayerRow(null)
-      window.location.hash = ''
-    }
+    if (view === 'profile') setSelectedPlayerRow(null)
     if (view === 'tournaments') setSelectedTournamentId(null)
+    window.location.hash = ''
     setActiveView(view)
     setNavOpen(false)
   }
@@ -4290,8 +4339,8 @@ function App() {
                 </span>
                 <button type="button" className="strike-btn strike-btn-secondary strike-tournament-banner-btn" onClick={() => {
                   const tid = myActiveTournamentRegistrations.find((r) => r.status === 'ongoing')?.id ?? myActiveTournamentRegistrations[0]?.id
-                  if (tid) { setSelectedTournamentId(tid); setActiveView('tournament-detail') }
-                  else setActiveView('tournaments')
+                  if (tid) { setSelectedTournamentId(tid); setActiveView('tournament-detail'); window.location.hash = `tournament=${tid}` }
+                  else { setActiveView('tournaments'); window.location.hash = '' }
                 }}>
                   {t.homeGoToTournaments}
                 </button>
@@ -4304,8 +4353,8 @@ function App() {
                 <button type="button" className="strike-card strike-card-primary" onClick={() => {
                   if (hasActiveTournamentMatch) {
                     const tid = myActiveTournamentRegistrations.find((r) => r.status === 'ongoing')?.id
-                    if (tid) { setSelectedTournamentId(tid); setActiveView('tournament-detail') }
-                    else setActiveView('tournaments')
+                    if (tid) { setSelectedTournamentId(tid); setActiveView('tournament-detail'); window.location.hash = `tournament=${tid}` }
+                    else { setActiveView('tournaments'); window.location.hash = '' }
                   } else setActiveView('ladder')
                 }}>
                   <div className="strike-card-icon"><HomeCardIconQuickPlay /></div>
@@ -4316,8 +4365,8 @@ function App() {
                 <button type="button" className="strike-card" onClick={() => {
                   if (hasActiveTournamentMatch) {
                     const tid = myActiveTournamentRegistrations.find((r) => r.status === 'ongoing')?.id
-                    if (tid) { setSelectedTournamentId(tid); setActiveView('tournament-detail') }
-                    else setActiveView('tournaments')
+                    if (tid) { setSelectedTournamentId(tid); setActiveView('tournament-detail'); window.location.hash = `tournament=${tid}` }
+                    else { setActiveView('tournaments'); window.location.hash = '' }
                   } else setActiveView('tournaments')
                 }}>
                   <div className="strike-card-icon"><HomeCardIconTournaments /></div>
@@ -5661,8 +5710,8 @@ function App() {
                 <p className="panel-text panel-error">{t.ladderInTournamentBlock}</p>
                 <button type="button" className="strike-btn strike-btn-primary" onClick={() => {
                   const tid = myActiveTournamentRegistrations.find((r) => r.status === 'ongoing')?.id
-                  if (tid) { setSelectedTournamentId(tid); setActiveView('tournament-detail') }
-                  else setActiveView('tournaments')
+                  if (tid) { setSelectedTournamentId(tid); setActiveView('tournament-detail'); window.location.hash = `tournament=${tid}` }
+                  else { setActiveView('tournaments'); window.location.hash = '' }
                 }}>
                   {t.navTournaments}
                 </button>
@@ -5968,7 +6017,7 @@ function App() {
           return (
             <section className="tournament-detail-page">
               <header className="tournament-detail-header">
-                <button type="button" className="tournament-detail-back" onClick={() => { setActiveView('tournaments'); setSelectedTournamentId(null) }}>
+                <button type="button" className="tournament-detail-back" onClick={() => { setActiveView('tournaments'); setSelectedTournamentId(null); window.location.hash = '' }}>
                   ← {t.tournamentDetailBack}
                 </button>
                 <h2 className="tournament-detail-title">{tr.name}</h2>
