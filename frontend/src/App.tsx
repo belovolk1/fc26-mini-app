@@ -4278,7 +4278,11 @@ function App() {
                   {t.homeYouAreInTournament} {myActiveTournamentRegistrations[0].name}
                   {myActiveTournamentRegistrations.length > 1 && ` (+${myActiveTournamentRegistrations.length - 1})`}
                 </span>
-                <button type="button" className="strike-btn strike-btn-secondary strike-tournament-banner-btn" onClick={() => setActiveView('tournaments')}>
+                <button type="button" className="strike-btn strike-btn-secondary strike-tournament-banner-btn" onClick={() => {
+                  const tid = myActiveTournamentRegistrations.find((r) => r.status === 'ongoing')?.id ?? myActiveTournamentRegistrations[0]?.id
+                  if (tid) { setSelectedTournamentId(tid); setActiveView('tournament-detail') }
+                  else setActiveView('tournaments')
+                }}>
                   {t.homeGoToTournaments}
                 </button>
               </section>
@@ -4287,13 +4291,25 @@ function App() {
             {/* Main: 4 cards left + Your Stats right */}
             <section className="strike-main">
               <div className="strike-cards">
-                <button type="button" className="strike-card strike-card-primary" onClick={() => setActiveView(hasActiveTournamentMatch ? 'tournaments' : 'ladder')}>
+                <button type="button" className="strike-card strike-card-primary" onClick={() => {
+                  if (hasActiveTournamentMatch) {
+                    const tid = myActiveTournamentRegistrations.find((r) => r.status === 'ongoing')?.id
+                    if (tid) { setSelectedTournamentId(tid); setActiveView('tournament-detail') }
+                    else setActiveView('tournaments')
+                  } else setActiveView('ladder')
+                }}>
                   <div className="strike-card-icon"><HomeCardIconQuickPlay /></div>
                   <h3 className="strike-card-title">{t.quickPlayTitle}</h3>
                   <p className="strike-card-text">{t.quickPlayText}</p>
                   <span className="strike-card-btn strike-btn strike-btn-primary">{hasActiveTournamentMatch ? t.homeInTournament : t.homePlayNow}</span>
             </button>
-                <button type="button" className="strike-card" onClick={() => setActiveView('tournaments')}>
+                <button type="button" className="strike-card" onClick={() => {
+                  if (hasActiveTournamentMatch) {
+                    const tid = myActiveTournamentRegistrations.find((r) => r.status === 'ongoing')?.id
+                    if (tid) { setSelectedTournamentId(tid); setActiveView('tournament-detail') }
+                    else setActiveView('tournaments')
+                  } else setActiveView('tournaments')
+                }}>
                   <div className="strike-card-icon"><HomeCardIconTournaments /></div>
                   <h3 className="strike-card-title">{t.tournamentsTitle}</h3>
                   <p className="strike-card-text">{t.tournamentsText}</p>
@@ -5633,7 +5649,11 @@ function App() {
             {user && playerId && hasActiveTournamentMatch && (
               <>
                 <p className="panel-text panel-error">{t.ladderInTournamentBlock}</p>
-                <button type="button" className="strike-btn strike-btn-primary" onClick={() => setActiveView('tournaments')}>
+                <button type="button" className="strike-btn strike-btn-primary" onClick={() => {
+                  const tid = myActiveTournamentRegistrations.find((r) => r.status === 'ongoing')?.id
+                  if (tid) { setSelectedTournamentId(tid); setActiveView('tournament-detail') }
+                  else setActiveView('tournaments')
+                }}>
                   {t.navTournaments}
                 </button>
               </>
