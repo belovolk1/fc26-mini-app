@@ -3144,11 +3144,11 @@ function App() {
         const map: Record<string, string> = {}
         ;(data || []).forEach((p: { id: string; display_name: string | null; username: string | null; first_name: string | null; last_name: string | null }) => {
           const name = (p.display_name?.trim() || (p.username ? `@${p.username}` : null) || [p.first_name, p.last_name].filter(Boolean).join(' ').trim() || '').trim()
-          map[p.id] = name || p.id.slice(0, 8)
+          map[p.id] = name || t.guestName
         })
         setTournamentPlayerNames((prev) => ({ ...prev, ...map }))
       })
-  }, [matchesByTournamentId])
+  }, [matchesByTournamentId, t])
 
   // Realtime: обновление без мерцания (silent)
   useEffect(() => {
@@ -3328,7 +3328,7 @@ function App() {
       if (!id) return '—'
       if (bracketPlayerNames[id]) return bracketPlayerNames[id]
       const r = leaderboard.find((x) => x.player_id === id)
-      return r?.display_name || id.slice(0, 8)
+      return (r?.display_name?.trim() || null) ?? t.guestName
     }
 
     useEffect(() => {
@@ -3349,11 +3349,11 @@ function App() {
           const map: Record<string, string> = {}
           ;(data || []).forEach((p: { id: string; display_name: string | null; username: string | null; first_name: string | null; last_name: string | null }) => {
             const name = (p.display_name?.trim() || (p.username ? `@${p.username}` : null) || [p.first_name, p.last_name].filter(Boolean).join(' ').trim() || '').trim()
-            map[p.id] = name || p.id.slice(0, 8)
+            map[p.id] = name || t.guestName
           })
           setBracketPlayerNames(map)
         })
-    }, [matches])
+    }, [matches, t])
 
     const rounds = useMemo(() => {
       const byRound: Record<number, TournamentMatchRow[]> = {}
@@ -3719,7 +3719,7 @@ function App() {
     if (!id) return '—'
     if (tournamentPlayerNames[id]) return tournamentPlayerNames[id]
     const r = leaderboard.find((x) => x.player_id === id)
-    return r?.display_name || id.slice(0, 8)
+    return (r?.display_name?.trim() || null) ?? t.guestName
   }
 
   const getTournamentStandingsFromMatches = (matches: TournamentMatchRow[]): string[] => {
