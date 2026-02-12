@@ -3544,6 +3544,20 @@ function App() {
       active: !!myActiveMatch,
     })
     const [myMatchTab, setMyMatchTab] = useState<'chat' | 'result'>('result')
+    const chatLastReadIdRef = useRef<number | null>(null)
+    const chatUnreadCount = useMemo(() => {
+      if (myMatchTab === 'chat' || !pid || chatLastReadIdRef.current === null) return 0
+      const msgs = tournamentChatSidebar.messages
+      return msgs.filter((m) => m.id > chatLastReadIdRef.current! && m.sender_id !== pid).length
+    }, [tournamentChatSidebar.messages, myMatchTab, pid])
+    useEffect(() => {
+      if (myMatchTab === 'chat' && tournamentChatSidebar.messages.length > 0) {
+        const maxId = Math.max(...tournamentChatSidebar.messages.map((m) => m.id))
+        chatLastReadIdRef.current = maxId
+      } else if (myMatchTab === 'result' && chatLastReadIdRef.current === null && tournamentChatSidebar.messages.length > 0) {
+        chatLastReadIdRef.current = Math.max(...tournamentChatSidebar.messages.map((m) => m.id))
+      }
+    }, [myMatchTab, tournamentChatSidebar.messages])
 
     const getPlayerName = (id: string | null) => {
       if (!id) return '—'
@@ -3878,7 +3892,10 @@ function App() {
           <aside className="tournament-my-match-sidebar" aria-label={t.tournamentMyMatchTitle}>
             <h4 className="tournament-my-match-sidebar-title">{t.tournamentMyMatchTitle}</h4>
             <nav className="tournament-my-match-tabs" aria-label={t.tournamentMyMatchTitle}>
-              <button type="button" className={`tournament-my-match-tab ${myMatchTab === 'chat' ? 'active' : ''}`} onClick={() => setMyMatchTab('chat')}>{t.tabChat}</button>
+              <button type="button" className={`tournament-my-match-tab ${myMatchTab === 'chat' ? 'active' : ''} ${chatUnreadCount > 0 ? 'tournament-my-match-tab--has-unread' : ''}`} onClick={() => setMyMatchTab('chat')}>
+                {t.tabChat}
+                {chatUnreadCount > 0 && <span className="tournament-my-match-tab-badge" aria-label={`${chatUnreadCount} new`}>{chatUnreadCount > 99 ? '99+' : chatUnreadCount}</span>}
+              </button>
               <button type="button" className={`tournament-my-match-tab ${myMatchTab === 'result' ? 'active' : ''}`} onClick={() => setMyMatchTab('result')}>{t.tabResult}</button>
             </nav>
             {myMatchTab === 'chat' && (
@@ -4367,18 +4384,6 @@ function App() {
             </div>
             <div className="strike-header-user-info">
               <span className="app-user-name">{displayName}</span>
-              <div className="strike-header-elo-wrap">
-                <span className="strike-header-elo-value">
-                  <EloWithRank
-                    elo={elo}
-                    matchesCount={myProfileStats?.matches_count ?? matchesCount ?? 0}
-                    calibrationLabel={t.profileCalibrationLabel}
-                    rankLabel={getTranslatedRankLabel(getRankFromElo(elo))}
-                    compact
-                    showEloValue={false}
-                  />
-                </span>
-              </div>
             </div>
             <button
               type="button"

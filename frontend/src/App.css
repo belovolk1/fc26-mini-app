@@ -4427,7 +4427,7 @@
     justify-self: start;
   }
   .app.strike-theme .strike-header .app-nav {
-    justify-self: center;
+    justify-self: start;
   }
   .app.strike-theme .strike-header .header-right {
     justify-self: end;
@@ -6412,6 +6412,28 @@
 .tournament-my-match-tab.active {
   color: var(--strike-text, #f5f7fa);
   background: var(--strike-border-subtle, #1a1d23);
+}
+.tournament-my-match-tab {
+  position: relative;
+}
+.tournament-my-match-tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  margin-left: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--strike-orange, #ff6b35);
+  border-radius: 999px;
+  line-height: 1;
+}
+.tournament-my-match-tab--has-unread:not(.active) {
+  color: var(--strike-orange, #ff6b35);
+  font-weight: 700;
 }
 .tournament-my-match-result {
   padding-top: 4px;
