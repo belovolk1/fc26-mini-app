@@ -4391,15 +4391,18 @@
   text-align: left;
 }
 .strike-logo-icon {
-  font-size: 28px;
-  line-height: 1;
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  display: block;
 }
 .app.strike-theme .strike-logo-icon {
   filter: drop-shadow(0 0 8px var(--strike-orange-glow));
 }
 @media (min-width: 1024px) {
   .strike-logo-icon {
-    font-size: 32px;
+    width: 32px;
+    height: 32px;
   }
 }
 .strike-header-user {

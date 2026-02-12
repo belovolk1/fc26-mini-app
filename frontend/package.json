@@ -8,6 +8,7 @@
     "build": "tsc -b && vite build",
     "simulate-tournament": "node scripts/simulate-tournament.mjs",
     "simulate-tournament-users": "node scripts/simulate-tournament-users.mjs",
+    "generate-favicon": "node scripts/generate-favicon.mjs",
     "lint": "eslint .",
     "preview": "vite preview"
   },
@@ -27,6 +28,8 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",
     "globals": "^16.5.0",
+    "sharp": "^0.34.5",
+    "to-ico": "^1.1.5",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.46.4",
     "vite": "^7.2.4"

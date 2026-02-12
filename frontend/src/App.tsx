@@ -3973,7 +3973,7 @@ function App() {
             onClick={() => { setActiveView('home'); setSelectedNews(null); setNavOpen(false); window.location.hash = '' }}
             aria-label={t.navHome}
           >
-            <span className="strike-logo-icon" aria-hidden="true">⚽</span>
+            <img src="/Logo.svg" alt="" className="strike-logo-icon" aria-hidden />
             <h1 className="app-title">{t.appTitle}</h1>
             <p className="app-subtitle">{t.appSubtitle}</p>
           </button>

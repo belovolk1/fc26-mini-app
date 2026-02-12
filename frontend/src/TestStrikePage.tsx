@@ -10,7 +10,7 @@ export function TestStrikePage() {
       {/* Header */}
       <header className="ts-header">
         <div className="ts-header-logo">
-          <span className="ts-logo-icon">⚽</span>
+          <img src="/Logo.svg" alt="" className="ts-logo-icon" aria-hidden />
           <span className="ts-logo-text">STRIKE LADDER</span>
         </div>
         <nav className="ts-nav">
