@@ -2102,14 +2102,24 @@ function App() {
         setSelectedPlayerRow(null)
         setSelectedNews(null)
         setSelectedTournamentId(null)
-        if (activeView === 'tournament-detail') setActiveView('tournaments')
-        else if (activeView === 'news-detail') setActiveView('home')
-        else if (activeView === 'profile') setActiveView('home')
       }
     }
     window.addEventListener('hashchange', onHashChange)
     return () => window.removeEventListener('hashchange', onHashChange)
-  }, [activeView])
+  }, [])
+
+  // Синхронизация URL (hash) с текущим экраном: при переходе на home/rating/tournaments и т.д. очищаем hash,
+  // чтобы после ручного обновления страницы показывался текущий экран, а не страница из старого hash.
+  useEffect(() => {
+    let desired = ''
+    if (activeView === 'profile' && selectedPlayerRow?.player_id) desired = `player=${selectedPlayerRow.player_id}`
+    else if (activeView === 'news-detail' && selectedNews?.id) desired = `news=${selectedNews.id}`
+    else if (activeView === 'tournament-detail' && selectedTournamentId) desired = `tournament=${selectedTournamentId}`
+    const current = window.location.hash.slice(1)
+    if (current !== desired) {
+      window.location.hash = desired
+    }
+  }, [activeView, selectedPlayerRow?.player_id, selectedNews?.id, selectedTournamentId])
 
   useEffect(() => {
     const loadProfile = async () => {
