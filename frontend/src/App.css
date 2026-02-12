@@ -6214,6 +6214,15 @@
 .bracket-match-modal-result .bracket-match-card-result-buttons {
   margin-top: 12px;
 }
+.bracket-match-modal-chat {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--strike-border, #23272e);
+}
+.bracket-match-modal-chat-inner.lobby-chat {
+  height: 260px;
+  max-height: 40vh;
+}
 .bracket-match-modal-close {
   position: absolute;
   top: 16px;

@@ -1,7 +1,9 @@
 import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import './App.css'
+import { MatchChat } from './MatchChat'
 import { supabase } from './supabaseClient'
+import { useMatchChat } from './useMatchChat'
 
 type View = 'home' | 'profile' | 'ladder' | 'tournaments' | 'matches' | 'rating' | 'admin' | 'news-detail'
 type Lang = 'en' | 'ro' | 'ru'
@@ -215,6 +217,11 @@ const messages: Record<
     bracketSubmitScore: string
     bracketConfirmResult: string
     bracketEnterScore: string
+    bracketMatchChatTitle: string
+    bracketMatchChatPlaceholder: string
+    bracketMatchChatSend: string
+    bracketMatchChatEmpty: string
+    bracketMatchChatLoadError: string
     tournamentStatusRegistration: string
     tournamentStatusOngoing: string
     tournamentStatusFinished: string
@@ -487,6 +494,11 @@ const messages: Record<
     bracketSubmitScore: 'Submit score',
     bracketConfirmResult: 'Confirm result',
     bracketEnterScore: 'Enter score',
+    bracketMatchChatTitle: 'Chat with opponent',
+    bracketMatchChatPlaceholder: 'Message…',
+    bracketMatchChatSend: 'Send',
+    bracketMatchChatEmpty: 'No messages yet. Agree on when to play.',
+    bracketMatchChatLoadError: 'Could not load chat.',
     tournamentStatusRegistration: 'Registration open',
     tournamentStatusOngoing: 'Tournament in progress',
     tournamentStatusFinished: 'Finished',
@@ -758,6 +770,11 @@ const messages: Record<
     bracketSubmitScore: 'Trimite scorul',
     bracketConfirmResult: 'Confirmă rezultatul',
     bracketEnterScore: 'Introdu scorul',
+    bracketMatchChatTitle: 'Chat cu adversarul',
+    bracketMatchChatPlaceholder: 'Mesaj…',
+    bracketMatchChatSend: 'Trimite',
+    bracketMatchChatEmpty: 'Nicio mesaj. Stabiliți când jucați.',
+    bracketMatchChatLoadError: 'Nu s-au putut încărca mesajele.',
     tournamentStatusRegistration: 'Înscriere deschisă',
     tournamentStatusOngoing: 'Turneu în desfășurare',
     tournamentStatusFinished: 'Încheiat',
@@ -1029,6 +1046,11 @@ const messages: Record<
     bracketSubmitScore: 'Отправить счёт',
     bracketConfirmResult: 'Подтвердить результат',
     bracketEnterScore: 'Введите счёт',
+    bracketMatchChatTitle: 'Чат с соперником',
+    bracketMatchChatPlaceholder: 'Сообщение…',
+    bracketMatchChatSend: 'Отправить',
+    bracketMatchChatEmpty: 'Пока нет сообщений. Договоритесь, когда играть.',
+    bracketMatchChatLoadError: 'Не удалось загрузить чат.',
     tournamentStatusRegistration: 'Регистрация открыта',
     tournamentStatusOngoing: 'Идёт турнир',
     tournamentStatusFinished: 'Завершён',
@@ -1716,11 +1738,6 @@ function App() {
   const [scoreB, setScoreB] = useState<string>('')
   const [savingMatch, setSavingMatch] = useState(false)
   const [matchMessage, setMatchMessage] = useState<string | null>(null)
-  type ChatMessageRow = { id: number; match_id: number; sender_id: string; body: string; created_at: string }
-  const [chatMessages, setChatMessages] = useState<ChatMessageRow[]>([])
-  const [chatInput, setChatInput] = useState('')
-  const [chatSending, setChatSending] = useState(false)
-  const [chatLoadError, setChatLoadError] = useState<string | null>(null)
   const [reportModalOpen, setReportModalOpen] = useState(false)
   const [reportMatchType, setReportMatchType] = useState<'ladder' | 'tournament'>('ladder')
   const [reportMatchId, setReportMatchId] = useState<string | null>(null)
@@ -1793,9 +1810,14 @@ function App() {
   const [myProfileStatsLoading, setMyProfileStatsLoading] = useState(false)
   const lastLobbyMatchIdRef = useRef<number | null>(null)
   const widgetContainerRef = useRef<HTMLDivElement>(null)
-  const chatMessagesScrollRef = useRef<HTMLDivElement>(null)
-  const chatMessagesEndRef = useRef<HTMLDivElement>(null)
-  
+
+  const ladderChat = useMatchChat({
+    type: 'ladder',
+    matchId: currentMatch?.id ?? 0,
+    playerId,
+    active: searchStatus === 'in_lobby' && !!currentMatch?.id,
+  })
+
   // Парсим редирект и/или пользователя из Telegram WebApp один раз при загрузке
   const parsedRedirectRef = useRef<TelegramUser | null>(null)
   const hadRedirectParamsRef = useRef(false)
@@ -2392,58 +2414,6 @@ function App() {
     }, 2000)
     return () => clearInterval(interval)
   }, [searchStatus, playerId, currentMatch?.id])
-
-  // Чат матча: загрузка сообщений и подписка на новые (уникальный чат только для двух соперников)
-  useEffect(() => {
-    if (searchStatus !== 'in_lobby' || !currentMatch?.id) {
-      setChatMessages([])
-      setChatLoadError(null)
-      return
-    }
-    const matchId = currentMatch.id
-    setChatLoadError(null)
-    const loadChat = async () => {
-      const { data, error } = await supabase
-        .from('chat_messages')
-        .select('id, match_id, sender_id, body, created_at')
-        .eq('match_id', matchId)
-        .order('created_at', { ascending: true })
-      if (error) {
-        console.error('[FC Area] chat_messages load error:', error)
-        setChatLoadError(error.message || t.ladderChatLoadError)
-        setChatMessages([])
-        return
-      }
-      setChatLoadError(null)
-      setChatMessages((Array.isArray(data) ? data : []) as ChatMessageRow[])
-    }
-    void loadChat()
-    const channel = supabase
-      .channel(`chat-${matchId}`)
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'chat_messages', filter: `match_id=eq.${matchId}` },
-        (payload) => {
-          const row = payload.new as ChatMessageRow
-          setChatMessages((prev) => (prev.some((m) => m.id === row.id) ? prev : [...prev, row]))
-        },
-      )
-      .subscribe()
-    return () => {
-      supabase.removeChannel(channel)
-    }
-  }, [searchStatus, currentMatch?.id, t])
-
-  // Автоскролл чата к последнему сообщению
-  useLayoutEffect(() => {
-    if (searchStatus !== 'in_lobby' || !chatMessages.length) return
-    const container = chatMessagesScrollRef.current
-    if (!container) return
-    container.scrollTo({
-      top: container.scrollHeight,
-      behavior: 'smooth',
-    })
-  }, [searchStatus, chatMessages.length, chatMessages])
 
   // Таймер поиска: сколько длится поиск соперника
   useEffect(() => {
@@ -3320,6 +3290,13 @@ function App() {
     const [bracketPlayerNames, setBracketPlayerNames] = useState<Record<string, string>>({})
     const [matchResultModalId, setMatchResultModalId] = useState<string | null>(null)
 
+    const tournamentChat = useMatchChat({
+      type: 'tournament',
+      tournamentMatchId: matchResultModalId ?? '',
+      playerId: pid,
+      active: !!matchResultModalId,
+    })
+
     const getPlayerName = (id: string | null) => {
       if (!id) return '—'
       if (bracketPlayerNames[id]) return bracketPlayerNames[id]
@@ -3624,6 +3601,20 @@ function App() {
                     </>
                   )}
                 </div>
+                {isInMatch && (
+                  <div className="bracket-match-modal-chat">
+                    <MatchChat
+                      {...tournamentChat}
+                      playerId={pid}
+                      title={t.bracketMatchChatTitle}
+                      placeholder={t.bracketMatchChatPlaceholder}
+                      sendLabel={t.bracketMatchChatSend}
+                      emptyLabel={t.bracketMatchChatEmpty}
+                      errorLabel={t.bracketMatchChatLoadError}
+                      containerClassName="bracket-match-modal-chat-inner"
+                    />
+                  </div>
+                )}
                 <button type="button" className="bracket-match-modal-close" onClick={() => setMatchResultModalId(null)} aria-label="Close">×</button>
               </div>
             </div>
@@ -3910,26 +3901,6 @@ function App() {
     }
     setReportToast(t.reportSent)
     setTimeout(() => { closeReportModal(); setReportToast(null) }, 2000)
-  }
-
-  const sendChatMessage = async () => {
-    const text = chatInput.trim()
-    if (!text || !currentMatch?.id || !playerId || chatSending) return
-    setChatSending(true)
-    const { data: inserted, error } = await supabase
-      .from('chat_messages')
-      .insert({
-        match_id: currentMatch.id,
-        sender_id: playerId,
-        body: text,
-      })
-      .select('id, match_id, sender_id, body, created_at')
-      .single()
-    setChatSending(false)
-    if (!error && inserted) {
-      setChatInput('')
-      setChatMessages((prev) => (prev.some((m) => m.id === (inserted as ChatMessageRow).id) ? prev : [...prev, inserted as ChatMessageRow]))
-    }
   }
 
   const [isWideScreen, setIsWideScreen] = useState(
@@ -5667,47 +5638,15 @@ function App() {
                   <p className="lobby-header-hint">{t.ladderLobbyAgree}</p>
                 </header>
 
-                <section className="lobby-chat">
-                  <h3 className="lobby-chat-title">{t.ladderChatTitle}</h3>
-                  <div ref={chatMessagesScrollRef} className="lobby-chat-messages" role="log" aria-live="polite">
-                    {chatLoadError && (
-                      <p className="panel-text small lobby-chat-empty lobby-chat-error">{t.ladderChatLoadError}</p>
-                    )}
-                    {!chatLoadError && chatMessages.length === 0 && (
-                      <p className="panel-text small lobby-chat-empty">{t.ladderChatEmpty}</p>
-                    )}
-                    {chatMessages.map((msg) => (
-                      <div
-                        key={msg.id}
-                        className={`lobby-chat-msg ${msg.sender_id === playerId ? 'lobby-chat-msg--mine' : 'lobby-chat-msg--theirs'}`}
-                      >
-                        <span className="lobby-chat-msg-body">{msg.body}</span>
-                        <span className="lobby-chat-msg-time">
-                          {new Date(msg.created_at).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
-                        </span>
-                      </div>
-                    ))}
-                    <div ref={chatMessagesEndRef} className="lobby-chat-anchor" aria-hidden="true" />
-                  </div>
-                  <div className="lobby-chat-form">
-                    <input
-                      type="text"
-                      className="form-input lobby-chat-input"
-                      placeholder={t.ladderChatPlaceholder}
-                      value={chatInput}
-                      onChange={(e) => setChatInput(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && sendChatMessage()}
-                    />
-                      <button
-                        type="button"
-                      className="primary-button lobby-chat-send"
-                      disabled={chatSending || !chatInput.trim()}
-                      onClick={sendChatMessage}
-                    >
-                      {chatSending ? '…' : t.ladderChatSend}
-                      </button>
-                  </div>
-                </section>
+                <MatchChat
+                  {...ladderChat}
+                  playerId={playerId}
+                  title={t.ladderChatTitle}
+                  placeholder={t.ladderChatPlaceholder}
+                  sendLabel={t.ladderChatSend}
+                  emptyLabel={t.ladderChatEmpty}
+                  errorLabel={t.ladderChatLoadError}
+                />
 
                 {currentMatch.score_submitted_by == null && (
                   <section className="lobby-score-card">
