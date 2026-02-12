@@ -1,0 +1,1 @@
+One report per match and restore lobby on refresh
