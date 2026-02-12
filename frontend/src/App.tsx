@@ -5,7 +5,7 @@ import { MatchChat } from './MatchChat'
 import { supabase } from './supabaseClient'
 import { useMatchChat } from './useMatchChat'
 
-type View = 'home' | 'profile' | 'ladder' | 'tournaments' | 'matches' | 'rating' | 'admin' | 'news-detail'
+type View = 'home' | 'profile' | 'ladder' | 'tournaments' | 'tournament-detail' | 'matches' | 'rating' | 'admin' | 'news-detail'
 type Lang = 'en' | 'ro' | 'ru'
 
 const messages: Record<
@@ -222,6 +222,10 @@ const messages: Record<
     bracketMatchChatSend: string
     bracketMatchChatEmpty: string
     bracketMatchChatLoadError: string
+    tournamentDetailBack: string
+    tournamentMyMatchTitle: string
+    tabChat: string
+    tabResult: string
     tournamentStatusRegistration: string
     tournamentStatusOngoing: string
     tournamentStatusFinished: string
@@ -281,6 +285,7 @@ const messages: Record<
       profile: 'Profile',
       ladder: 'Quick play',
       tournaments: 'Tournaments',
+      'tournament-detail': 'Tournament',
       matches: 'Matches',
       rating: 'Rating',
       admin: 'Admin',
@@ -499,6 +504,10 @@ const messages: Record<
     bracketMatchChatSend: 'Send',
     bracketMatchChatEmpty: 'No messages yet. Agree on when to play.',
     bracketMatchChatLoadError: 'Could not load chat.',
+    tournamentDetailBack: 'Back to tournaments',
+    tournamentMyMatchTitle: 'My match',
+    tabChat: 'Chat',
+    tabResult: 'Result',
     tournamentStatusRegistration: 'Registration open',
     tournamentStatusOngoing: 'Tournament in progress',
     tournamentStatusFinished: 'Finished',
@@ -557,6 +566,7 @@ const messages: Record<
       profile: 'Profil',
       ladder: 'Joc rapid',
       tournaments: 'Turnee',
+      'tournament-detail': 'Turneu',
       matches: 'Meciuri',
       rating: 'Clasament',
       admin: 'Admin',
@@ -775,6 +785,10 @@ const messages: Record<
     bracketMatchChatSend: 'Trimite',
     bracketMatchChatEmpty: 'Nicio mesaj. Stabiliți când jucați.',
     bracketMatchChatLoadError: 'Nu s-au putut încărca mesajele.',
+    tournamentDetailBack: 'Înapoi la turnee',
+    tournamentMyMatchTitle: 'Meciul meu',
+    tabChat: 'Chat',
+    tabResult: 'Rezultat',
     tournamentStatusRegistration: 'Înscriere deschisă',
     tournamentStatusOngoing: 'Turneu în desfășurare',
     tournamentStatusFinished: 'Încheiat',
@@ -833,6 +847,7 @@ const messages: Record<
       profile: 'Профиль',
       ladder: 'Быстрая игра',
       tournaments: 'Турниры',
+      'tournament-detail': 'Турнир',
       matches: 'Матчи',
       rating: 'Рейтинг',
       admin: 'Админка',
@@ -1051,6 +1066,10 @@ const messages: Record<
     bracketMatchChatSend: 'Отправить',
     bracketMatchChatEmpty: 'Пока нет сообщений. Договоритесь, когда играть.',
     bracketMatchChatLoadError: 'Не удалось загрузить чат.',
+    tournamentDetailBack: 'Назад к турнирам',
+    tournamentMyMatchTitle: 'Мой матч',
+    tabChat: 'Чат',
+    tabResult: 'Результат',
     tournamentStatusRegistration: 'Регистрация открыта',
     tournamentStatusOngoing: 'Идёт турнир',
     tournamentStatusFinished: 'Завершён',
@@ -2971,7 +2990,7 @@ function App() {
   }
 
   useEffect(() => {
-    if (activeView === 'home' || activeView === 'tournaments' || activeView === 'admin') fetchTournaments(true)
+    if (activeView === 'home' || activeView === 'tournaments' || activeView === 'tournament-detail' || activeView === 'admin') fetchTournaments(true)
   }, [activeView, playerId])
 
   // Если вкладки «Регистрация» и «Идёт турнир» пустые — автоматом открывать «Завершён»
@@ -3057,7 +3076,7 @@ function App() {
   }, [playerId, myActiveTournamentRegistrations])
 
   useEffect(() => {
-    if (activeView !== 'tournaments') return
+    if (activeView !== 'tournaments' && activeView !== 'tournament-detail') return
     const runTick = async () => {
       await supabase.rpc('tournament_tick', {})
       fetchTournaments(true)
@@ -3073,7 +3092,7 @@ function App() {
 
   // Предзагрузка матчей для всех турниров ongoing/finished — при открытии сетки данные уже есть
   useEffect(() => {
-    if (activeView !== 'tournaments' && activeView !== 'admin') return
+    if (activeView !== 'tournaments' && activeView !== 'tournament-detail' && activeView !== 'admin') return
     const need = tournamentsList.filter((t) => (t.status === 'ongoing' || t.status === 'finished'))
     if (need.length === 0) return
     need.forEach((t) => {
@@ -3282,8 +3301,9 @@ function App() {
     onMatchUpdated?: (updated: TournamentMatchRow) => void
     onMatchConfirmed?: () => void
     onOpenPlayerProfile?: (playerId: string) => void
+    myActiveMatch?: TournamentMatchRow | null
   }) {
-    const { matches, playerId: pid, leaderboard, lang: bracketLang, onMatchUpdated, onMatchConfirmed, onOpenPlayerProfile } = props
+    const { matches, playerId: pid, leaderboard, lang: bracketLang, onMatchUpdated, onMatchConfirmed, onOpenPlayerProfile, myActiveMatch } = props
     const [matchMessage, setMatchMessage] = useState<string | null>(null)
     const [savingMatchId, setSavingMatchId] = useState<string | null>(null)
     const [scoreInputs, setScoreInputs] = useState<Record<string, { a: string; b: string }>>({})
@@ -3296,6 +3316,13 @@ function App() {
       playerId: pid,
       active: !!matchResultModalId,
     })
+    const tournamentChatSidebar = useMatchChat({
+      type: 'tournament',
+      tournamentMatchId: myActiveMatch?.id ?? '',
+      playerId: pid,
+      active: !!myActiveMatch,
+    })
+    const [myMatchTab, setMyMatchTab] = useState<'chat' | 'result'>('result')
 
     const getPlayerName = (id: string | null) => {
       if (!id) return '—'
@@ -3412,7 +3439,8 @@ function App() {
     })
 
     return (
-      <div className="bracket-view">
+      <div className={myActiveMatch ? 'tournament-detail-layout' : 'bracket-view-wrap'}>
+        <div className="bracket-view">
         <header className="bracket-view-header">
           <h3 className="bracket-view-title">{t.bracketViewTitle.toUpperCase()}</h3>
           {roundNumbers.length > 0 && (
@@ -3620,6 +3648,69 @@ function App() {
             </div>
           )
         })()}
+        </div>
+        {myActiveMatch && (
+          <aside className="tournament-my-match-sidebar" aria-label={t.tournamentMyMatchTitle}>
+            <h4 className="tournament-my-match-sidebar-title">{t.tournamentMyMatchTitle}</h4>
+            <nav className="tournament-my-match-tabs" aria-label={t.tournamentMyMatchTitle}>
+              <button type="button" className={`tournament-my-match-tab ${myMatchTab === 'chat' ? 'active' : ''}`} onClick={() => setMyMatchTab('chat')}>{t.tabChat}</button>
+              <button type="button" className={`tournament-my-match-tab ${myMatchTab === 'result' ? 'active' : ''}`} onClick={() => setMyMatchTab('result')}>{t.tabResult}</button>
+            </nav>
+            {myMatchTab === 'chat' && (
+              <MatchChat
+                {...tournamentChatSidebar}
+                playerId={pid}
+                title={t.bracketMatchChatTitle}
+                placeholder={t.bracketMatchChatPlaceholder}
+                sendLabel={t.bracketMatchChatSend}
+                emptyLabel={t.bracketMatchChatEmpty}
+                errorLabel={t.bracketMatchChatLoadError}
+                containerClassName="tournament-my-match-chat"
+              />
+            )}
+            {myMatchTab === 'result' && (() => {
+              const m = myActiveMatch
+              if (!m || !pid) return null
+              const isPlayerA = m.player_a_id === pid
+              const isPlayerB = m.player_b_id === pid
+              const canConfirm = m.status === 'score_submitted' && m.score_submitted_by !== pid
+              const finished = ['confirmed', 'finished', 'auto_win_a', 'auto_win_b', 'auto_no_show'].includes(m.status)
+              const inp = scoreInputs[m.id] ?? { a: String(m.score_a ?? ''), b: String(m.score_b ?? '') }
+              return (
+                <div className="tournament-my-match-result">
+                  <p className="bracket-match-card-result-hint">
+                    {m.status === 'score_submitted' && canConfirm ? t.bracketScoreHintConfirm : m.status === 'score_submitted' && m.score_submitted_by === pid ? t.bracketScoreWaitingConfirm : t.bracketScoreHintEnter}
+                  </p>
+                  {m.status === 'score_submitted' && canConfirm ? (
+                    <div className="bracket-match-card-result-row bracket-match-card-result-actions">
+                      <span className="bracket-match-card-score-display">{m.score_a ?? 0} : {m.score_b ?? 0}</span>
+                      <button type="button" className="bracket-match-card-btn bracket-match-card-btn--primary" disabled={savingMatchId === m.id} onClick={() => confirmScore(m)}>{t.bracketConfirmResult}</button>
+                      <button type="button" className="bracket-match-card-btn bracket-match-card-btn--secondary" onClick={() => openReportModal('tournament', m.id)}>{t.reportButton}</button>
+                    </div>
+                  ) : m.status === 'score_submitted' && m.score_submitted_by === pid ? (
+                    <p className="bracket-match-card-result-hint">{t.bracketScoreWaitingConfirm}</p>
+                  ) : !finished ? (
+                    <>
+                      <div className="bracket-match-card-result-row bracket-match-card-result-fields">
+                        <label className="bracket-match-card-label">{t.bracketScoreLabelMy}</label>
+                        <input type="number" min={0} className="bracket-match-card-input" value={isPlayerA ? inp.a : inp.b} onChange={(e) => setScoreInputs((prev) => ({ ...prev, [m.id]: { ...prev[m.id], a: isPlayerA ? e.target.value : prev[m.id]?.a ?? '', b: isPlayerB ? e.target.value : prev[m.id]?.b ?? '' } }))} />
+                        <span className="bracket-match-card-sep">–</span>
+                        <label className="bracket-match-card-label">{t.bracketScoreLabelOpp}</label>
+                        <input type="number" min={0} className="bracket-match-card-input" value={isPlayerA ? inp.b : inp.a} onChange={(e) => setScoreInputs((prev) => ({ ...prev, [m.id]: { ...prev[m.id], a: isPlayerB ? e.target.value : prev[m.id]?.a ?? '', b: isPlayerA ? e.target.value : prev[m.id]?.b ?? '' } }))} />
+                      </div>
+                      <div className="bracket-match-card-result-buttons">
+                        <button type="button" className="bracket-match-card-btn bracket-match-card-btn--secondary" disabled={savingMatchId === m.id} onClick={() => submitScore(m)}>{t.bracketSubmitScore}</button>
+                      </div>
+                    </>
+                  ) : (
+                    <p className="bracket-match-card-score-display">{m.score_a ?? 0} : {m.score_b ?? 0}</p>
+                  )}
+                  {matchMessage && <p className="bracket-view-message">{matchMessage}</p>}
+                </div>
+              )
+            })()}
+          </aside>
+        )}
       </div>
     )
   }
@@ -3729,7 +3820,10 @@ function App() {
                 <button
                   type="button"
                   className="tournament-card-ref-btn tournament-card-ref-btn--secondary"
-                  onClick={() => setSelectedTournamentId(tr.id)}
+                  onClick={() => {
+                    setSelectedTournamentId(tr.id)
+                    setActiveView('tournament-detail')
+                  }}
                 >
                   <span className="tournament-card-ref-btn-icon tournament-card-ref-btn-icon--bracket" aria-hidden="true">⊂⊃</span>
                   {t.tournamentBracket}
@@ -3920,6 +4014,7 @@ function App() {
       setSelectedPlayerRow(null)
       window.location.hash = ''
     }
+    if (view === 'tournaments') setSelectedTournamentId(null)
     setActiveView(view)
     setNavOpen(false)
   }
@@ -3935,7 +4030,7 @@ function App() {
   ]
 
   return (
-    <div className={`app ${useMobileLayout ? 'app--mobile' : 'app--desktop'} strike-theme${activeView === 'rating' && selectedPlayerRow ? ' rating-modal-open' : ''}${selectedTournamentId ? ' bracket-modal-open' : ''}`}>
+    <div className={`app ${useMobileLayout ? 'app--mobile' : 'app--desktop'} strike-theme${activeView === 'rating' && selectedPlayerRow ? ' rating-modal-open' : ''}${selectedTournamentId && activeView === 'tournaments' ? ' bracket-modal-open' : ''}`}>
       <div className="site-header strike-header">
         <header className="app-header">
           <button
@@ -4006,7 +4101,7 @@ function App() {
                 <button
                   key={view}
                   type="button"
-                  className={activeView === view ? 'nav-drawer-btn active' : 'nav-drawer-btn'}
+                  className={activeView === view || (view === 'tournaments' && activeView === 'tournament-detail') ? 'nav-drawer-btn active' : 'nav-drawer-btn'}
                   onClick={() => closeNavAnd(view)}
                 >
                   {label}
@@ -4025,7 +4120,7 @@ function App() {
               <button
                 key={view}
                 type="button"
-                className={activeView === view ? 'nav-btn active' : 'nav-btn'}
+                className={activeView === view || (view === 'tournaments' && activeView === 'tournament-detail') ? 'nav-btn active' : 'nav-btn'}
                 onClick={() => {
                   if (view === 'profile') {
                     setSelectedPlayerRow(null)
@@ -4375,7 +4470,7 @@ function App() {
           </>
         )}
 
-        {activeView !== 'home' && (
+        {activeView !== 'home' && activeView !== 'tournament-detail' && (
           <h2 className="view-title">{t.viewTitle[activeView]}</h2>
         )}
 
@@ -5790,7 +5885,7 @@ function App() {
               </>
             )}
 
-            {selectedTournamentId && (() => {
+            {activeView === 'tournaments' && selectedTournamentId && (() => {
               const tr = tournamentsList.find((t) => t.id === selectedTournamentId)
               if (!tr || (tr.status !== 'ongoing' && tr.status !== 'finished')) return null
               return createPortal(
@@ -5829,6 +5924,51 @@ function App() {
             })()}
           </section>
         )}
+
+        {activeView === 'tournament-detail' && selectedTournamentId && (() => {
+          const tr = tournamentsList.find((t) => t.id === selectedTournamentId)
+          if (!tr || (tr.status !== 'ongoing' && tr.status !== 'finished')) return null
+          const matches = matchesByTournamentId[tr.id] ?? []
+          const finishedStatuses = ['confirmed', 'finished', 'auto_win_a', 'auto_win_b', 'auto_no_show']
+          const myActiveMatch: TournamentMatchRow | null = playerId
+            ? (matches
+                .filter((m) => (m.player_a_id === playerId || m.player_b_id === playerId) && !finishedStatuses.includes(m.status))
+                .sort((a, b) => a.round - b.round)[0] ?? null)
+            : null
+          return (
+            <section className="tournament-detail-page">
+              <header className="tournament-detail-header">
+                <button type="button" className="tournament-detail-back" onClick={() => { setActiveView('tournaments'); setSelectedTournamentId(null) }}>
+                  ← {t.tournamentDetailBack}
+                </button>
+                <h2 className="tournament-detail-title">{tr.name}</h2>
+              </header>
+              <div className="tournament-detail-body">
+                <TournamentBracketBlock
+                  tournament={tr}
+                  matches={matches}
+                  playerId={playerId}
+                  leaderboard={leaderboard}
+                  lang={lang}
+                  onOpenPlayerProfile={openPlayerProfile}
+                  myActiveMatch={myActiveMatch}
+                  onRefresh={async () => {
+                    fetchTournaments(true)
+                    const { data } = await supabase.from('tournament_matches').select('*').eq('tournament_id', tr.id).order('round', { ascending: false }).order('match_index')
+                    if (data) setMatchesByTournamentId((prev) => ({ ...prev, [tr.id]: data as TournamentMatchRow[] }))
+                  }}
+                  onMatchUpdated={(updated) => {
+                    setMatchesByTournamentId((prev) => ({
+                      ...prev,
+                      [tr.id]: (prev[tr.id] ?? []).map((match) => (match.id === updated.id ? updated : match)),
+                    }))
+                  }}
+                  onMatchConfirmed={refetchHeaderElo}
+                />
+              </div>
+            </section>
+          )
+        })()}
       </main>
 
       <footer className="site-footer">
