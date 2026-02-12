@@ -1593,20 +1593,6 @@ const HomeCardIconTournaments = () => (
   </svg>
 )
 
-/** Иконка кубка для заголовка страницы Tournaments — узнаваемый кубок с ручками, чашей, ножкой и базой. */
-const TournamentsPageIcon = () => (
-  <svg className="tournaments-page-icon" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-    {/* Чаша кубка */}
-    <path d="M14 12h20v12c0 5.5-4 9-10 10.5-6-1.5-10-5-10-10.5V12z" stroke="currentColor" strokeWidth="2.5" strokeLinejoin="round" fill="none" />
-    {/* Левый ручка */}
-    <path d="M14 18H8s0 6 6 6" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-    {/* Правый ручка */}
-    <path d="M34 18h6s0 6-6 6" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-    {/* Ножка и база */}
-    <path d="M24 34.5v6M18 44h12" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-    <path d="M20 44a2 2 0 0 0 4 0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-  </svg>
-)
 const HomeCardIconProfile = () => (
   <svg className="strike-card-icon-svg" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
     <circle cx="20" cy="14" r="6" stroke="currentColor" strokeWidth="2" fill="none" />
@@ -2021,7 +2007,9 @@ function App() {
   const [adminSending, setAdminSending] = useState(false)
   const [adminResult, setAdminResult] = useState<string | null>(null)
 
-  type NewsRow = { id: string; title: string; body: string; image_url: string | null; created_at: string; pinned_order?: number | null }
+    type NewsRow = { id: string; title: string; body: string; image_url: string | null; created_at: string; pinned_order?: number | null; title_ro?: string | null; title_ru?: string | null; body_ro?: string | null; body_ru?: string | null }
+  const getNewsTitle = (n: NewsRow, l: Lang): string => (l === 'ro' && (n.title_ro?.trim() ?? '')) ? n.title_ro!.trim() : (l === 'ru' && (n.title_ru?.trim() ?? '')) ? n.title_ru!.trim() : n.title
+  const getNewsBody = (n: NewsRow, l: Lang): string => (l === 'ro' && (n.body_ro?.trim() ?? '')) ? n.body_ro!.trim() : (l === 'ru' && (n.body_ru?.trim() ?? '')) ? n.body_ru!.trim() : n.body
   type TournamentRow = {
     id: string
     name: string
@@ -2057,6 +2045,10 @@ function App() {
   const [newsError, setNewsError] = useState<string | null>(null)
   const [newsTitle, setNewsTitle] = useState('')
   const [newsBody, setNewsBody] = useState('')
+  const [newsTitleRo, setNewsTitleRo] = useState('')
+  const [newsBodyRo, setNewsBodyRo] = useState('')
+  const [newsTitleRu, setNewsTitleRu] = useState('')
+  const [newsBodyRu, setNewsBodyRu] = useState('')
   const [newsImageFile, setNewsImageFile] = useState<File | null>(null)
   const [newsSending, setNewsSending] = useState(false)
   const [newsResult, setNewsResult] = useState<string | null>(null)
@@ -2145,9 +2137,16 @@ function App() {
         setActiveView('news-detail')
         setSelectedNews(null)
         setNewsDetailLoading(true)
-        supabase.from('news').select('id, title, body, image_url, created_at').eq('id', id).single().then(({ data, error }) => {
-          setNewsDetailLoading(false)
-          if (!error && data) setSelectedNews(data as NewsRow)
+        supabase.from('news').select('id, title, body, image_url, created_at, title_ro, title_ru, body_ro, body_ru').eq('id', id).single().then(({ data, error }) => {
+          if (!error && data) {
+            setNewsDetailLoading(false)
+            setSelectedNews(data as NewsRow)
+            return
+          }
+          supabase.from('news').select('id, title, body, image_url, created_at').eq('id', id).single().then(({ data: data2, error: err2 }) => {
+            setNewsDetailLoading(false)
+            if (!err2 && data2) setSelectedNews(data2 as NewsRow)
+          })
         })
       } else if (tourMatch) {
         setSelectedTournamentId(tourMatch[1])
@@ -2870,8 +2869,9 @@ function App() {
   const fetchNews = () => {
     setNewsLoading(true)
     setNewsError(null)
-    const selectWithPinned = 'id, title, body, image_url, created_at, pinned_order'
-    const selectBase = 'id, title, body, image_url, created_at'
+    const selectWithPinned = 'id, title, body, image_url, created_at, pinned_order, title_ro, title_ru, body_ro, body_ru'
+    const selectBase = 'id, title, body, image_url, created_at, title_ro, title_ru, body_ro, body_ru'
+    const selectLegacy = 'id, title, body, image_url, created_at'
     supabase
       .from('news')
       .select(selectWithPinned)
@@ -2879,15 +2879,22 @@ function App() {
       .limit(50)
       .then(({ data, error }) => {
         if (error) {
-          // 400 часто из-за отсутствия колонки pinned_order — повтор без неё
           supabase.from('news').select(selectBase).order('created_at', { ascending: false }).limit(50)
             .then(({ data: data2, error: err2 }) => {
-              setNewsLoading(false)
               if (err2) {
-                setNewsError(err2.message || 'Ошибка загрузки новостей')
-                setNewsList([])
+                supabase.from('news').select(selectLegacy).order('created_at', { ascending: false }).limit(50)
+                  .then(({ data: data3, error: err3 }) => {
+                    setNewsLoading(false)
+                    if (err3) {
+                      setNewsError(err3.message || 'Ошибка загрузки новостей')
+                      setNewsList([])
+                      return
+                    }
+                    setNewsList((Array.isArray(data3) ? data3 : []).map((r: Record<string, unknown>) => ({ ...r, pinned_order: null } as NewsRow)))
+                  })
                 return
               }
+              setNewsLoading(false)
               setNewsList((Array.isArray(data2) ? data2 : []).map((r: Record<string, unknown>) => ({ ...r, pinned_order: null } as NewsRow)))
             })
           return
@@ -3022,9 +3029,21 @@ function App() {
     setNewsSending(true)
     setNewsResult(null)
     try {
+      const titleRo = newsTitleRo.trim() || null
+      const titleRu = newsTitleRu.trim() || null
+      const bodyRo = newsBodyRo.trim() || null
+      const bodyRu = newsBodyRu.trim() || null
       const { data: inserted, error: insertErr } = await supabase
         .from('news')
-        .insert({ title, body: newsBody.trim() || '', image_url: null })
+        .insert({
+          title,
+          body: newsBody.trim() || '',
+          title_ro: titleRo,
+          title_ru: titleRu,
+          body_ro: bodyRo,
+          body_ru: bodyRu,
+          image_url: null,
+        })
         .select('id')
         .single()
       if (insertErr) {
@@ -3056,6 +3075,10 @@ function App() {
       }
       setNewsTitle('')
       setNewsBody('')
+      setNewsTitleRo('')
+      setNewsBodyRo('')
+      setNewsTitleRu('')
+      setNewsBodyRu('')
       setNewsImageFile(null)
       fetchNews()
       setNewsResult('Новость добавлена.')
@@ -4621,8 +4644,8 @@ function App() {
                       <div className="strike-news-thumb">
                         {n.image_url ? <img src={n.image_url} alt="" referrerPolicy="no-referrer" /> : null}
                       </div>
-                      <h4 className="strike-news-card-title">{n.title}</h4>
-                      <p className="strike-news-card-desc">{n.body || '—'}</p>
+                      <h4 className="strike-news-card-title">{getNewsTitle(n, lang)}</h4>
+                      <p className="strike-news-card-desc">{getNewsBody(n, lang) || '—'}</p>
                       <span className="strike-news-date">
                         {formatNewsDate(n.created_at)}
                       </span>
@@ -4666,7 +4689,7 @@ function App() {
             {!newsDetailLoading && !selectedNews && <p className="panel-text">{t.ratingEmpty}</p>}
             {!newsDetailLoading && selectedNews && (
               <article className="news-detail-article">
-                <h1 className="news-detail-title">{selectedNews.title}</h1>
+                <h1 className="news-detail-title">{getNewsTitle(selectedNews, lang)}</h1>
                 <time className="news-detail-date" dateTime={selectedNews.created_at}>
                   {formatNewsDate(selectedNews.created_at)}
                 </time>
@@ -4676,7 +4699,7 @@ function App() {
                   </div>
                 )}
                 <div className="news-detail-body">
-                  {selectedNews.body.split('\n').map((p, i) => (
+                  {(getNewsBody(selectedNews, lang) || '').split('\n').map((p, i) => (
                     <p key={i}>{p || '\u00A0'}</p>
                   ))}
                 </div>
@@ -4973,26 +4996,39 @@ function App() {
             {adminTab === 'news' && (
             <>
             <h3 className="panel-title admin-news-title">Новости (главная)</h3>
-            <p className="panel-text small">Добавьте новость: заголовок, текст и по желанию фото. Они отображаются в блоке «Последние новости» на главной.</p>
-            <div className="form-row">
-              <label className="form-label">Заголовок</label>
-              <input
-                type="text"
-                className="form-input"
-                value={newsTitle}
-                onChange={(e) => setNewsTitle(e.target.value)}
-                placeholder="Заголовок новости"
-              />
-                    </div>
-            <div className="form-row">
-              <label className="form-label">Текст</label>
-              <textarea
-                className="form-input"
-                rows={4}
-                value={newsBody}
-                onChange={(e) => setNewsBody(e.target.value)}
-                placeholder="Краткое описание или полный текст"
-              />
+            <p className="panel-text small">Добавьте новость для трёх языков (EN, RO, RU). Обязателен только английский; при отсутствии перевода показывается английский текст.</p>
+            <div className="admin-news-lang-block">
+              <h4 className="panel-subtitle">English (обязательно)</h4>
+              <div className="form-row">
+                <label className="form-label">Заголовок</label>
+                <input type="text" className="form-input" value={newsTitle} onChange={(e) => setNewsTitle(e.target.value)} placeholder="Title" />
+              </div>
+              <div className="form-row">
+                <label className="form-label">Текст</label>
+                <textarea className="form-input" rows={3} value={newsBody} onChange={(e) => setNewsBody(e.target.value)} placeholder="Content" />
+              </div>
+            </div>
+            <div className="admin-news-lang-block">
+              <h4 className="panel-subtitle">Română (опционально)</h4>
+              <div className="form-row">
+                <label className="form-label">Заголовок</label>
+                <input type="text" className="form-input" value={newsTitleRo} onChange={(e) => setNewsTitleRo(e.target.value)} placeholder="Titlu" />
+              </div>
+              <div className="form-row">
+                <label className="form-label">Текст</label>
+                <textarea className="form-input" rows={3} value={newsBodyRo} onChange={(e) => setNewsBodyRo(e.target.value)} placeholder="Conținut" />
+              </div>
+            </div>
+            <div className="admin-news-lang-block">
+              <h4 className="panel-subtitle">Русский (опционально)</h4>
+              <div className="form-row">
+                <label className="form-label">Заголовок</label>
+                <input type="text" className="form-input" value={newsTitleRu} onChange={(e) => setNewsTitleRu(e.target.value)} placeholder="Заголовок" />
+              </div>
+              <div className="form-row">
+                <label className="form-label">Текст</label>
+                <textarea className="form-input" rows={3} value={newsBodyRu} onChange={(e) => setNewsBodyRu(e.target.value)} placeholder="Текст новости" />
+              </div>
             </div>
             <div className="form-row">
               <label className="form-label">Фото (опционально)</label>

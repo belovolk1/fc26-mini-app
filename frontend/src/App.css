@@ -1832,6 +1832,14 @@
   gap: 12px;
 }
 
+.admin-news-lang-block {
+  margin-bottom: 20px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+.admin-news-lang-block:last-of-type {
+  border-bottom: none;
+}
 .admin-news-title {
   margin-top: 32px;
   padding-top: 24px;
