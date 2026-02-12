@@ -3327,8 +3327,7 @@ function App() {
     const getPlayerName = (id: string | null) => {
       if (!id) return '—'
       if (bracketPlayerNames[id]) return bracketPlayerNames[id]
-      const r = leaderboard.find((x) => x.player_id === id)
-      return (r?.display_name?.trim() || null) ?? t.guestName
+      return '…'
     }
 
     useEffect(() => {
@@ -3718,8 +3717,7 @@ function App() {
   const getTournamentPlayerName = (id: string | null) => {
     if (!id) return '—'
     if (tournamentPlayerNames[id]) return tournamentPlayerNames[id]
-    const r = leaderboard.find((x) => x.player_id === id)
-    return (r?.display_name?.trim() || null) ?? t.guestName
+    return '…'
   }
 
   const getTournamentStandingsFromMatches = (matches: TournamentMatchRow[]): string[] => {
