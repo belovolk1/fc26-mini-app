@@ -3303,7 +3303,7 @@ function App() {
     onOpenPlayerProfile?: (playerId: string) => void
     myActiveMatch?: TournamentMatchRow | null
   }) {
-    const { matches, playerId: pid, leaderboard, lang: bracketLang, onMatchUpdated, onMatchConfirmed, onOpenPlayerProfile, myActiveMatch } = props
+    const { matches, playerId: pid, lang: bracketLang, onMatchUpdated, onMatchConfirmed, onOpenPlayerProfile, myActiveMatch } = props
     const [matchMessage, setMatchMessage] = useState<string | null>(null)
     const [savingMatchId, setSavingMatchId] = useState<string | null>(null)
     const [scoreInputs, setScoreInputs] = useState<Record<string, { a: string; b: string }>>({})
