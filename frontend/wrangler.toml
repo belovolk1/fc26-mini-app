@@ -1,5 +1,5 @@
-# Cloudflare Pages: только статика, без Functions.
-# Указывает вывод сборки и уменьшает шанс ошибки "Failed to publish your Function".
+# Cloudflare Pages: статика + минимальная pass-through Function.
+# functions/[[path]].js передаёт запросы в статику; без неё деплой падает с "Failed to publish your Function".
 name = "fc26-mini-app"
 pages_build_output_dir = "./dist"
 compatibility_date = "2026-02-06"
