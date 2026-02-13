@@ -42,6 +42,8 @@
 @media (max-width: 1023px) {
   .app {
     max-width: 100vw;
+  }
+  html, body {
     overflow-x: hidden;
   }
 }
@@ -53,10 +55,13 @@
 }
 
 /* ========== Шапка ========== */
+/* Всегда закреплена сверху при прокрутке, выше футера и модалок */
 .site-header {
-  position: sticky;
+  position: fixed;
   top: 0;
-  z-index: 50;
+  left: 0;
+  right: 0;
+  z-index: 10050;
   background: var(--bg-card);
   border-bottom: 2px solid var(--border);
   padding: 14px 20px;
@@ -406,9 +411,11 @@
 }
 
 /* ========== Main ========== */
+/* Отступ сверху под фиксированную шапку (мобильная и десктоп) */
 .app-main {
   flex: 1;
   padding: 28px 20px 36px;
+  padding-top: calc(60px + 28px);
   max-width: 640px;
   margin: 0 auto;
   width: 100%;
@@ -418,6 +425,7 @@
 @media (max-width: 1023px) {
   .app-main {
     padding: 20px 12px 36px;
+    padding-top: calc(60px + 20px);
     max-width: 100%;
   }
 }
@@ -426,6 +434,7 @@
   .app-main {
     max-width: 1200px;
     padding: 48px 40px 64px;
+    padding-top: calc(60px + 48px);
   }
 }
 
@@ -914,10 +923,11 @@
   }
 }
 
-/* Статические страницы (About, Terms, Privacy, Contact) */
+/* Статические страницы (About, Terms, Privacy, Contact) — отступ сверху, чтобы не уходили под фиксированный хедер */
 .static-page-panel {
   max-width: 720px;
   margin: 0 auto;
+  padding-top: 2rem;
 }
 .static-page-title {
   margin: 0 0 16px;
@@ -4479,9 +4489,13 @@
 .app.strike-theme::before {
   content: none;
 }
-.app.strike-theme > *:not(.nav-drawer):not(.nav-drawer-backdrop) {
+.app.strike-theme > *:not(.nav-drawer):not(.nav-drawer-backdrop):not(.site-header) {
   position: relative;
   z-index: 1;
+}
+.app.strike-theme > .site-header {
+  position: fixed;
+  z-index: 10050;
 }
 .app.strike-theme .site-header {
   background: var(--strike-card) !important;
@@ -4613,13 +4627,29 @@
   object-fit: cover;
 }
 .strike-header-user-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   min-width: 0;
+}
+.strike-header-user-info .app-user-name {
+  flex-shrink: 0;
+}
+.strike-header-user-info .elo-with-rank {
+  flex-shrink: 0;
 }
 .app.strike-theme .strike-header-user-info .app-user-name {
   font-family: var(--strike-font);
   font-size: 14px;
   letter-spacing: 0.04em;
   text-transform: uppercase;
+}
+.app.strike-theme .strike-header-user-info .elo-with-rank-label {
+  font-size: 12px;
+  letter-spacing: 0.02em;
+}
+.app.strike-theme .strike-header-user-info .elo-with-rank--compact.elo-with-rank--label-only {
+  opacity: 0.9;
 }
 .strike-header-elo-wrap {
   display: flex;

@@ -4570,7 +4570,7 @@ function App() {
         ) : (
           <div className="strike-header-center">
             <nav className="app-nav">
-              {navLinks.map(({ view, label, badge }) => (
+              {navLinks.filter(({ view }) => view !== 'ladder').map(({ view, label, badge }) => (
                 <button
                   key={view}
                   type="button"
@@ -4593,6 +4593,15 @@ function App() {
                 </div>
                 <div className="strike-header-user-info">
                   <span className="app-user-name">{displayName}</span>
+                  <EloWithRank
+                    elo={elo ?? null}
+                    matchesCount={myProfileStats?.matches_count ?? matchesCount ?? 0}
+                    calibrationLabel={t.profileCalibrationLabel}
+                    rankLabel={getTranslatedRankLabel(getRankFromElo(elo ?? null))}
+                    compact
+                    showEloValue={false}
+                    rankIconSize="small"
+                  />
                 </div>
                 <button
                   type="button"
@@ -4641,6 +4650,15 @@ function App() {
                   </div>
                   <div className="strike-header-user-info">
                     <span className="app-user-name">{displayName}</span>
+                    <EloWithRank
+                      elo={elo ?? null}
+                      matchesCount={myProfileStats?.matches_count ?? matchesCount ?? 0}
+                      calibrationLabel={t.profileCalibrationLabel}
+                      rankLabel={getTranslatedRankLabel(getRankFromElo(elo ?? null))}
+                      compact
+                      showEloValue={false}
+                      rankIconSize="small"
+                    />
                   </div>
                   <button
                     type="button"
@@ -4736,14 +4754,6 @@ function App() {
               <div className="strike-hero-content">
                 <h1 className="strike-hero-title">{t.homeHeroHeadline}</h1>
                 <p className="strike-hero-desc">{t.homeHeroDesc}</p>
-                <div className="strike-hero-buttons">
-                  <button type="button" className="strike-btn strike-btn-primary" onClick={() => setActiveView('ladder')}>
-                    {t.homeJoinNow}
-            </button>
-                  <button type="button" className="strike-btn strike-btn-secondary" onClick={() => setActiveView('tournaments')}>
-                    {t.homeLearnMore}
-                  </button>
-                </div>
               </div>
               <div className="strike-hero-graphic" aria-hidden="true">
                 <svg viewBox="0 0 200 120" fill="none" xmlns="http://www.w3.org/2000/svg" className="strike-field-svg">
