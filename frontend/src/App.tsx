@@ -1858,6 +1858,8 @@ function App() {
   const [adminVisitsRegisteredList, setAdminVisitsRegisteredList] = useState<AdminVisitRegisteredRow[]>([])
   const [adminVisitsGuestsList, setAdminVisitsGuestsList] = useState<AdminVisitGuestRow[]>([])
   const [adminVisitsListLoading, setAdminVisitsListLoading] = useState(false)
+  const [adminPendingReportsCount, setAdminPendingReportsCount] = useState(0)
+  const [adminUnseenViolationsCount, setAdminUnseenViolationsCount] = useState(0)
   const recordedVisitRef = useRef(false)
   type AdminUserRow = { id: string; display_name: string | null; username: string | null; first_name: string | null; last_name: string | null; elo: number; country_code: string | null; is_active: boolean; created_at: string }
   const [adminUsersSearch, setAdminUsersSearch] = useState('')
@@ -3141,6 +3143,22 @@ function App() {
   }, [activeView, isAdminUser, adminTab])
 
   useEffect(() => {
+    if (!isAdminUser) return
+    const fetchCounts = () => {
+      supabase.rpc('get_admin_pending_counts').then(({ data, error }) => {
+        if (!error && Array.isArray(data) && data[0]) {
+          const row = data[0] as { pending_reports: number; unseen_violations: number }
+          setAdminPendingReportsCount(Number(row.pending_reports) || 0)
+          setAdminUnseenViolationsCount(Number(row.unseen_violations) || 0)
+        }
+      })
+    }
+    fetchCounts()
+    const interval = setInterval(fetchCounts, 60 * 1000)
+    return () => clearInterval(interval)
+  }, [isAdminUser])
+
+  useEffect(() => {
     if (activeView !== 'admin' || !isAdminUser || adminTab !== 'stats') return
     setAdminVisitsListLoading(true)
     const from = adminStatsFrom || null
@@ -3188,6 +3206,7 @@ function App() {
     if (!error) {
       setMatchReportsAdmin((prev) => prev.map((r) => (r.id === reportId ? { ...r, status: 'resolved', resolution, admin_comment: comment.trim() || null, resolved_at: new Date().toISOString() } : r)))
       setAdminReportComments((prev) => ({ ...prev, [reportId]: '' }))
+      setAdminPendingReportsCount((c) => Math.max(0, c - 1))
     }
   }
 
@@ -3226,6 +3245,7 @@ function App() {
   const markViolationSeen = (violationId: string) => {
     supabase.rpc('mark_rating_violation_seen', { p_violation_id: violationId }).then(() => {
       setRatingViolations((prev) => prev.map((v) => (v.id === violationId ? { ...v, admin_seen_at: new Date().toISOString() } : v)))
+      setAdminUnseenViolationsCount((c) => Math.max(0, c - 1))
     })
   }
 
@@ -4459,7 +4479,7 @@ function App() {
     { view: 'rating', label: t.navRating },
     { view: 'profile', label: t.navProfile },
     ...(isAdminUser ? [{ view: 'matches' as View, label: t.navMatches }] : []),
-    ...(isAdminUser ? [{ view: 'admin' as View, label: t.navAdmin }] : []),
+    ...(isAdminUser ? [{ view: 'admin' as View, label: t.navAdmin, badge: adminPendingReportsCount + adminUnseenViolationsCount || undefined }] : []),
   ]
 
   return (
@@ -5453,7 +5473,7 @@ function App() {
             {adminTab === 'stats' && (
             <>
             <h3 className="panel-title admin-news-title">Статистика</h3>
-            <p className="panel-text small">Визиты по дням и странам (UTC), а также кто сейчас онлайн (активность за последние 5 минут). Учитываются уникальные пользователи (зарег.) и гости (по устройству); запись визита — не чаще 1 раза в 24 ч с одного устройства.</p>
+            <p className="panel-text small">Визиты по дням и странам (время — Кишинёв), а также кто сейчас онлайн (активность за последние 5 минут). Учитываются уникальные пользователи (зарег.) и гости (по устройству); запись визита — не чаще 1 раза в 24 ч с одного устройства.</p>
 
             <h4 className="admin-stats-subtitle">Сейчас онлайн</h4>
             {adminOnlineLoading && <p className="panel-text small">Загрузка…</p>}
@@ -5463,14 +5483,14 @@ function App() {
                 {adminOnlinePlayers.map((p) => (
                   <li key={p.id} className="admin-online-item">
                     <span className="admin-online-name">{p.display_name || (p.username ? `@${p.username}` : p.id.slice(0, 8))}{p.username && p.display_name ? ` @${p.username}` : ''}</span>
-                    <span className="admin-online-meta">{p.country_code || '—'} · {new Date(p.last_seen_at).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'medium' })}</span>
+                    <span className="admin-online-meta">{p.country_code ? (COUNTRIES.find((c) => c.code === p.country_code)?.name ?? p.country_code) : '—'} · {new Date(p.last_seen_at).toLocaleString('ru-RU', { timeZone: 'Europe/Chisinau', dateStyle: 'short', timeStyle: 'medium' })}</span>
                     <button type="button" className="player-name-link" onClick={() => openPlayerProfile(p.id)}>Профиль</button>
                   </li>
                 ))}
               </ul>
             )}
 
-            <h4 className="admin-stats-subtitle">Визиты по дням и времени (UTC)</h4>
+            <h4 className="admin-stats-subtitle">Визиты по дням и времени (Кишинёв)</h4>
             <div className="admin-stats-daterange">
               <label className="form-label">С</label>
               <input type="date" className="form-input" value={adminStatsFrom} onChange={(e) => setAdminStatsFrom(e.target.value)} />
@@ -5485,22 +5505,26 @@ function App() {
                   <thead>
                     <tr>
                       <th>Дата</th>
-                      <th>Час (UTC)</th>
+                      <th>Час (Кишинёв)</th>
                       <th>Страна</th>
                       <th>Пользователи</th>
                       <th>Гости</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {adminVisitsStats.map((r, i) => (
+                    {adminVisitsStats.map((r, i) => {
+                      const utcDate = new Date(`${r.visit_date}T${String(r.visit_hour).padStart(2, '0')}:00:00.000Z`)
+                      const datePart = utcDate.toLocaleString('ru-RU', { timeZone: 'Europe/Chisinau', day: '2-digit', month: '2-digit', year: 'numeric' })
+                      const timePart = utcDate.toLocaleString('ru-RU', { timeZone: 'Europe/Chisinau', hour: '2-digit', minute: '2-digit' })
+                      return (
                       <tr key={`${r.visit_date}-${r.visit_hour}-${r.country_code}-${i}`}>
-                        <td>{r.visit_date}</td>
-                        <td>{r.visit_hour}:00</td>
-                        <td>{r.country_code}</td>
+                        <td>{datePart}</td>
+                        <td>{timePart}</td>
+                        <td>{r.country_code === '(без страны)' ? 'Без страны' : (COUNTRIES.find((c) => c.code === r.country_code)?.name ?? r.country_code)}</td>
                         <td>{r.visits_registered ?? 0}</td>
                         <td>{r.visits_anonymous ?? 0}</td>
                       </tr>
-                    ))}
+                    )})}
                   </tbody>
                 </table>
               </div>
@@ -5511,7 +5535,7 @@ function App() {
               <button type="button" className={`admin-stats-minitab ${adminStatsListTab === 'registered' ? 'admin-stats-minitab--active' : ''}`} onClick={() => setAdminStatsListTab('registered')}>Зарегистрированные</button>
               <button type="button" className={`admin-stats-minitab ${adminStatsListTab === 'guests' ? 'admin-stats-minitab--active' : ''}`} onClick={() => setAdminStatsListTab('guests')}>Гости</button>
             </div>
-            <p className="panel-text small">Период: с {adminStatsFrom} по {adminStatsTo}. Дата/время — UTC.</p>
+            <p className="panel-text small">Период: с {adminStatsFrom} по {adminStatsTo}. Дата и время — Кишинёв.</p>
             {adminVisitsListLoading && <p className="panel-text small">Загрузка…</p>}
             {!adminVisitsListLoading && adminStatsListTab === 'registered' && (
               adminVisitsRegisteredList.length === 0 ? <p className="panel-text small">Нет визитов зарегистрированных за период.</p> : (
@@ -5528,8 +5552,8 @@ function App() {
                   <tbody>
                     {adminVisitsRegisteredList.map((r, i) => (
                       <tr key={`reg-${r.visited_at}-${r.player_id}-${i}`}>
-                        <td>{new Date(r.visited_at).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'medium' })}</td>
-                        <td>{r.country_code}</td>
+                        <td>{new Date(r.visited_at).toLocaleString('ru-RU', { timeZone: 'Europe/Chisinau', dateStyle: 'short', timeStyle: 'medium' })}</td>
+                        <td>{r.country_code === '(без страны)' ? 'Без страны' : (COUNTRIES.find((c) => c.code === r.country_code)?.name ?? r.country_code)}</td>
                         <td>{r.ip || '—'}</td>
                         <td>
                           <span>{r.display_name || (r.username ? `@${r.username}` : r.player_id.slice(0, 8))}{r.username && r.display_name ? ` @${r.username}` : ''}</span>
@@ -5556,8 +5580,8 @@ function App() {
                   <tbody>
                     {adminVisitsGuestsList.map((r, i) => (
                       <tr key={`guest-${r.visited_at}-${r.anonymous_visitor_id ?? i}-${i}`}>
-                        <td>{new Date(r.visited_at).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'medium' })}</td>
-                        <td>{r.country_code}</td>
+                        <td>{new Date(r.visited_at).toLocaleString('ru-RU', { timeZone: 'Europe/Chisinau', dateStyle: 'short', timeStyle: 'medium' })}</td>
+                        <td>{r.country_code === '(без страны)' ? 'Без страны' : (COUNTRIES.find((c) => c.code === r.country_code)?.name ?? r.country_code)}</td>
                         <td>{r.ip || '—'}</td>
                         <td>{r.anonymous_visitor_id ? `Гость ${r.anonymous_visitor_id.slice(0, 8)}` : '—'}</td>
                       </tr>
