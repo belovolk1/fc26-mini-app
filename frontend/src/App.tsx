@@ -2301,16 +2301,23 @@ function App() {
     void loadProfile()
   }, [user])
 
-  // Записать визит один раз за сессию (для раздела «Статистика» в админке)
+  // Записать визит один раз за сессию (страна определяется по IP через geo-API)
   useEffect(() => {
     if (recordedVisitRef.current) return
     if (user === undefined) return
     if (user !== null && loadingProfile) return
     recordedVisitRef.current = true
-    const country = user ? (myCountryCode || null) : null
     const pid = user ? (playerId || null) : null
-    supabase.rpc('record_site_visit', { p_country_code: country, p_player_id: pid }).then(() => {})
-  }, [user, loadingProfile, playerId, myCountryCode])
+    ;(async () => {
+      let country: string | null = null
+      try {
+        const r = await fetch('https://ip-api.com/json/?fields=countryCode', { method: 'GET' })
+        const d = await r.json() as { countryCode?: string }
+        if (d?.countryCode && typeof d.countryCode === 'string') country = d.countryCode
+      } catch (_) {}
+      await supabase.rpc('record_site_visit', { p_country_code: country, p_player_id: pid })
+    })()
+  }, [user, loadingProfile, playerId])
 
   // Heartbeat для «кто онлайн» (каждые 90 сек для залогиненного)
   useEffect(() => {
