@@ -1840,7 +1840,7 @@ function App() {
   const [playersForBan, setPlayersForBan] = useState<PlayerOption[]>([])
   type AdminTabId = 'broadcast' | 'reports' | 'bans' | 'violations' | 'news' | 'tournaments' | 'users' | 'stats'
   const [adminTab, setAdminTab] = useState<AdminTabId>('broadcast')
-  type AdminVisitStatRow = { visit_date: string; visit_hour: number; country_code: string; visits_count: number }
+  type AdminVisitStatRow = { visit_date: string; visit_hour: number; country_code: string; visits_registered: number; visits_anonymous: number }
   type AdminOnlineRow = { id: string; display_name: string | null; username: string | null; country_code: string | null; last_seen_at: string }
   const [adminStatsFrom, setAdminStatsFrom] = useState<string>(() => {
     const d = new Date()
@@ -2301,21 +2301,42 @@ function App() {
     void loadProfile()
   }, [user])
 
-  // Записать визит один раз за сессию (страна определяется по IP через geo-API)
+  // Записать визит не чаще 1 раза в 24 ч (страна по IP, уникальные пользователи/гости в статистике)
+  const VISIT_THROTTLE_KEY = 'fc26_visit_last'
+  const ANONYMOUS_VISITOR_KEY = 'fc26_anonymous_id'
   useEffect(() => {
     if (recordedVisitRef.current) return
     if (user === undefined) return
     if (user !== null && loadingProfile) return
-    recordedVisitRef.current = true
     const pid = user ? (playerId || null) : null
     ;(async () => {
+      try {
+        const last = localStorage.getItem(VISIT_THROTTLE_KEY)
+        const now = Date.now()
+        if (last != null && now - Number(last) < 24 * 60 * 60 * 1000) return
+      } catch (_) {}
+      recordedVisitRef.current = true
       let country: string | null = null
       try {
         const r = await fetch('https://ip-api.com/json/?fields=countryCode', { method: 'GET' })
         const d = await r.json() as { countryCode?: string }
         if (d?.countryCode && typeof d.countryCode === 'string') country = d.countryCode
       } catch (_) {}
-      await supabase.rpc('record_site_visit', { p_country_code: country, p_player_id: pid })
+      let anonymousId: string | null = null
+      if (!pid) {
+        try {
+          let id = localStorage.getItem(ANONYMOUS_VISITOR_KEY)
+          if (!id) {
+            id = crypto.randomUUID()
+            localStorage.setItem(ANONYMOUS_VISITOR_KEY, id)
+          }
+          anonymousId = id
+        } catch (_) {}
+      }
+      await supabase.rpc('record_site_visit', { p_country_code: country, p_player_id: pid, p_anonymous_visitor_id: anonymousId })
+      try {
+        localStorage.setItem(VISIT_THROTTLE_KEY, String(Date.now()))
+      } catch (_) {}
     })()
   }, [user, loadingProfile, playerId])
 
@@ -5376,7 +5397,7 @@ function App() {
             {adminTab === 'stats' && (
             <>
             <h3 className="panel-title admin-news-title">Статистика</h3>
-            <p className="panel-text small">Визиты по дням и странам (UTC), а также кто сейчас онлайн (активность за последние 5 минут).</p>
+            <p className="panel-text small">Визиты по дням и странам (UTC), а также кто сейчас онлайн (активность за последние 5 минут). Учитываются уникальные пользователи (зарег.) и гости (по устройству); запись визита — не чаще 1 раза в 24 ч с одного устройства.</p>
 
             <h4 className="admin-stats-subtitle">Сейчас онлайн</h4>
             {adminOnlineLoading && <p className="panel-text small">Загрузка…</p>}
@@ -5410,7 +5431,8 @@ function App() {
                       <th>Дата</th>
                       <th>Час (UTC)</th>
                       <th>Страна</th>
-                      <th>Визитов</th>
+                      <th>Пользователи</th>
+                      <th>Гости</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -5419,7 +5441,8 @@ function App() {
                         <td>{r.visit_date}</td>
                         <td>{r.visit_hour}:00</td>
                         <td>{r.country_code}</td>
-                        <td>{r.visits_count}</td>
+                        <td>{r.visits_registered ?? 0}</td>
+                        <td>{r.visits_anonymous ?? 0}</td>
                       </tr>
                     ))}
                   </tbody>

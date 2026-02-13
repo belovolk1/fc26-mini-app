@@ -1,35 +1,39 @@
 -- Раздел «Статистика» в админке: визиты по дням/странам и кто онлайн.
 -- Выполни в Supabase SQL Editor.
 
--- Таблица визитов: один запрос на загрузку/открытие приложения (вызов record_site_visit с фронта).
+-- Таблица визитов: один запрос на загрузку (не чаще 1 раза в 24 ч с устройства). Уникальные пользователи по player_id / anonymous_visitor_id.
 CREATE TABLE IF NOT EXISTS public.site_visits (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   visited_at timestamptz NOT NULL DEFAULT now(),
   country_code text,
-  player_id uuid REFERENCES public.players(id) ON DELETE SET NULL
+  player_id uuid REFERENCES public.players(id) ON DELETE SET NULL,
+  anonymous_visitor_id uuid
 );
+
+ALTER TABLE public.site_visits ADD COLUMN IF NOT EXISTS anonymous_visitor_id uuid;
+COMMENT ON COLUMN public.site_visits.anonymous_visitor_id IS 'Постоянный uuid гостя из localStorage для подсчёта уникальных визитов';
+COMMENT ON TABLE public.site_visits IS 'Визиты на сайт для админ-статистики по дням и странам (уникальные по пользователю/гостю)';
 
 CREATE INDEX IF NOT EXISTS idx_site_visits_visited_at ON public.site_visits (visited_at);
 CREATE INDEX IF NOT EXISTS idx_site_visits_country ON public.site_visits (country_code);
 CREATE INDEX IF NOT EXISTS idx_site_visits_player ON public.site_visits (player_id);
-
-COMMENT ON TABLE public.site_visits IS 'Визиты на сайт для админ-статистики по дням и странам';
+CREATE INDEX IF NOT EXISTS idx_site_visits_anonymous ON public.site_visits (anonymous_visitor_id);
 
 ALTER TABLE public.players
   ADD COLUMN IF NOT EXISTS last_seen_at timestamptz;
 
 COMMENT ON COLUMN public.players.last_seen_at IS 'Последняя активность (heartbeat) — для раздела «кто онлайн» в админке';
 
--- Записать визит (вызывать при загрузке приложения). Если передан player_id — также обновляет last_seen_at.
-CREATE OR REPLACE FUNCTION public.record_site_visit(p_country_code text DEFAULT NULL, p_player_id uuid DEFAULT NULL)
+-- Записать визит (вызывать не чаще 1 раза в 24 ч с фронта). p_anonymous_visitor_id — uuid гостя из localStorage. Если передан player_id — также обновляет last_seen_at.
+CREATE OR REPLACE FUNCTION public.record_site_visit(p_country_code text DEFAULT NULL, p_player_id uuid DEFAULT NULL, p_anonymous_visitor_id uuid DEFAULT NULL)
 RETURNS void
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
 AS $$
 BEGIN
-  INSERT INTO public.site_visits (country_code, player_id)
-  VALUES (NULLIF(trim(p_country_code), ''), p_player_id);
+  INSERT INTO public.site_visits (country_code, player_id, anonymous_visitor_id)
+  VALUES (NULLIF(trim(p_country_code), ''), p_player_id, p_anonymous_visitor_id);
 
   IF p_player_id IS NOT NULL THEN
     UPDATE public.players
@@ -39,8 +43,8 @@ BEGIN
 END;
 $$;
 
-GRANT EXECUTE ON FUNCTION public.record_site_visit(text, uuid) TO anon;
-GRANT EXECUTE ON FUNCTION public.record_site_visit(text, uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.record_site_visit(text, uuid, uuid) TO anon;
+GRANT EXECUTE ON FUNCTION public.record_site_visit(text, uuid, uuid) TO authenticated;
 
 -- Heartbeat: только обновить last_seen_at (вызывать периодически с фронта для залогиненного пользователя).
 CREATE OR REPLACE FUNCTION public.heartbeat(p_player_id uuid)
@@ -56,13 +60,15 @@ $$;
 
 GRANT EXECUTE ON FUNCTION public.heartbeat(uuid) TO authenticated;
 
--- Статистика визитов по дням, часу и странам (для админки). p_from/p_to — даты включительно.
+-- Статистика визитов по дням, часу и странам: уникальные пользователи (DISTINCT). Зарег. = по player_id, гости = по anonymous_visitor_id. p_from/p_to — даты включительно.
+DROP FUNCTION IF EXISTS public.admin_get_visits_stats(date, date);
 CREATE OR REPLACE FUNCTION public.admin_get_visits_stats(p_from date DEFAULT NULL, p_to date DEFAULT NULL)
 RETURNS TABLE (
   visit_date date,
   visit_hour int,
   country_code text,
-  visits_count bigint
+  visits_registered bigint,
+  visits_anonymous bigint
 )
 LANGUAGE sql
 SECURITY DEFINER
@@ -73,7 +79,11 @@ AS $$
     (visited_at AT TIME ZONE 'UTC')::date AS visit_date,
     extract(hour FROM (visited_at AT TIME ZONE 'UTC'))::int AS visit_hour,
     coalesce(NULLIF(trim(country_code), ''), '(без страны)') AS country_code,
-    count(*)::bigint AS visits_count
+    count(DISTINCT player_id) FILTER (WHERE player_id IS NOT NULL)::bigint AS visits_registered,
+    (
+      count(DISTINCT anonymous_visitor_id) FILTER (WHERE player_id IS NULL AND anonymous_visitor_id IS NOT NULL)
+      + count(*) FILTER (WHERE player_id IS NULL AND anonymous_visitor_id IS NULL)
+    )::bigint AS visits_anonymous
   FROM public.site_visits
   WHERE (p_from IS NULL OR (visited_at AT TIME ZONE 'UTC')::date >= p_from)
     AND (p_to IS NULL OR (visited_at AT TIME ZONE 'UTC')::date <= p_to)
