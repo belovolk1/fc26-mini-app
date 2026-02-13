@@ -140,6 +140,7 @@ const messages: Record<
     profileAvatar: string
     profileCountry: string
     profileSave: string
+    profileSaved: string
     profileAvatarUrlPlaceholder: string
     profileStatsSummary: string
     profileMatchesWins: string
@@ -437,6 +438,7 @@ const messages: Record<
     profileAvatar: 'Avatar',
     profileCountry: 'Country',
     profileSave: 'Save profile',
+    profileSaved: 'Data saved.',
     profileAvatarUrlPlaceholder: 'Avatar image URL',
     profileStatsSummary: 'Statistics',
     profileMatchesWins: 'matches, {pct}% wins',
@@ -733,6 +735,7 @@ const messages: Record<
     profileAvatar: 'Avatar',
     profileCountry: 'Țara',
     profileSave: 'Salvează profilul',
+    profileSaved: 'Date salvate.',
     profileAvatarUrlPlaceholder: 'URL imagine avatar',
     profileStatsSummary: 'Statistici',
     profileMatchesWins: 'meciuri, {pct}% victorii',
@@ -1029,6 +1032,7 @@ const messages: Record<
     profileAvatar: 'Аватар',
     profileCountry: 'Страна',
     profileSave: 'Сохранить профиль',
+    profileSaved: 'Данные сохранены.',
     profileAvatarUrlPlaceholder: 'URL изображения аватара',
     profileStatsSummary: 'Статистика',
     profileMatchesWins: 'матчей, {pct}% побед',
@@ -1729,6 +1733,11 @@ function ProfileRatingChart({
               key={i}
               onMouseEnter={() => setHoveredPoint(i)}
               onMouseLeave={() => { if (!pinnedByClick) setHoveredPoint(null) }}
+              onPointerDown={(e) => {
+                e.stopPropagation()
+                setHoveredPoint(i)
+                setPinnedByClick(true)
+              }}
               onClick={(e) => {
                 e.stopPropagation()
                 setHoveredPoint((prev) => {
@@ -1740,7 +1749,7 @@ function ProfileRatingChart({
               className="profile-rating-chart-point-hit"
             >
               <circle cx={scaleX(p.t)} cy={scaleY(p.elo)} r={5} className="profile-rating-chart-point-dot" />
-              <circle cx={scaleX(p.t)} cy={scaleY(p.elo)} r={12} fill="transparent" />
+              <circle cx={scaleX(p.t)} cy={scaleY(p.elo)} r={22} fill="transparent" className="profile-rating-chart-point-hitarea" />
             </g>
           ))}
           <text x={pad.left - 8} y={pad.top} textAnchor="end" className="profile-rating-chart-axis" fontSize="11">{Math.round(maxElo)}</text>
@@ -1862,6 +1871,7 @@ function App() {
   const [myCountryCode, setMyCountryCode] = useState<string>('')
   const [myDisplayName, setMyDisplayName] = useState<string>('')
   const [profileSaveLoading, setProfileSaveLoading] = useState(false)
+  const [profileSaveSuccess, setProfileSaveSuccess] = useState(false)
   const [avatarUploading, setAvatarUploading] = useState(false)
   const [avatarUploadError, setAvatarUploadError] = useState<string | null>(null)
   type RecentMatchRow = { match_id: string; match_type?: string; tournament_name?: string | null; opponent_id: string | null; opponent_name: string | null; my_score: number; opp_score: number; result: string; played_at: string | null; elo_delta?: number | null }
@@ -4082,6 +4092,7 @@ function App() {
   const saveProfileAvatarCountry = async () => {
     if (!playerId) return
     setProfileSaveLoading(true)
+    setProfileSaveSuccess(false)
     const { error } = await supabase
       .from('players')
       .update({
@@ -4091,7 +4102,12 @@ function App() {
       })
       .eq('id', playerId)
     setProfileSaveLoading(false)
-    if (error) console.error('Failed to save profile', error)
+    if (error) {
+      console.error('Failed to save profile', error)
+      return
+    }
+    setProfileSaveSuccess(true)
+    setTimeout(() => setProfileSaveSuccess(false), 4000)
   }
 
   const AVATAR_BUCKET = 'avatars'
@@ -5828,6 +5844,9 @@ function App() {
                 >
                   {profileSaveLoading ? '…' : t.profileSave}
                 </button>
+                {profileSaveSuccess && (
+                  <p className="panel-text profile-save-success" role="status">{t.profileSaved}</p>
+                )}
                               </div>
               </div>
             )}

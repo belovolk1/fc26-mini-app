@@ -2835,6 +2835,10 @@
 }
 .profile-rating-chart-point-hit {
   cursor: pointer;
+  touch-action: manipulation;
+}
+.profile-rating-chart-point-hitarea {
+  pointer-events: all;
 }
 .profile-rating-chart-point-dot {
   fill: var(--accent);
@@ -3098,6 +3102,16 @@
 
 .profile-edit-section .form-row:last-of-type {
   margin-bottom: 24px;
+}
+
+.profile-save-success {
+  margin-top: 12px;
+  margin-bottom: 0;
+  color: var(--accent);
+  font-weight: 600;
+}
+.app.strike-theme .profile-save-success {
+  color: var(--strike-orange);
 }
 
 .profile-tab-panel .profile-telegram {
@@ -3923,6 +3937,12 @@
   justify-content: center;
   padding: 16px;
   overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  /* Safe area для iOS (вырез, home indicator) */
+  padding-top: max(16px, env(safe-area-inset-top));
+  padding-right: max(16px, env(safe-area-inset-right));
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
+  padding-left: max(16px, env(safe-area-inset-left));
   --strike-card: #111419;
   --strike-elevated: #171a1f;
   --strike-border: #23272e;
@@ -4025,6 +4045,57 @@
 .rating-modal-body .profile-recent-elo-cell .profile-recent-elo-delta {
   overflow: visible;
   vertical-align: middle;
+}
+
+/* Модалка рейтинга: мобильная версия и Safari iOS */
+@media (max-width: 767px) {
+  .rating-modal-backdrop {
+    padding: 16px;
+    padding-top: env(safe-area-inset-top, 16px);
+    padding-right: env(safe-area-inset-right, 16px);
+    padding-bottom: env(safe-area-inset-bottom, 16px);
+    padding-left: env(safe-area-inset-left, 16px);
+    align-items: stretch;
+    justify-content: flex-end;
+    min-height: 100vh;
+    min-height: 100dvh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .rating-modal-panel {
+    max-width: none;
+    width: 100%;
+    max-height: calc(100vh - 32px);
+    max-height: calc(100dvh - 32px);
+    margin: auto 0 0;
+    border-radius: var(--strike-radius) var(--strike-radius) 0 0;
+    flex: 0 1 auto;
+  }
+  .rating-modal-header {
+    padding: 12px 16px;
+  }
+  .rating-modal-close {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+    font-size: 28px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .rating-modal-body {
+    padding: 16px 16px 24px;
+    padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+    -webkit-overflow-scrolling: touch;
+    overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+  }
+  .rating-modal-body .rating-last-table,
+  .rating-modal-body .profile-recent-table-wrap {
+    -webkit-overflow-scrolling: touch;
+    overflow-x: auto;
+    max-width: 100%;
+  }
 }
 
 .rating-details {
