@@ -376,8 +376,8 @@
 
 @media (min-width: 1024px) {
   .app-nav {
-    flex: 1;
-    justify-content: center;
+    flex: 0 0 auto;
+    justify-content: flex-start;
     gap: 10px;
   }
 }
@@ -4487,20 +4487,36 @@
   background: var(--strike-card) !important;
   border-bottom: var(--strike-border-w) solid var(--strike-border) !important;
 }
+/* Фиксированная раскладка шапки (desktop): лого 48px от левого края, меню+вход/игрок в одной зоне слева, языки 48px от правого края. Не менять без согласования. */
 @media (min-width: 1024px) {
+  .app.strike-theme .site-header {
+    padding-left: 48px;
+    padding-right: 48px;
+  }
   .app.strike-theme .strike-header {
     display: grid;
-    grid-template-columns: 1fr auto 1fr;
+    grid-template-columns: minmax(0, max(0px, calc((100vw - 1200px) / 2 - 72px))) 1fr auto;
     align-items: center;
-    justify-content: space-between;
+    gap: 0 24px;
   }
   .app.strike-theme .strike-header .app-header {
     justify-self: start;
   }
+  .app.strike-theme .strike-header .strike-header-center {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    justify-self: start;
+    min-width: 0;
+  }
   .app.strike-theme .strike-header .app-nav {
     justify-self: start;
   }
-  .app.strike-theme .strike-header .header-right {
+  .app.strike-theme .strike-header .header-right.strike-header-lang {
+    justify-self: end;
+    margin-left: 0;
+  }
+  .app.strike-theme .strike-header .header-right:not(.strike-header-lang) {
     justify-self: end;
     margin-left: 0;
   }

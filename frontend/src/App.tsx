@@ -4568,63 +4568,112 @@ function App() {
             )}
           </>
         ) : (
-          <nav className="app-nav">
-            {navLinks.map(({ view, label, badge }) => (
-              <button
-                key={view}
-                type="button"
-                className={activeView === view || (view === 'tournaments' && activeView === 'tournament-detail') ? 'nav-btn active' : 'nav-btn'}
-                onClick={() => closeNavAnd(view)}
-              >
-                {label}
-                {badge != null && badge > 0 && <span className="nav-badge">{badge}</span>}
-              </button>
-            ))}
-          </nav>
-        )}
-        <div className={`header-right ${showHamburger ? 'header-right--desktop-only' : ''}`}>
-          {user ? (
-          <div className="strike-header-user">
-            <div className="strike-header-avatar">
-              {myAvatarUrl ? (
-                <img src={myAvatarUrl} alt="" width={36} height={36} />
-              ) : (
-                <span>{(displayName || '?').charAt(0).toUpperCase()}</span>
-              )}
-            </div>
-            <div className="strike-header-user-info">
-              <span className="app-user-name">{displayName}</span>
-            </div>
-            <button
-              type="button"
-              className="strike-header-cta strike-btn strike-btn-primary"
-              onClick={
-                searchStatus === 'searching'
-                  ? cancelSearch
-                  : () => {
-                      void handlePlayNowClick()
-                    }
-              }
-            >
-              {searchStatus === 'idle'
-                ? (hasActiveTournamentMatch ? t.homeInTournament : t.homePlayNow)
-                : searchStatus === 'searching'
-                  ? t.ladderSearching
-                  : t.ladderLobbyTitle}
-            </button>
-          </div>
-          ) : (
-          <div className="strike-header-user strike-header-login">
-            {telegramLoginUrl ? (
-              <a href={telegramLoginUrl} className="strike-header-cta strike-btn strike-btn-primary">
-                {t.profileTelegramLoginButton}
-              </a>
+          <div className="strike-header-center">
+            <nav className="app-nav">
+              {navLinks.map(({ view, label, badge }) => (
+                <button
+                  key={view}
+                  type="button"
+                  className={activeView === view || (view === 'tournaments' && activeView === 'tournament-detail') ? 'nav-btn active' : 'nav-btn'}
+                  onClick={() => closeNavAnd(view)}
+                >
+                  {label}
+                  {badge != null && badge > 0 && <span className="nav-badge">{badge}</span>}
+                </button>
+              ))}
+            </nav>
+            {user ? (
+              <div className="strike-header-user">
+                <div className="strike-header-avatar">
+                  {myAvatarUrl ? (
+                    <img src={myAvatarUrl} alt="" width={36} height={36} />
+                  ) : (
+                    <span>{(displayName || '?').charAt(0).toUpperCase()}</span>
+                  )}
+                </div>
+                <div className="strike-header-user-info">
+                  <span className="app-user-name">{displayName}</span>
+                </div>
+                <button
+                  type="button"
+                  className="strike-header-cta strike-btn strike-btn-primary"
+                  onClick={
+                    searchStatus === 'searching'
+                      ? cancelSearch
+                      : () => {
+                          void handlePlayNowClick()
+                        }
+                  }
+                >
+                  {searchStatus === 'idle'
+                    ? (hasActiveTournamentMatch ? t.homeInTournament : t.homePlayNow)
+                    : searchStatus === 'searching'
+                      ? t.ladderSearching
+                      : t.ladderLobbyTitle}
+                </button>
+              </div>
             ) : (
-              <button type="button" className="strike-header-cta strike-btn strike-btn-primary" onClick={() => setActiveView('profile')}>
-                {t.profileTelegramLoginButton}
-              </button>
+              <div className="strike-header-user strike-header-login">
+                {telegramLoginUrl ? (
+                  <a href={telegramLoginUrl} className="strike-header-cta strike-btn strike-btn-primary">
+                    {t.profileTelegramLoginButton}
+                  </a>
+                ) : (
+                  <button type="button" className="strike-header-cta strike-btn strike-btn-primary" onClick={() => setActiveView('profile')}>
+                    {t.profileTelegramLoginButton}
+                  </button>
+                )}
+              </div>
             )}
           </div>
+        )}
+        <div className={`header-right ${showHamburger ? 'header-right--desktop-only' : 'strike-header-lang'}`}>
+          {showHamburger && (
+            <>
+              {user ? (
+                <div className="strike-header-user">
+                  <div className="strike-header-avatar">
+                    {myAvatarUrl ? (
+                      <img src={myAvatarUrl} alt="" width={36} height={36} />
+                    ) : (
+                      <span>{(displayName || '?').charAt(0).toUpperCase()}</span>
+                    )}
+                  </div>
+                  <div className="strike-header-user-info">
+                    <span className="app-user-name">{displayName}</span>
+                  </div>
+                  <button
+                    type="button"
+                    className="strike-header-cta strike-btn strike-btn-primary"
+                    onClick={
+                      searchStatus === 'searching'
+                        ? cancelSearch
+                        : () => {
+                            void handlePlayNowClick()
+                          }
+                    }
+                  >
+                    {searchStatus === 'idle'
+                      ? (hasActiveTournamentMatch ? t.homeInTournament : t.homePlayNow)
+                      : searchStatus === 'searching'
+                        ? t.ladderSearching
+                        : t.ladderLobbyTitle}
+                  </button>
+                </div>
+              ) : (
+                <div className="strike-header-user strike-header-login">
+                  {telegramLoginUrl ? (
+                    <a href={telegramLoginUrl} className="strike-header-cta strike-btn strike-btn-primary">
+                      {t.profileTelegramLoginButton}
+                    </a>
+                  ) : (
+                    <button type="button" className="strike-header-cta strike-btn strike-btn-primary" onClick={() => setActiveView('profile')}>
+                      {t.profileTelegramLoginButton}
+                    </button>
+                  )}
+                </div>
+              )}
+            </>
           )}
           <div className="lang-switch">
             <button
