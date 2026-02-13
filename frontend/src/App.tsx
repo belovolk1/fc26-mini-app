@@ -1852,6 +1852,12 @@ function App() {
   const [adminOnlinePlayers, setAdminOnlinePlayers] = useState<AdminOnlineRow[]>([])
   const [adminStatsLoading, setAdminStatsLoading] = useState(false)
   const [adminOnlineLoading, setAdminOnlineLoading] = useState(false)
+  type AdminVisitRegisteredRow = { visited_at: string; country_code: string; ip: string | null; player_id: string; display_name: string | null; username: string | null }
+  type AdminVisitGuestRow = { visited_at: string; country_code: string; ip: string | null; anonymous_visitor_id: string | null }
+  const [adminStatsListTab, setAdminStatsListTab] = useState<'registered' | 'guests'>('registered')
+  const [adminVisitsRegisteredList, setAdminVisitsRegisteredList] = useState<AdminVisitRegisteredRow[]>([])
+  const [adminVisitsGuestsList, setAdminVisitsGuestsList] = useState<AdminVisitGuestRow[]>([])
+  const [adminVisitsListLoading, setAdminVisitsListLoading] = useState(false)
   const recordedVisitRef = useRef(false)
   type AdminUserRow = { id: string; display_name: string | null; username: string | null; first_name: string | null; last_name: string | null; elo: number; country_code: string | null; is_active: boolean; created_at: string }
   const [adminUsersSearch, setAdminUsersSearch] = useState('')
@@ -2316,12 +2322,6 @@ function App() {
         if (last != null && now - Number(last) < 24 * 60 * 60 * 1000) return
       } catch (_) {}
       recordedVisitRef.current = true
-      let country: string | null = null
-      try {
-        const r = await fetch('https://ip-api.com/json/?fields=countryCode', { method: 'GET' })
-        const d = await r.json() as { countryCode?: string }
-        if (d?.countryCode && typeof d.countryCode === 'string') country = d.countryCode
-      } catch (_) {}
       let anonymousId: string | null = null
       if (!pid) {
         try {
@@ -2333,7 +2333,43 @@ function App() {
           anonymousId = id
         } catch (_) {}
       }
-      await supabase.rpc('record_site_visit', { p_country_code: country, p_player_id: pid, p_anonymous_visitor_id: anonymousId })
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined
+      const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined
+      const useEdgeFunction = supabaseUrl && anonKey
+      if (useEdgeFunction) {
+        try {
+          const res = await fetch(`${supabaseUrl}/functions/v1/record_visit`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${anonKey}` },
+            body: JSON.stringify({ player_id: pid, anonymous_visitor_id: anonymousId }),
+          })
+          if (res.ok) {
+            try { localStorage.setItem(VISIT_THROTTLE_KEY, String(Date.now())) } catch (_) {}
+            return
+          }
+        } catch (_) {}
+      }
+      let country: string | null = null
+      const tryGeo = async (): Promise<string | null> => {
+        try {
+          const r = await fetch('https://ip-api.com/json/?fields=countryCode', { method: 'GET' })
+          const d = await r.json() as { countryCode?: string }
+          if (d?.countryCode && typeof d.countryCode === 'string') return d.countryCode
+        } catch (_) {}
+        try {
+          const r = await fetch('https://get.geojs.io/v1/ip/geo.json', { method: 'GET' })
+          const d = await r.json() as { country_code?: string }
+          if (d?.country_code && typeof d.country_code === 'string') return d.country_code
+        } catch (_) {}
+        try {
+          const r = await fetch('https://ipapi.co/json/', { method: 'GET' })
+          const d = await r.json() as { country_code?: string }
+          if (d?.country_code && typeof d.country_code === 'string') return d.country_code
+        } catch (_) {}
+        return null
+      }
+      country = await tryGeo()
+      await supabase.rpc('record_site_visit', { p_country_code: country, p_player_id: pid, p_anonymous_visitor_id: anonymousId, p_ip: null })
       try {
         localStorage.setItem(VISIT_THROTTLE_KEY, String(Date.now()))
       } catch (_) {}
@@ -3103,6 +3139,26 @@ function App() {
     }, 30 * 1000)
     return () => clearInterval(interval)
   }, [activeView, isAdminUser, adminTab])
+
+  useEffect(() => {
+    if (activeView !== 'admin' || !isAdminUser || adminTab !== 'stats') return
+    setAdminVisitsListLoading(true)
+    const from = adminStatsFrom || null
+    const to = adminStatsTo || null
+    if (adminStatsListTab === 'registered') {
+      supabase.rpc('admin_get_visits_registered_list', { p_from: from, p_to: to }).then(({ data, error }) => {
+        setAdminVisitsListLoading(false)
+        if (!error && Array.isArray(data)) setAdminVisitsRegisteredList(data as AdminVisitRegisteredRow[])
+        else setAdminVisitsRegisteredList([])
+      })
+    } else {
+      supabase.rpc('admin_get_visits_guests_list', { p_from: from, p_to: to }).then(({ data, error }) => {
+        setAdminVisitsListLoading(false)
+        if (!error && Array.isArray(data)) setAdminVisitsGuestsList(data as AdminVisitGuestRow[])
+        else setAdminVisitsGuestsList([])
+      })
+    }
+  }, [activeView, isAdminUser, adminTab, adminStatsListTab, adminStatsFrom, adminStatsTo])
 
   const saveAdminUser = async (row: AdminUserRow, patch: { display_name?: string | null; elo?: number; country_code?: string | null; is_active?: boolean }) => {
     setAdminUsersMessage(null)
@@ -5449,6 +5505,67 @@ function App() {
                 </table>
               </div>
             )}
+
+            <h4 className="admin-stats-subtitle">Визиты по уникальным пользователям</h4>
+            <div className="admin-stats-minitabs">
+              <button type="button" className={`admin-stats-minitab ${adminStatsListTab === 'registered' ? 'admin-stats-minitab--active' : ''}`} onClick={() => setAdminStatsListTab('registered')}>Зарегистрированные</button>
+              <button type="button" className={`admin-stats-minitab ${adminStatsListTab === 'guests' ? 'admin-stats-minitab--active' : ''}`} onClick={() => setAdminStatsListTab('guests')}>Гости</button>
+            </div>
+            <p className="panel-text small">Период: с {adminStatsFrom} по {adminStatsTo}. Дата/время — UTC.</p>
+            {adminVisitsListLoading && <p className="panel-text small">Загрузка…</p>}
+            {!adminVisitsListLoading && adminStatsListTab === 'registered' && (
+              adminVisitsRegisteredList.length === 0 ? <p className="panel-text small">Нет визитов зарегистрированных за период.</p> : (
+              <div className="admin-stats-table-wrap">
+                <table className="admin-stats-table">
+                  <thead>
+                    <tr>
+                      <th>Дата и время</th>
+                      <th>Страна</th>
+                      <th>IP</th>
+                      <th>Пользователь</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {adminVisitsRegisteredList.map((r, i) => (
+                      <tr key={`reg-${r.visited_at}-${r.player_id}-${i}`}>
+                        <td>{new Date(r.visited_at).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'medium' })}</td>
+                        <td>{r.country_code}</td>
+                        <td>{r.ip || '—'}</td>
+                        <td>
+                          <span>{r.display_name || (r.username ? `@${r.username}` : r.player_id.slice(0, 8))}{r.username && r.display_name ? ` @${r.username}` : ''}</span>
+                          <button type="button" className="player-name-link" style={{ marginLeft: 8 }} onClick={() => openPlayerProfile(r.player_id)}>Профиль</button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ))}
+            {!adminVisitsListLoading && adminStatsListTab === 'guests' && (
+              adminVisitsGuestsList.length === 0 ? <p className="panel-text small">Нет визитов гостей за период.</p> : (
+              <div className="admin-stats-table-wrap">
+                <table className="admin-stats-table">
+                  <thead>
+                    <tr>
+                      <th>Дата и время</th>
+                      <th>Страна</th>
+                      <th>IP</th>
+                      <th>Гость</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {adminVisitsGuestsList.map((r, i) => (
+                      <tr key={`guest-${r.visited_at}-${r.anonymous_visitor_id ?? i}-${i}`}>
+                        <td>{new Date(r.visited_at).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'medium' })}</td>
+                        <td>{r.country_code}</td>
+                        <td>{r.ip || '—'}</td>
+                        <td>{r.anonymous_visitor_id ? `Гость ${r.anonymous_visitor_id.slice(0, 8)}` : '—'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ))}
             </>
             )}
           </section>

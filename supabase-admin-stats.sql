@@ -11,7 +11,9 @@ CREATE TABLE IF NOT EXISTS public.site_visits (
 );
 
 ALTER TABLE public.site_visits ADD COLUMN IF NOT EXISTS anonymous_visitor_id uuid;
+ALTER TABLE public.site_visits ADD COLUMN IF NOT EXISTS ip text;
 COMMENT ON COLUMN public.site_visits.anonymous_visitor_id IS 'Постоянный uuid гостя из localStorage для подсчёта уникальных визитов';
+COMMENT ON COLUMN public.site_visits.ip IS 'IP визита (из Edge Function / заголовков запроса)';
 COMMENT ON TABLE public.site_visits IS 'Визиты на сайт для админ-статистики по дням и странам (уникальные по пользователю/гостю)';
 
 CREATE INDEX IF NOT EXISTS idx_site_visits_visited_at ON public.site_visits (visited_at);
@@ -24,16 +26,17 @@ ALTER TABLE public.players
 
 COMMENT ON COLUMN public.players.last_seen_at IS 'Последняя активность (heartbeat) — для раздела «кто онлайн» в админке';
 
--- Записать визит (вызывать не чаще 1 раза в 24 ч с фронта). p_anonymous_visitor_id — uuid гостя из localStorage. Если передан player_id — также обновляет last_seen_at.
-CREATE OR REPLACE FUNCTION public.record_site_visit(p_country_code text DEFAULT NULL, p_player_id uuid DEFAULT NULL, p_anonymous_visitor_id uuid DEFAULT NULL)
+-- Записать визит (вызывать не чаще 1 раза в 24 ч с фронта). p_ip — IP клиента (из Edge Function). Если передан player_id — также обновляет last_seen_at.
+DROP FUNCTION IF EXISTS public.record_site_visit(text, uuid, uuid);
+CREATE OR REPLACE FUNCTION public.record_site_visit(p_country_code text DEFAULT NULL, p_player_id uuid DEFAULT NULL, p_anonymous_visitor_id uuid DEFAULT NULL, p_ip text DEFAULT NULL)
 RETURNS void
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
 AS $$
 BEGIN
-  INSERT INTO public.site_visits (country_code, player_id, anonymous_visitor_id)
-  VALUES (NULLIF(trim(p_country_code), ''), p_player_id, p_anonymous_visitor_id);
+  INSERT INTO public.site_visits (country_code, player_id, anonymous_visitor_id, ip)
+  VALUES (NULLIF(trim(p_country_code), ''), p_player_id, p_anonymous_visitor_id, NULLIF(trim(p_ip), ''));
 
   IF p_player_id IS NOT NULL THEN
     UPDATE public.players
@@ -43,8 +46,8 @@ BEGIN
 END;
 $$;
 
-GRANT EXECUTE ON FUNCTION public.record_site_visit(text, uuid, uuid) TO anon;
-GRANT EXECUTE ON FUNCTION public.record_site_visit(text, uuid, uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.record_site_visit(text, uuid, uuid, text) TO anon;
+GRANT EXECUTE ON FUNCTION public.record_site_visit(text, uuid, uuid, text) TO authenticated;
 
 -- Heartbeat: только обновить last_seen_at (вызывать периодически с фронта для залогиненного пользователя).
 CREATE OR REPLACE FUNCTION public.heartbeat(p_player_id uuid)
@@ -123,6 +126,69 @@ $$;
 
 GRANT EXECUTE ON FUNCTION public.admin_get_online_players() TO anon;
 GRANT EXECUTE ON FUNCTION public.admin_get_online_players() TO authenticated;
+
+-- Список визитов зарегистрированных: дата/время, страна, IP, пользователь (для мини-таба «Зарегистрированные»).
+CREATE OR REPLACE FUNCTION public.admin_get_visits_registered_list(p_from date DEFAULT NULL, p_to date DEFAULT NULL)
+RETURNS TABLE (
+  visited_at timestamptz,
+  country_code text,
+  ip text,
+  player_id uuid,
+  display_name text,
+  username text
+)
+LANGUAGE sql
+SECURITY DEFINER
+STABLE
+SET search_path = public
+AS $$
+  SELECT
+    v.visited_at,
+    coalesce(NULLIF(trim(v.country_code), ''), '(без страны)') AS country_code,
+    v.ip,
+    v.player_id,
+    p.display_name,
+    p.username
+  FROM public.site_visits v
+  JOIN public.players p ON p.id = v.player_id
+  WHERE v.player_id IS NOT NULL
+    AND (p_from IS NULL OR (v.visited_at AT TIME ZONE 'UTC')::date >= p_from)
+    AND (p_to IS NULL OR (v.visited_at AT TIME ZONE 'UTC')::date <= p_to)
+  ORDER BY v.visited_at DESC
+  LIMIT 500;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.admin_get_visits_registered_list(date, date) TO anon;
+GRANT EXECUTE ON FUNCTION public.admin_get_visits_registered_list(date, date) TO authenticated;
+
+-- Список визитов гостей: дата/время, страна, IP, короткий id гостя (для мини-таба «Гости»).
+CREATE OR REPLACE FUNCTION public.admin_get_visits_guests_list(p_from date DEFAULT NULL, p_to date DEFAULT NULL)
+RETURNS TABLE (
+  visited_at timestamptz,
+  country_code text,
+  ip text,
+  anonymous_visitor_id uuid
+)
+LANGUAGE sql
+SECURITY DEFINER
+STABLE
+SET search_path = public
+AS $$
+  SELECT
+    v.visited_at,
+    coalesce(NULLIF(trim(v.country_code), ''), '(без страны)') AS country_code,
+    v.ip,
+    v.anonymous_visitor_id
+  FROM public.site_visits v
+  WHERE v.player_id IS NULL
+    AND (p_from IS NULL OR (v.visited_at AT TIME ZONE 'UTC')::date >= p_from)
+    AND (p_to IS NULL OR (v.visited_at AT TIME ZONE 'UTC')::date <= p_to)
+  ORDER BY v.visited_at DESC
+  LIMIT 500;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.admin_get_visits_guests_list(date, date) TO anon;
+GRANT EXECUTE ON FUNCTION public.admin_get_visits_guests_list(date, date) TO authenticated;
 
 -- RLS: site_visits — вставка для всех (record_site_visit через DEFINER), чтение только через admin RPC (DEFINER).
 ALTER TABLE public.site_visits ENABLE ROW LEVEL SECURITY;
