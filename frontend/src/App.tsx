@@ -1838,8 +1838,27 @@ function App() {
   const [banSending, setBanSending] = useState(false)
   type PlayerOption = { id: string; display_name: string | null; username: string | null }
   const [playersForBan, setPlayersForBan] = useState<PlayerOption[]>([])
-  type AdminTabId = 'broadcast' | 'reports' | 'bans' | 'violations' | 'news' | 'tournaments'
+  type AdminTabId = 'broadcast' | 'reports' | 'bans' | 'violations' | 'news' | 'tournaments' | 'users' | 'stats'
   const [adminTab, setAdminTab] = useState<AdminTabId>('broadcast')
+  type AdminVisitStatRow = { visit_date: string; visit_hour: number; country_code: string; visits_count: number }
+  type AdminOnlineRow = { id: string; display_name: string | null; username: string | null; country_code: string | null; last_seen_at: string }
+  const [adminStatsFrom, setAdminStatsFrom] = useState<string>(() => {
+    const d = new Date()
+    d.setDate(d.getDate() - 30)
+    return d.toISOString().slice(0, 10)
+  })
+  const [adminStatsTo, setAdminStatsTo] = useState<string>(() => new Date().toISOString().slice(0, 10))
+  const [adminVisitsStats, setAdminVisitsStats] = useState<AdminVisitStatRow[]>([])
+  const [adminOnlinePlayers, setAdminOnlinePlayers] = useState<AdminOnlineRow[]>([])
+  const [adminStatsLoading, setAdminStatsLoading] = useState(false)
+  const [adminOnlineLoading, setAdminOnlineLoading] = useState(false)
+  const recordedVisitRef = useRef(false)
+  type AdminUserRow = { id: string; display_name: string | null; username: string | null; first_name: string | null; last_name: string | null; elo: number; country_code: string | null; is_active: boolean; created_at: string }
+  const [adminUsersSearch, setAdminUsersSearch] = useState('')
+  const [adminUsersList, setAdminUsersList] = useState<AdminUserRow[]>([])
+  const [adminUsersLoading, setAdminUsersLoading] = useState(false)
+  const [adminUserEditingId, setAdminUserEditingId] = useState<string | null>(null)
+  const [adminUsersMessage, setAdminUsersMessage] = useState<string | null>(null)
   const [allMatches, setAllMatches] = useState<Array<{ match_id: number; player_a_id: string; player_b_id: string; player_a_name: string; player_b_name: string; score_a: number; score_b: number; result: string; played_at: string | null; elo_delta_a: number | null; elo_delta_b: number | null }>>([])
   const [allMatchesLoading, setAllMatchesLoading] = useState(false)
   type PlayerWarningRow = { id: string; message: string; created_at: string }
@@ -2281,6 +2300,26 @@ function App() {
 
     void loadProfile()
   }, [user])
+
+  // Записать визит один раз за сессию (для раздела «Статистика» в админке)
+  useEffect(() => {
+    if (recordedVisitRef.current) return
+    if (user === undefined) return
+    if (user !== null && loadingProfile) return
+    recordedVisitRef.current = true
+    const country = user ? (myCountryCode || null) : null
+    const pid = user ? (playerId || null) : null
+    supabase.rpc('record_site_visit', { p_country_code: country, p_player_id: pid }).then(() => {})
+  }, [user, loadingProfile, playerId, myCountryCode])
+
+  // Heartbeat для «кто онлайн» (каждые 90 сек для залогиненного)
+  useEffect(() => {
+    if (!playerId) return
+    const tick = () => supabase.rpc('heartbeat', { p_player_id: playerId }).then(() => {})
+    tick()
+    const id = setInterval(tick, 90 * 1000)
+    return () => clearInterval(id)
+  }, [playerId])
 
   useEffect(() => {
     if (!playerId) return
@@ -2998,6 +3037,57 @@ function App() {
     }, 300)
     return () => clearTimeout(t)
   }, [banPlayerSearch])
+
+  useEffect(() => {
+    if (activeView !== 'admin' || !isAdminUser || adminTab !== 'users') return
+    setAdminUsersLoading(true)
+    supabase.rpc('admin_search_players', { p_search: adminUsersSearch.trim() || null }).then(({ data, error }) => {
+      setAdminUsersLoading(false)
+      if (!error && Array.isArray(data)) setAdminUsersList(data as AdminUserRow[])
+      else setAdminUsersList([])
+    })
+  }, [activeView, isAdminUser, adminTab, adminUsersSearch])
+
+  useEffect(() => {
+    if (activeView !== 'admin' || !isAdminUser || adminTab !== 'stats') return
+    setAdminStatsLoading(true)
+    const from = adminStatsFrom || null
+    const to = adminStatsTo || null
+    supabase.rpc('admin_get_visits_stats', { p_from: from, p_to: to }).then(({ data, error }) => {
+      setAdminStatsLoading(false)
+      if (!error && Array.isArray(data)) setAdminVisitsStats(data as AdminVisitStatRow[])
+      else setAdminVisitsStats([])
+    })
+  }, [activeView, isAdminUser, adminTab, adminStatsFrom, adminStatsTo])
+
+  useEffect(() => {
+    if (activeView !== 'admin' || !isAdminUser || adminTab !== 'stats') return
+    setAdminOnlineLoading(true)
+    supabase.rpc('admin_get_online_players').then(({ data, error }) => {
+      setAdminOnlineLoading(false)
+      if (!error && Array.isArray(data)) setAdminOnlinePlayers(data as AdminOnlineRow[])
+      else setAdminOnlinePlayers([])
+    })
+    const interval = setInterval(() => {
+      supabase.rpc('admin_get_online_players').then(({ data }) => {
+        if (Array.isArray(data)) setAdminOnlinePlayers(data as AdminOnlineRow[])
+      })
+    }, 30 * 1000)
+    return () => clearInterval(interval)
+  }, [activeView, isAdminUser, adminTab])
+
+  const saveAdminUser = async (row: AdminUserRow, patch: { display_name?: string | null; elo?: number; country_code?: string | null; is_active?: boolean }) => {
+    setAdminUsersMessage(null)
+    const { error } = await supabase.from('players').update(patch).eq('id', row.id)
+    if (error) {
+      setAdminUsersMessage(error.message)
+      return
+    }
+    setAdminUsersList((prev) => prev.map((r) => (r.id === row.id ? { ...r, ...patch } : r)))
+    setAdminUserEditingId(null)
+    setAdminUsersMessage('Сохранено.')
+    setTimeout(() => setAdminUsersMessage(null), 3000)
+  }
 
   const markWarningRead = (warningId: string) => {
     if (!playerId) return
@@ -4836,7 +4926,7 @@ function App() {
         {activeView === 'admin' && isAdminUser && (
           <section className="panel admin-panel">
             <div className="admin-tabs" role="tablist">
-              {(['broadcast', 'reports', 'bans', 'violations', 'news', 'tournaments'] as const).map((tab) => (
+              {(['broadcast', 'reports', 'bans', 'violations', 'news', 'tournaments', 'users', 'stats'] as const).map((tab) => (
                 <button
                   key={tab}
                   type="button"
@@ -4851,6 +4941,8 @@ function App() {
                   {tab === 'violations' && 'Нарушения'}
                   {tab === 'news' && 'Новости'}
                   {tab === 'tournaments' && 'Турниры'}
+                  {tab === 'users' && 'Пользователи'}
+                  {tab === 'stats' && 'Статистика'}
                 </button>
               ))}
             </div>
@@ -5209,6 +5301,124 @@ function App() {
                         ))}
                       </ul>
                     )}
+            </>
+            )}
+
+            {adminTab === 'users' && (
+            <>
+            <h3 className="panel-title admin-news-title">Пользователи</h3>
+            <p className="panel-text small">Поиск по имени, username или отображаемому имени. Редактируйте ELO, никнейм и страну; деактивируйте или снова активируйте пользователя (неактивные не отображаются в рейтинге).</p>
+            <div className="form-row">
+              <label className="form-label">Поиск</label>
+              <input
+                type="text"
+                className="form-input"
+                placeholder="Username, имя или никнейм…"
+                value={adminUsersSearch}
+                onChange={(e) => setAdminUsersSearch(e.target.value)}
+              />
+            </div>
+            {adminUsersMessage && <p className="panel-text small">{adminUsersMessage}</p>}
+            {adminUsersLoading && <p className="panel-text small">Загрузка…</p>}
+            {!adminUsersLoading && adminUsersList.length === 0 && <p className="panel-text small">Введите запрос для поиска или оставьте пустым для списка последних зарегистрированных.</p>}
+            {!adminUsersLoading && adminUsersList.length > 0 && (
+              <ul className="admin-users-list">
+                {adminUsersList.map((row) => (
+                  <li key={row.id} className={`admin-users-item ${!row.is_active ? 'admin-users-item--inactive' : ''}`}>
+                    <div className="admin-users-main">
+                      <span className="admin-users-name">
+                        {row.display_name || (row.username ? `@${row.username}` : [row.first_name, row.last_name].filter(Boolean).join(' ') || row.id.slice(0, 8))}
+                        {row.username && row.display_name ? ` @${row.username}` : ''}
+                      </span>
+                      <span className="admin-users-meta">{row.elo} ELO · {row.country_code || '—'} {!row.is_active && <span className="admin-users-badge">неактивен</span>}</span>
+                      <span className="admin-users-date">{new Date(row.created_at).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })}</span>
+                    </div>
+                    {adminUserEditingId === row.id ? (
+                      <div className="admin-users-edit">
+                        <input type="text" className="form-input" placeholder="Никнейм" defaultValue={row.display_name ?? ''} id={`admin-user-dn-${row.id}`} />
+                        <input type="number" className="form-input" placeholder="ELO" defaultValue={row.elo} id={`admin-user-elo-${row.id}`} style={{ width: 80 }} />
+                        <select className="form-input" defaultValue={row.country_code || ''} id={`admin-user-cc-${row.id}`} style={{ minWidth: 120 }}>
+                          <option value="">—</option>
+                          {COUNTRIES.map((c) => <option key={c.code} value={c.code}>{c.flag} {c.name}</option>)}
+                        </select>
+                        <button type="button" className="strike-btn strike-btn-primary" onClick={() => {
+                          const dn = (document.getElementById(`admin-user-dn-${row.id}`) as HTMLInputElement)?.value?.trim() || null
+                          const eloVal = parseInt((document.getElementById(`admin-user-elo-${row.id}`) as HTMLInputElement)?.value ?? '', 10)
+                          const elo = Number.isNaN(eloVal) ? row.elo : Math.max(0, eloVal)
+                          const cc = (document.getElementById(`admin-user-cc-${row.id}`) as HTMLSelectElement)?.value || null
+                          saveAdminUser(row, { display_name: dn || null, elo, country_code: cc || null })
+                        }}>Сохранить</button>
+                        <button type="button" className="strike-btn strike-btn-secondary" onClick={() => setAdminUserEditingId(null)}>Отмена</button>
+                      </div>
+                    ) : (
+                      <div className="admin-users-actions">
+                        <button type="button" className="strike-btn strike-btn-secondary" onClick={() => setAdminUserEditingId(row.id)}>Изменить</button>
+                        <button type="button" className="strike-btn strike-btn-secondary" onClick={() => saveAdminUser(row, { is_active: !row.is_active })}>
+                          {row.is_active ? 'Деактивировать' : 'Активировать'}
+                        </button>
+                        <button type="button" className="player-name-link" onClick={() => row.id && openPlayerProfile(row.id)}>Профиль</button>
+                      </div>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+            </>
+            )}
+
+            {adminTab === 'stats' && (
+            <>
+            <h3 className="panel-title admin-news-title">Статистика</h3>
+            <p className="panel-text small">Визиты по дням и странам (UTC), а также кто сейчас онлайн (активность за последние 5 минут).</p>
+
+            <h4 className="admin-stats-subtitle">Сейчас онлайн</h4>
+            {adminOnlineLoading && <p className="panel-text small">Загрузка…</p>}
+            {!adminOnlineLoading && adminOnlinePlayers.length === 0 && <p className="panel-text small">Никого нет.</p>}
+            {!adminOnlineLoading && adminOnlinePlayers.length > 0 && (
+              <ul className="admin-online-list">
+                {adminOnlinePlayers.map((p) => (
+                  <li key={p.id} className="admin-online-item">
+                    <span className="admin-online-name">{p.display_name || (p.username ? `@${p.username}` : p.id.slice(0, 8))}{p.username && p.display_name ? ` @${p.username}` : ''}</span>
+                    <span className="admin-online-meta">{p.country_code || '—'} · {new Date(p.last_seen_at).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'medium' })}</span>
+                    <button type="button" className="player-name-link" onClick={() => openPlayerProfile(p.id)}>Профиль</button>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            <h4 className="admin-stats-subtitle">Визиты по дням и времени (UTC)</h4>
+            <div className="admin-stats-daterange">
+              <label className="form-label">С</label>
+              <input type="date" className="form-input" value={adminStatsFrom} onChange={(e) => setAdminStatsFrom(e.target.value)} />
+              <label className="form-label">По</label>
+              <input type="date" className="form-input" value={adminStatsTo} onChange={(e) => setAdminStatsTo(e.target.value)} />
+            </div>
+            {adminStatsLoading && <p className="panel-text small">Загрузка…</p>}
+            {!adminStatsLoading && adminVisitsStats.length === 0 && <p className="panel-text small">Нет данных за выбранный период.</p>}
+            {!adminStatsLoading && adminVisitsStats.length > 0 && (
+              <div className="admin-stats-table-wrap">
+                <table className="admin-stats-table">
+                  <thead>
+                    <tr>
+                      <th>Дата</th>
+                      <th>Час (UTC)</th>
+                      <th>Страна</th>
+                      <th>Визитов</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {adminVisitsStats.map((r, i) => (
+                      <tr key={`${r.visit_date}-${r.visit_hour}-${r.country_code}-${i}`}>
+                        <td>{r.visit_date}</td>
+                        <td>{r.visit_hour}:00</td>
+                        <td>{r.country_code}</td>
+                        <td>{r.visits_count}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
             </>
             )}
           </section>

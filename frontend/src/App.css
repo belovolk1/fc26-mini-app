@@ -5796,6 +5796,129 @@
   color: var(--text-muted);
 }
 
+.admin-users-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 24px;
+}
+.admin-users-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px;
+  margin-bottom: 10px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.admin-users-item--inactive {
+  opacity: 0.75;
+  border-left: 4px solid var(--text-muted);
+}
+.admin-users-main {
+  flex: 1;
+  min-width: 0;
+}
+.admin-users-name {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.admin-users-meta {
+  font-size: 13px;
+  color: var(--text-muted);
+  display: block;
+  margin-top: 2px;
+}
+.admin-users-date {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.admin-users-badge {
+  margin-left: 8px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: var(--border);
+  border-radius: 999px;
+}
+.admin-users-edit {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+.admin-users-edit .form-input,
+.admin-users-edit select {
+  max-width: 160px;
+}
+.admin-users-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.admin-stats-subtitle {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 24px 0 12px;
+}
+.admin-stats-subtitle:first-of-type {
+  margin-top: 0;
+}
+.admin-stats-daterange {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.admin-stats-daterange .form-input {
+  width: auto;
+}
+.admin-stats-table-wrap {
+  overflow-x: auto;
+  margin-bottom: 24px;
+}
+.admin-stats-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.admin-stats-table th,
+.admin-stats-table td {
+  padding: 8px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+.admin-stats-table th {
+  font-weight: 600;
+  color: var(--text-muted);
+}
+.admin-online-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 24px;
+}
+.admin-online-item {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.admin-online-name {
+  font-weight: 600;
+}
+.admin-online-meta {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
 /* Модальное окно сетки турнира — поверх футера (рендер в body, задаём переменные темы) */
 .bracket-modal-backdrop {
   position: fixed;
